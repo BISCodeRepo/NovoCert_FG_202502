@@ -1,0 +1,11 @@
+[project]
+name = "novocertproject"
+version = "0.1.0"
+description = "NovoCert - 인증서 관리 시스템"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "Flask==2.3.3",
+    "Flask-SQLAlchemy==3.0.5",
+    "Werkzeug==2.3.7",
+]
