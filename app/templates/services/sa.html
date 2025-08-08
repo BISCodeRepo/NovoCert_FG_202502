@@ -1,0 +1,50 @@
+<div class="pipeline-content">
+    <div class="content-header">
+        <h3 id="step-title">SA Calculation</h3>
+        <button class="help-btn" title="전 화면의 output path를 가져와서 input에 보여줌.">?</button>
+    </div>
+    
+    <div class="input-form">
+        <div class="form-description">
+            <p>We provide Prosit for predicted spectra</p>
+        </div>
+        
+        <div class="form-group">
+            <label for="target-dnps-results-path">Target DNPS results path:</label>
+            <div class="file-input-group">
+                <input type="text" id="target-dnps-results-path" class="form-input long-input" value="D:/target/result/">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="decoy-dnps-results-path">Decoy DNPS results path:</label>
+            <div class="file-input-group">
+                <input type="text" id="decoy-dnps-results-path" class="form-input long-input" value="D:/decoy/result/">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="peptide-length">Peptide length:</label>
+            <div class="range-input-group">
+                <input type="text" id="peptide-length-min" class="form-input short-input" value="6">
+                <span class="range-separator">to</span>
+                <input type="text" id="peptide-length-max" class="form-input short-input" value="30">
+                <span class="input-note">min = 6 max=30 을 default로 넣어줌.</span>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="normalized-collision-energy">Normalized Collision Energy:</label>
+            <input type="text" id="normalized-collision-energy" class="form-input short-input">
+        </div>
+        
+        <div class="form-actions">
+            <button class="btn btn-primary start-btn" id="start-btn" disabled>Start</button>
+        </div>
+        
+        <div class="file-info">
+            <p>input file: .csv</p>
+            <p>output file: .msp 와 .csv</p>
+        </div>
+    </div>
+</div> 

@@ -16,22 +16,47 @@
 ```
 NovoCertProject/
 ├── app/
-│   ├── __init__.py          # 앱 팩토리
+│   ├── __init__.py          # Flask 앱 팩토리
 │   ├── routes.py            # 라우트 정의
-│   ├── models/              # MVC Model
-│   ├── controllers/         # MVC Controller
+│   ├── models/              # MVC Model (데이터 모델)
+│   │   └── __init__.py     # 모델 정의 예정
+│   ├── controllers/         # MVC Controller (비즈니스 로직)
+│   │   └── __init__.py     # 컨트롤러 정의 예정
 │   ├── templates/
-│   │   └── index.html       # HTML 템플릿
+│   │   ├── base.html        # 기본 템플릿
+│   │   ├── index.html       # 메인 페이지
+│   │   ├── service.html     # 서비스 페이지
+│   │   ├── components/      # 재사용 컴포넌트
+│   │   │   ├── header.html
+│   │   │   └── sidebar.html
+│   │   └── services/        # 서비스별 템플릿
+│   │       ├── decoy.html
+│   │       ├── denovo.html
+│   │       ├── fdr.html
+│   │       ├── percolator.html
+│   │       ├── pif.html
+│   │       ├── post.html
+│   │       └── sa.html
 │   └── static/              # 정적 파일들
 │       ├── css/
-│       │   └── style.css    # 메인 스타일
+│       │   ├── style.css    # 메인 스타일
+│       │   └── service.css  # 서비스 페이지 스타일
 │       ├── js/
-│       │   └── main.js      # 메인 스크립트
-│       └── images/          # 이미지 파일들
+│       │   └── service.js   # 서비스 페이지 스크립트
+│       └── images/          # 이미지 파일들 (비어있음)
 ├── config.py                # 설정 관리
-├── extensions.py            # Flask 확장
+├── extensions.py            # Flask 확장 (SQLAlchemy)
+├── instance/                # 인스턴스 폴더 (데이터베이스 등)
+│   ├── novocert.db         # SQLite 데이터베이스
+│   └── backups/            # 백업 폴더 (비어있음)
+├── docs/                    # 문서
+│   └── issue-based-branching.md
 ├── pyproject.toml          # uv 의존성 관리
-└── run.py                  # 실행 파일
+├── uv.lock                 # uv 잠금 파일
+├── requirements.txt         # pip 의존성 (호환성)
+├── run.py                  # Flask 앱 실행 파일
+├── .gitignore              # Git 무시 파일
+└── README.md               # 프로젝트 문서
 ```
 
 ## 설치 및 실행 방법

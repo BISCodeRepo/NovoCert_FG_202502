@@ -1,16 +1,9 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NovoCert</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>NovoCert</h1> 
-    </div>
-    
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script> 
-</body>
-</html> 
+{% extends "base.html" %}
+
+{% block title %}NovoCert - 홈{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>NovoCert</h1>
+</div>
+{% endblock %} 
