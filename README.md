@@ -96,3 +96,5 @@ uv run python run.py
 
 ### 5. 브라우저에서 확인
 웹 브라우저에서 `http://localhost:5000`으로 접속하여 애플리케이션을 확인할 수 있습니다.
+
+![서비스 화면](docs/images/services_image.png)
