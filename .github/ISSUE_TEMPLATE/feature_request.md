@@ -1,9 +1,12 @@
 ---
 name: 기능 요청
 about: 새로운 기능을 제안합니다.
-title: '[FEATURE] '
+title: '[FEATURE] [{{ github.event.issue.user.login }}] '
 labels: ['enhancement']
 ---
+
+## 작성자
+**{{ github.event.issue.user.login }}**
 
 ## 기능 설명
 어떤 기능을 추가하고 싶은지 간단히 설명해주세요.

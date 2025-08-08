@@ -1,9 +1,12 @@
 ---
 name: 문서화 요청
 about: 문서화를 요청합니다.
-title: '[DOCS] '
+title: '[DOCS] [{{ github.event.issue.user.login }}] '
 labels: ['documentation']
 ---
+
+## 작성자
+**{{ github.event.issue.user.login }}**
 
 ## 문서화 대상
 어떤 부분에 대한 문서화가 필요한지 설명해주세요.
