@@ -49,8 +49,14 @@ NovoCertProject/
 ├── instance/                # 인스턴스 폴더 (데이터베이스 등)
 │   ├── novocert.db         # SQLite 데이터베이스
 │   └── backups/            # 백업 폴더 (비어있음)
-├── docs/                    # 문서
-│   └── issue-based-branching.md
+├── pipelines/               # 파이프라인 실행 파일들
+│   ├── decoy/              # Decoy 스펙트라 생성
+│   ├── denovo/             # De novo 펩타이드 시퀀싱
+│   ├── fdr/                # FDR 계산
+│   ├── percolator/         # Percolator 재점수화
+│   ├── pif/                # PIF 계산
+│   ├── post/               # 후처리
+│   └── sa/                 # SA 계산
 ├── pyproject.toml          # uv 의존성 관리
 ├── uv.lock                 # uv 잠금 파일
 ├── requirements.txt         # pip 의존성 (호환성)
