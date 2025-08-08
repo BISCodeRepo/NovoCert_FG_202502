@@ -267,5 +267,5 @@ yarn-error.log*
 instance/
 .webassets-cache
 
-# Project specific
-# Add any project-specific files or directories here 
+# Pipeline configuration files (user-specific parameters)
+pipelines/config/ 

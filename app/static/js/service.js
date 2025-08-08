@@ -1,5 +1,7 @@
 // 페이지 로드 시 초기화
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('DOMContentLoaded event fired');
+    
     const stepItems = document.querySelectorAll('.step-item');
     const pipelineContent = document.getElementById('pipeline-content');
     
@@ -19,6 +21,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 초기 폼 유효성 검사
     validateForm();
+    
+    // 초기 로드 시 decoy.js 로드 (현재 decoy.html이 로드되어 있음)
+    console.log('Loading initial decoy.js');
+    loadPipelineSpecificJS('decoy');
+    
+    // 초기 파라미터 적용 (decoy가 기본 단계)
+    if (window.parameterManager) {
+        console.log('Applying initial parameters for decoy...');
+        // 파라미터 매니저가 준비될 때까지 잠시 대기
+        setTimeout(() => {
+            window.parameterManager.applyParametersToForm('decoy');
+        }, 100);
+    }
 });
 
 // AJAX를 통해 단계별 콘텐츠를 동적으로 로드
@@ -34,10 +49,57 @@ function loadStepContent(stepName) {
             // 새로 로드된 콘텐츠에 이벤트 리스너 재연결
             attachFormListeners();
             validateForm();
+            
+            // 파이프라인별 전용 JavaScript 로드
+            loadPipelineSpecificJS(stepName);
+            
+            // 저장된 파라미터 적용
+            if (window.parameterManager) {
+                window.parameterManager.applyParametersToForm(stepName);
+            }
         })
         .catch(error => {
             console.error('단계 콘텐츠 로드 중 오류 발생:', error);
         });
+}
+
+// 파이프라인별 전용 JavaScript 로드
+function loadPipelineSpecificJS(stepName) {
+    console.log(`Loading pipeline-specific JS for: ${stepName}`);
+    
+    // 기존 파이프라인별 스크립트 제거
+    const existingScript = document.querySelector(`script[data-pipeline="${stepName}"]`);
+    if (existingScript) {
+        existingScript.remove();
+        console.log(`Removed existing script for: ${stepName}`);
+    }
+    
+    // 새로운 스크립트 로드
+    const script = document.createElement('script');
+    script.src = `/static/js/${stepName}.js`;
+    script.setAttribute('data-pipeline', stepName);
+    
+    script.onload = function() {
+        console.log(`Script loaded successfully: ${stepName}.js`);
+        // 파이프라인별 초기화 함수 호출
+        const initFunction = window[`setup${stepName.charAt(0).toUpperCase() + stepName.slice(1)}Form`];
+        console.log(`Looking for init function: setup${stepName.charAt(0).toUpperCase() + stepName.slice(1)}Form`);
+        console.log(`Init function found:`, initFunction);
+        
+        if (initFunction && typeof initFunction === 'function') {
+            console.log(`Calling init function for: ${stepName}`);
+            initFunction();
+        } else {
+            console.warn(`Init function not found for: ${stepName}`);
+        }
+    };
+    
+    script.onerror = function() {
+        console.error(`Failed to load script: ${stepName}.js`);
+    };
+    
+    console.log(`Adding script to DOM: ${script.src}`);
+    document.head.appendChild(script);
 }
 
 // 디렉토리 선택 기능
@@ -102,29 +164,12 @@ function selectFile(inputId) {
 
 // 폼 유효성 검사 - 모든 필수 필드가 채워졌는지 확인
 function validateForm() {
-    const inputDir = document.getElementById('input-dir')?.value.trim();
-    const outputDir = document.getElementById('output-dir')?.value.trim();
     const startBtn = document.getElementById('start-btn');
     
     if (!startBtn) return;
     
-    // 현재 폼의 모든 입력 필드 가져오기
-    const inputFields = document.querySelectorAll('.input-form input[type="text"], .input-form select');
-    let allFieldsFilled = true;
-    
-    // 각 필드가 비어있지 않은지 확인
-    inputFields.forEach(field => {
-        if (field.value.trim() === '') {
-            allFieldsFilled = false;
-        }
-    });
-    
-    // 모든 필수 필드가 채워졌는지 확인하고 시작 버튼 활성화/비활성화
-    if (allFieldsFilled) {
-        startBtn.disabled = false;
-    } else {
-        startBtn.disabled = true;
-    }
+    // 버튼을 항상 활성화
+    startBtn.disabled = false;
 }
 
 // 동적으로 로드된 콘텐츠에 이벤트 리스너 연결
