@@ -84,10 +84,20 @@ git clone https://github.com/BISCodeRepo/NovoCert_FG_202502.git
 cd NovoCert_FG_202502
 ```
 
-### 2. uv 설치 (macOS)
+### uv 설치
+
+[uv installation 공식 문서](https://docs.astral.sh/uv/getting-started/installation/)
+
+#### macOS
 ```bash
 # Homebrew를 사용한 설치
 brew install uv
+```
+
+#### Windows
+```powershell
+# winget을 사용한 설치
+winget install --id=astral-sh.uv  -e
 ```
 
 ### 3. 의존성 설치 및 가상환경 생성
