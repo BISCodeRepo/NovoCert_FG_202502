@@ -1,10 +1,19 @@
 # NovoCert_FG_202502
 
 ## 작성자 정보
+
+### 노영진
 - **이름**: Youngjin Noh (노영진)
 - **학번**: 2021097474
 - **소속**: Hanyang University
 - **전공**: Computer Science
+
+### 신현욱
+- **이름**: Hyeonuk Shin (신현욱)
+- **소속**: Hanyang University
+- **전공**: Computer Science
+
+
 
 ## 기술 스택
 - **Backend**: Flask (Python)
