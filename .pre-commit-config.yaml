@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: commit-msg-format
+        name: 커밋 메시지 형식 검증
+        entry: uv run python scripts/validate_commit_msg.py
+        language: system
+        stages: [commit-msg] 
