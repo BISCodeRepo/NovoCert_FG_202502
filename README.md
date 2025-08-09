@@ -57,11 +57,13 @@ NovoCertProject/
 │   ├── pif/                # PIF 계산
 │   ├── post/               # 후처리
 │   └── sa/                 # SA 계산
+├── scripts/                 # 유틸리티 스크립트
+│   └── validate_commit_msg.py # 커밋 메시지 형식 검증
 ├── pyproject.toml          # uv 의존성 관리
 ├── uv.lock                 # uv 잠금 파일
-├── requirements.txt         # pip 의존성 (호환성)
 ├── run.py                  # Flask 앱 실행 파일
 ├── .gitignore              # Git 무시 파일
+├── .pre-commit-config.yaml # pre-commit 설정
 └── README.md               # 프로젝트 문서
 ```
 
@@ -86,15 +88,32 @@ uv init
 
 # 의존성 설치 및 가상환경 생성
 uv sync
+
+# 개발 의존성 포함하여 설치 (pre-commit 포함)
+uv sync --extra dev
 ```
 
-### 4. 애플리케이션 실행
+### 4. pre-commit 설정 (팀원들과 공유되는 커밋 메시지 형식)
+```bash
+# pre-commit hooks 설치
+uv run pre-commit install --hook-type commit-msg
+```
+
+**커밋 메시지 형식:**
+- `yj: [#이슈번호] 설명` 또는 `hw: [#이슈번호] 설명`
+- 예시:
+  - `yj: [#3] 이슈 템플릿 자동화`
+  - `hw: [#5] 로그인 기능 추가`
+  - `yj: [#12] 버그 수정`
+  - `hw: [#8] 문서 업데이트`
+
+### 5. 애플리케이션 실행
 ```bash
 # 개발 모드로 실행
 uv run python run.py
 ```
 
-### 5. 브라우저에서 확인
-웹 브라우저에서 `http://localhost:5000`으로 접속하여 애플리케이션을 확인할 수 있습니다.
+### 6. 브라우저에서 확인
+웹 브라우저에서 `http://localhost:5001`로 접속하여 애플리케이션을 확인할 수 있습니다.
 
 ![서비스 화면](docs/images/services_image.png)

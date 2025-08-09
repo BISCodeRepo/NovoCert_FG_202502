@@ -39,8 +39,9 @@ if __name__ == "__main__":
     commit_msg_file = sys.argv[1]
     
     try:
+        # 파일을 읽기 전용으로 열어서 내용만 읽기
         with open(commit_msg_file, 'r', encoding='utf-8') as f:
-            commit_msg = f.read()
+            commit_msg = f.read().strip()
     except FileNotFoundError:
         print(f"오류: 파일을 찾을 수 없습니다: {commit_msg_file}")
         sys.exit(1)
