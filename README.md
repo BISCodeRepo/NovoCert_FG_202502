@@ -86,6 +86,8 @@ cd NovoCert_FG_202502
 
 ### uv 설치
 
+[uv installation guide](https://docs.astral.sh/uv/getting-started/installation/)
+
 #### macOS
 ```bash
 # Homebrew를 사용한 설치
