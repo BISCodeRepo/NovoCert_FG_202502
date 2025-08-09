@@ -104,8 +104,6 @@ uv run pre-commit install --hook-type commit-msg
 - 예시:
   - `yj: [#3] 이슈 템플릿 자동화`
   - `hw: [#5] 로그인 기능 추가`
-  - `yj: [#12] 버그 수정`
-  - `hw: [#8] 문서 업데이트`
 
 ### 5. 애플리케이션 실행
 ```bash
