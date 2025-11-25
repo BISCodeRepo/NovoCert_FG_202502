@@ -1,0 +1,18 @@
+services:
+  p1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: novocert-p1:compose-build
+    container_name: novocert-p1
+    environment:
+      - MEMORY=${MEMORY}
+      - PRECURSOR_TOLERANCE=${PRECURSOR_TOLERANCE}
+      - RANDOM_SEED=${RANDOM_SEED}
+    volumes:
+      - type: bind
+        source: ${INPUT_SOURCE_DIR}
+        target: /app/input
+      - type: bind
+        source: ${OUTPUT_SOURCE_DIR}
+        target: /app/output
