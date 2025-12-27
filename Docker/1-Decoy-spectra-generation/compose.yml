@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: novocert-p1:compose-build
+    platform: linux/amd64
     container_name: novocert-p1
     environment:
       - MEMORY=${MEMORY}
