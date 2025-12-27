@@ -30,7 +30,11 @@ jobs:
       matrix:
         # List the folder names to build here
         service: [
-            '1-Decoy-spectra-generation'
+            '1-Decoy-spectra-generation',
+            '2-1-Download-casanovo-config',
+            '2-2-De-novo-peptide-sequencing 3',
+            '3-Feature-calculation',
+            '4-Percolator-and-FDRControl'
             ]
 
     steps:
