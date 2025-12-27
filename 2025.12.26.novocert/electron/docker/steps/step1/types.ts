@@ -6,6 +6,7 @@ export interface Step1Params {
   projectName: string
   inputPath: string
   outputPath: string
+  logPath: string // 로그 파일 경로
   taskUuid: string // Task의 고유 ID
   uid?: string
   gid?: string

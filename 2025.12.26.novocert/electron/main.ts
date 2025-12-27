@@ -183,6 +183,7 @@ function setupIpcHandlers() {
     projectName: string
     inputPath: string
     outputPath: string
+    logPath: string
     taskUuid: string
     uid?: string
     gid?: string
