@@ -1,0 +1,29 @@
+services:
+  p3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: novocert-p3:compose-build
+    container_name: novocert-p3
+    # user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      # Target spectra dir
+      - type: bind
+        source: ./test_data/target/mgf/
+        target: /app/target/mgf
+      # Decoy spectra dir
+      - type: bind
+        source: ./test_data/decoy/mgf/
+        target: /app/decoy/mgf
+      # Target DNPS result
+      - type: bind
+        source: ./test_data/target/result.mztab
+        target: /app/target/result.mztab
+      # Decoy DNPS result
+      - type: bind
+        source: ./test_data/decoy/result.mztab
+        target: /app/decoy/result.mztab
+      #  Output directory
+      - type: bind
+        source: ./test_data/output
+        target: /app/output
