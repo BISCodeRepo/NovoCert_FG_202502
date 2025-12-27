@@ -1,0 +1,18 @@
+services:
+  p4:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/amd64
+    image: novocert-p4:compose-build
+    container_name: novocert-p4
+    # user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - type: bind
+        source: ./test_data/t_d.pin
+        target: /app/t_d.pin
+      - type: bind
+        source: ./test_data/output
+        target: /app/output
+    
