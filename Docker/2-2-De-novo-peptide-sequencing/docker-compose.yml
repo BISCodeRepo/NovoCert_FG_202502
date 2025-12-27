@@ -1,0 +1,25 @@
+services:
+  p2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: novocert-p2:compose-build
+    container_name: novocert-p2
+    # user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      # spectra dir
+      - type: bind
+        source: ./test_data/mgf/short.mgf
+        target: /app/data/mgf/spectra.mgf
+      # Casanovo .yaml path
+      - type: bind
+        source: ./test_data/casanovo.yaml
+        target: /app/data/casanovo.yaml
+      # Casanovo model path
+      - type: bind
+        source: ./test_data/model.ckpt
+        target: /app/data/model.ckpt
+      # Output directory
+      - type: bind
+        source: ./test_data/output
+        target: /app/output/
