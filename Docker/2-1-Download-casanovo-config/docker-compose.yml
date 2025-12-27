@@ -4,7 +4,6 @@ services:
       context: .
       dockerfile: Dockerfile
     image: novocert-p2-1:compose-build
-    platform: linux/amd64
     container_name: novocert-p2-1
     # user: "${UID:-1000}:${GID:-1000}"
     volumes:
