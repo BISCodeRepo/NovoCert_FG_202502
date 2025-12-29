@@ -19,6 +19,8 @@ export {
 } from './container'
 export { 
   runStep1Container,
-  executeStep1Workflow
+  executeStep1Workflow,
+  runStep2Container,
+  executeStep2Workflow
 } from './steps'
 

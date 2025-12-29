@@ -1,7 +1,7 @@
 import { runDockerContainer } from '../../container'
 import { REQUIRED_IMAGES } from '../../config'
+import { generateLogFilePath } from '../../utils'
 import type { Step1ContainerParams, DockerRunResult } from './types'
-import path from 'node:path'
 
 /**
  * Step1 (Decoy Spectra Generation)을 위한 Docker 컨테이너를 실행합니다.
@@ -23,10 +23,7 @@ export async function runStep1Container(params: Step1ContainerParams): Promise<D
   const containerName = `step1-${projectName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`
   
   // 로그 파일 경로 생성 (전달받은 logPath 사용)
-  const now = new Date()
-  const dateStr = now.toISOString().split('T')[0]
-  const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-')
-  const logFilePath = path.join(logPath, `step1-${taskUuid}-${dateStr}-${timeStr}.log`)
+  const logFilePath = generateLogFilePath(logPath, '1', taskUuid)
 
   // 환경 변수 객체 생성 (docker-compose.yml의 환경 변수와 동일하게)
   const environment: Record<string, string> = {

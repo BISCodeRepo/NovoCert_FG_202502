@@ -68,4 +68,8 @@ contextBridge.exposeInMainWorld('step', {
     precursorTolerance: string
     randomSeed: string
   }) => ipcRenderer.invoke('step:runStep1', params),
+  runStep2: (params: {
+    projectName: string
+    outputPath: string
+  }) => ipcRenderer.invoke('step:runStep2', params),
 })

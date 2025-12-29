@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Layout } from "./components/layout";
-import { Dashboard, Prepare, Step1, ProjectDetail, TaskDetail } from "./pages";
+import { Dashboard, Prepare, Step1, Step2, ProjectDetail, TaskDetail } from "./pages";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<string>("dashboard");
@@ -31,7 +31,7 @@ function App() {
       case "step1":
         return <Step1 />;
       case "step2":
-        return <div>Step 2 (준비 중)</div>;
+        return <Step2 />;
       case "step3":
         return <div>Step 3 (준비 중)</div>;
       case "step4":

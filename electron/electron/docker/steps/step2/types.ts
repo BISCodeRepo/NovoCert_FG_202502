@@ -4,9 +4,12 @@
 
 export interface Step2Params {
   projectName: string
-  inputPath: string
   outputPath: string
-  // Step2 specific parameters can be added here
+}
+
+export interface Step2ContainerParams extends Step2Params {
+  logPath: string // 로그 파일 경로
+  taskUuid: string // Task의 고유 ID
 }
 
 export interface DockerRunResult {

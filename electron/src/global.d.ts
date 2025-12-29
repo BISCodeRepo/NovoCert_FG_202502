@@ -78,8 +78,22 @@ interface Step1Result {
   error?: string
 }
 
+interface Step2Params {
+  projectName: string
+  outputPath: string
+}
+
+interface Step2Result {
+  success: boolean
+  project?: Project
+  task?: Task
+  containerId?: string
+  error?: string
+}
+
 interface StepAPI {
   runStep1: (params: Step1Params) => Promise<Step1Result>
+  runStep2: (params: Step2Params) => Promise<Step2Result>
 }
 
 declare global {
