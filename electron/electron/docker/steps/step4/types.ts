@@ -1,7 +1,15 @@
 export interface Step4Params {
   projectName: string
-  inputPath: string
-  outputPath: string
+  targetMgfDir: string        // Target MGF 디렉토리 경로
+  targetResultPath: string    // Target DNPS 결과 파일 경로 (mztab)
+  decoyMgfDir: string         // Decoy MGF 디렉토리 경로
+  decoyResultPath: string     // Decoy DNPS 결과 파일 경로 (mztab)
+  outputPath: string          // 출력 디렉토리 경로
+}
+
+export interface Step4ContainerParams extends Step4Params {
+  logPath: string // 로그 파일 경로
+  taskUuid: string // Task의 고유 ID
 }
 
 export interface DockerRunResult {

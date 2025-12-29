@@ -12,7 +12,9 @@ import {
   pullImage,
   executeStep1Workflow,
   executeStep2Workflow,
-  executeStep3Workflow
+  executeStep3Workflow,
+  executeStep4Workflow,
+  executeStep5Workflow
 } from './docker'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -212,5 +214,26 @@ function setupIpcHandlers() {
     outputPath: string
   }) => {
     return await executeStep3Workflow(database, params)
+  })
+
+  // Step4 실행 핸들러
+  ipcMain.handle('step:runStep4', async (_, params: {
+    projectName: string
+    targetMgfDir: string
+    targetResultPath: string
+    decoyMgfDir: string
+    decoyResultPath: string
+    outputPath: string
+  }) => {
+    return await executeStep4Workflow(database, params)
+  })
+
+  // Step5 실행 핸들러
+  ipcMain.handle('step:runStep5', async (_, params: {
+    projectName: string
+    inputPath: string
+    outputPath: string
+  }) => {
+    return await executeStep5Workflow(database, params)
   })
 }

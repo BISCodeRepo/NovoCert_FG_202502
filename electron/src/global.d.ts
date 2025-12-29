@@ -115,10 +115,43 @@ interface Step3Result {
   error?: string
 }
 
+interface Step4Params {
+  projectName: string
+  targetMgfDir: string
+  targetResultPath: string
+  decoyMgfDir: string
+  decoyResultPath: string
+  outputPath: string
+}
+
+interface Step4Result {
+  success: boolean
+  project?: Project
+  task?: Task
+  containerId?: string
+  error?: string
+}
+
+interface Step5Params {
+  projectName: string
+  inputPath: string
+  outputPath: string
+}
+
+interface Step5Result {
+  success: boolean
+  project?: Project
+  task?: Task
+  containerId?: string
+  error?: string
+}
+
 interface StepAPI {
   runStep1: (params: Step1Params) => Promise<Step1Result>
   runStep2: (params: Step2Params) => Promise<Step2Result>
   runStep3: (params: Step3Params) => Promise<Step3Result>
+  runStep4: (params: Step4Params) => Promise<Step4Result>
+  runStep5: (params: Step5Params) => Promise<Step5Result>
 }
 
 declare global {

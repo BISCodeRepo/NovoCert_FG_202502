@@ -23,6 +23,10 @@ export {
   runStep2Container,
   executeStep2Workflow,
   runStep3Container,
-  executeStep3Workflow
+  executeStep3Workflow,
+  runStep4Container,
+  executeStep4Workflow,
+  runStep5Container,
+  executeStep5Workflow
 } from './steps'
 

@@ -1,7 +1,12 @@
 export interface Step5Params {
   projectName: string
-  inputPath: string
+  inputPath: string        // PIN 파일 경로
   outputPath: string
+}
+
+export interface Step5ContainerParams extends Step5Params {
+  logPath: string // 로그 파일 경로
+  taskUuid: string // Task의 고유 ID
 }
 
 export interface DockerRunResult {

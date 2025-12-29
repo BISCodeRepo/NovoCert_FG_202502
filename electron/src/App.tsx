@@ -6,6 +6,8 @@ import {
   Step1,
   Step2,
   Step3,
+  Step4,
+  Step5,
   ProjectDetail,
   TaskDetail,
 } from "./pages";
@@ -45,9 +47,9 @@ function App() {
       case "step3":
         return <Step3 />;
       case "step4":
-        return <div>Step 4 (준비 중)</div>;
+        return <Step4 />;
       case "step5":
-        return <div>Step 5 (준비 중)</div>;
+        return <Step5 />;
       case "project-detail":
         if (currentProjectUuid) {
           return (
