@@ -6,8 +6,6 @@ import path from 'node:path'
 interface DockerRunOptions {
   image: string
   containerName: string
-  uid?: string
-  gid?: string
   volumes?: string[]  // ['/host/path:/container/path']
   environment?: Record<string, string>
   command?: string[]
@@ -31,8 +29,6 @@ export async function runDockerContainer(options: DockerRunOptions): Promise<Doc
   const {
     image,
     containerName,
-    uid,
-    gid,
     volumes = [],
     environment = {},
     command = [],
@@ -54,11 +50,6 @@ export async function runDockerContainer(options: DockerRunOptions): Promise<Doc
 
     // 컨테이너 이름
     args.push('--name', containerName)
-
-    // 사용자/그룹 ID 설정
-    if (uid && gid) {
-      args.push('--user', `${uid}:${gid}`)
-    }
 
     // 플랫폼 지정
     if (platform) {

@@ -1,13 +1,13 @@
 import { runDockerContainer } from '../../container'
 import { REQUIRED_IMAGES } from '../../config'
-import type { Step1Params, DockerRunResult } from './types'
+import type { Step1ContainerParams, DockerRunResult } from './types'
 import path from 'node:path'
 
 /**
  * Step1 (Decoy Spectra Generation)을 위한 Docker 컨테이너를 실행합니다.
  */
-export async function runStep1Container(params: Step1Params): Promise<DockerRunResult> {
-  const { projectName, inputPath, outputPath, logPath, taskUuid, uid, gid } = params
+export async function runStep1Container(params: Step1ContainerParams): Promise<DockerRunResult> {
+  const { projectName, inputPath, outputPath, logPath, taskUuid, memory, precursorTolerance, randomSeed } = params
 
   // Step1 이미지 찾기
   const step1Image = REQUIRED_IMAGES.find(img => img.step === 'step1')
@@ -28,19 +28,25 @@ export async function runStep1Container(params: Step1Params): Promise<DockerRunR
   const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-')
   const logFilePath = path.join(logPath, `step1-${taskUuid}-${dateStr}-${timeStr}.log`)
 
+  // 환경 변수 객체 생성 (docker-compose.yml의 환경 변수와 동일하게)
+  const environment: Record<string, string> = {
+    PROJECT_NAME: projectName,
+    MEMORY: memory,
+    PRECURSOR_TOLERANCE: precursorTolerance,
+    RANDOM_SEED: randomSeed
+  }
+
   // Docker 컨테이너 실행 (bind mount 사용)
   return await runDockerContainer({
     image: step1Image.image,
     containerName,
-    uid: uid || '1000',
-    gid: gid || '1000',
+    // uid: uid || '1000',
+    // gid: gid || '1000',
     volumes: [
       `${inputPath}:/app/input`,
       `${outputPath}:/app/output`
     ],
-    environment: {
-      PROJECT_NAME: projectName
-    },
+    environment,
     platform: step1Image.platform,
     autoRemove: true,
     command: [],

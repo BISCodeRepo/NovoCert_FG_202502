@@ -73,8 +73,9 @@ export async function executeStep1Workflow(
       outputPath: containerOutputPath, // 컨테이너 결과물 경로
       logPath: logPath,                // 로그 파일 경로
       taskUuid: task.uuid,
-      uid: params.uid,
-      gid: params.gid
+      memory: params.memory,
+      precursorTolerance: params.precursorTolerance,
+      randomSeed: params.randomSeed
     })
 
     if (!dockerResult.success) {

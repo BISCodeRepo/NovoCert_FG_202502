@@ -6,10 +6,14 @@ export interface Step1Params {
   projectName: string
   inputPath: string
   outputPath: string
+  memory: string           // MEMORY 환경 변수 (필수)
+  precursorTolerance: string  // PRECURSOR_TOLERANCE 환경 변수 (필수)
+  randomSeed: string       // RANDOM_SEED 환경 변수 (필수)
+}
+
+export interface Step1ContainerParams extends Step1Params {
   logPath: string // 로그 파일 경로
   taskUuid: string // Task의 고유 ID
-  uid?: string
-  gid?: string
 }
 
 export interface DockerRunResult {

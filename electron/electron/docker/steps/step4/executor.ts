@@ -3,7 +3,7 @@ import { REQUIRED_IMAGES } from '../../config'
 import type { Step4Params, DockerRunResult } from './types'
 
 export async function runStep4Container(params: Step4Params): Promise<DockerRunResult> {
-  const { projectName, inputPath, outputPath, uid, gid } = params
+  const { projectName, inputPath, outputPath } = params
   const step4Image = REQUIRED_IMAGES.find(img => img.step === 'step4')
   
   if (!step4Image) {
@@ -15,8 +15,6 @@ export async function runStep4Container(params: Step4Params): Promise<DockerRunR
   return await runDockerContainer({
     image: step4Image.image,
     containerName,
-    uid: uid || '1000',
-    gid: gid || '1000',
     volumes: [`${inputPath}:/app/input`, `${outputPath}:/app/output`],
     environment: { PROJECT_NAME: projectName },
     platform: step4Image.platform,

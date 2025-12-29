@@ -183,10 +183,9 @@ function setupIpcHandlers() {
     projectName: string
     inputPath: string
     outputPath: string
-    logPath: string
-    taskUuid: string
-    uid?: string
-    gid?: string
+    memory: string
+    precursorTolerance: string
+    randomSeed: string
   }) => {
     return await executeStep1Workflow(database, params)
   })

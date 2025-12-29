@@ -69,8 +69,7 @@ export interface Step2Params {
   projectName: string
   inputPath: string
   outputPath: string
-  uid?: string
-  gid?: string
+  
   // 여기에 Step2 전용 파라미터 추가
   configPath?: string
   threads?: number

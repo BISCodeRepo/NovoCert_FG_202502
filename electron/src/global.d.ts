@@ -65,8 +65,9 @@ interface Step1Params {
   projectName: string
   inputPath: string
   outputPath: string
-  uid?: string
-  gid?: string
+  memory: string
+  precursorTolerance: string
+  randomSeed: string
 }
 
 interface Step1Result {

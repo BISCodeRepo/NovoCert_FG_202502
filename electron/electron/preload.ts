@@ -64,7 +64,8 @@ contextBridge.exposeInMainWorld('step', {
     projectName: string
     inputPath: string
     outputPath: string
-    uid?: string
-    gid?: string
+    memory: string
+    precursorTolerance: string
+    randomSeed: string
   }) => ipcRenderer.invoke('step:runStep1', params),
 })

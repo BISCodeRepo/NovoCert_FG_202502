@@ -2,8 +2,6 @@ export interface Step5Params {
   projectName: string
   inputPath: string
   outputPath: string
-  uid?: string
-  gid?: string
 }
 
 export interface DockerRunResult {

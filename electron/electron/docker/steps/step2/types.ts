@@ -6,8 +6,6 @@ export interface Step2Params {
   projectName: string
   inputPath: string
   outputPath: string
-  uid?: string
-  gid?: string
   // Step2 specific parameters can be added here
 }
 

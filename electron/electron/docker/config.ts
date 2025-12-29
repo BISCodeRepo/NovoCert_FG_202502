@@ -16,32 +16,39 @@ export interface DockerImageConfig {
  */
 export const REQUIRED_IMAGES: DockerImageConfig[] = [
   {
-    name: 'NovoCert Decoy Spectra',
-    image: 'ghcr.io/huswim/novocert-docker-1-decoy-spectra-generation:main',
+    name: 'NovoCert P1 - Decoy Spectra Generation',
+    image: 'huswim/novocert-p1',
     description: 'Decoy Spectra 생성 도구',
-    platform: 'linux/amd64',
+    platform: 'linux/arm64',
     step: 'step1'
   },
   {
-    name: 'PostgreSQL',
-    image: 'postgres:latest',
-    description: '관계형 데이터베이스 (임시 - Step2)',
-    platform: 'linux/amd64',
+    name: 'NovoCert P2-1 - Download Casanovo Config',
+    image: 'huswim/novocert-p2-1',
+    description: 'Casanovo 설정 다운로드',
+    platform: 'linux/arm64',
     step: 'step2'
   },
   {
-    name: 'Redis',
-    image: 'redis:latest',
-    description: '인메모리 데이터 저장소 (임시 - Step3)',
-    platform: 'linux/amd64',
+    name: 'NovoCert P2-2 - De-novo Peptide Sequencing',
+    image: 'huswim/novocert-p2-2',
+    description: 'De-novo 펩타이드 시퀀싱',
+    platform: 'linux/arm64',
     step: 'step3'
   },
   {
-    name: 'Nginx',
-    image: 'nginx:latest',
-    description: '웹 서버 및 리버스 프록시 (임시 - Step4)',
-    platform: 'linux/amd64',
+    name: 'NovoCert P3 - Feature Calculation',
+    image: 'huswim/novocert-p3',
+    description: '특성 계산',
+    platform: 'linux/arm64',
     step: 'step4'
+  },
+  {
+    name: 'NovoCert P4 - Percolator and FDR Control',
+    image: 'huswim/novocert-p4',
+    description: 'Percolator 및 FDR 제어 (Percolator 호환성으로 amd64)',
+    platform: 'linux/amd64',
+    step: 'step5'
   }
 ]
 

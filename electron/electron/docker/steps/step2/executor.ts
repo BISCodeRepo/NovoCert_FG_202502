@@ -7,7 +7,7 @@ import type { Step2Params, DockerRunResult } from './types'
  * TODO: Step2에 맞게 volumes, environment, command 등을 수정하세요
  */
 export async function runStep2Container(params: Step2Params): Promise<DockerRunResult> {
-  const { projectName, inputPath, outputPath, uid, gid } = params
+  const { projectName, inputPath, outputPath } = params
 
   // Step2 이미지 찾기
   const step2Image = REQUIRED_IMAGES.find(img => img.step === 'step2')
@@ -26,8 +26,6 @@ export async function runStep2Container(params: Step2Params): Promise<DockerRunR
   return await runDockerContainer({
     image: step2Image.image,
     containerName,
-    uid: uid || '1000',
-    gid: gid || '1000',
     volumes: [
       `${inputPath}:/app/input`,
       `${outputPath}:/app/output`

@@ -1,19 +1,28 @@
 import { useState } from "react";
-import { PathInput, TextInput } from "../../components/form";
+import { PathInput, TextInput, NumberInput } from "../../components/form";
 
 function Step1() {
   const [projectName, setProjectName] = useState("");
   const [inputPath, setInputPath] = useState("");
   const [outputPath, setOutputPath] = useState("");
+  const [memory, setMemory] = useState("8");
+  const [precursorTolerance, setPrecursorTolerance] = useState("16");
+  const [randomSeed, setRandomSeed] = useState("32");
   const [isRunning, setIsRunning] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   // 모든 필수 파라미터가 입력되었는지 확인
   const isFormValid = () => {
     return (
       projectName.trim() !== "" &&
       inputPath.trim() !== "" &&
-      outputPath.trim() !== ""
+      outputPath.trim() !== "" &&
+      memory.trim() !== "" &&
+      precursorTolerance.trim() !== "" &&
+      randomSeed.trim() !== ""
     );
   };
 
@@ -31,26 +40,33 @@ function Step1() {
         projectName,
         inputPath,
         outputPath,
-        // uid와 gid는 선택사항 - 기본값 1000:1000 사용
+        memory: memory.trim(),
+        precursorTolerance: precursorTolerance.trim(),
+        randomSeed: randomSeed.trim(),
       });
 
       if (result.success) {
         setMessage({
-          type: 'success',
-          text: `프로젝트 "${projectName}"가 생성되었고, Step 1이 실행 중입니다. (Container ID: ${result.containerId?.substring(0, 12)})`
+          type: "success",
+          text: `프로젝트 "${projectName}"가 생성되었고, Step 1이 실행 중입니다. (Container ID: ${result.containerId?.substring(
+            0,
+            12
+          )})`,
         });
-        console.log('Step1 실행 결과:', result);
+        console.log("Step1 실행 결과:", result);
       } else {
         setMessage({
-          type: 'error',
-          text: `Step 1 실행 실패: ${result.error}`
+          type: "error",
+          text: `Step 1 실행 실패: ${result.error}`,
         });
       }
     } catch (error: unknown) {
-      console.error('Step1 실행 중 에러:', error);
+      console.error("Step1 실행 중 에러:", error);
       setMessage({
-        type: 'error',
-        text: `예상치 못한 오류: ${error instanceof Error ? error.message : 'Unknown error'}`
+        type: "error",
+        text: `예상치 못한 오류: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
       });
     } finally {
       setIsRunning(false);
@@ -72,9 +88,7 @@ function Step1() {
               Step 설명
             </h3>
             <div className="space-y-3 text-sm text-gray-600">
-              <p>
-                이 단계에서는 입력 데이터로부터 Decoy Spectra를 생성합니다.
-              </p>
+              <p>이 단계에서는 입력 데이터로부터 Decoy Spectra를 생성합니다.</p>
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="font-medium text-gray-700 mb-2">필요한 입력:</p>
                 <ul className="list-disc list-inside space-y-1 text-xs">
@@ -142,6 +156,33 @@ function Step1() {
               placeholder="/path/to/output/folder"
               required={true}
               description="결과를 저장할 폴더의 전체 경로 (컨테이너 내부 /app/output에 마운트됩니다)"
+            />
+
+            <NumberInput
+              label="Memory"
+              value={memory}
+              onChange={setMemory}
+              placeholder="4"
+              required={true}
+              description="메모리 할당량 (정수, 단위: GB) - MEMORY 환경 변수로 전달됩니다 (예: 4 → 4G)"
+            />
+
+            <NumberInput
+              label="Precursor Tolerance"
+              value={precursorTolerance}
+              onChange={setPrecursorTolerance}
+              placeholder="20"
+              required={true}
+              description="Precursor Tolerance 값 (정수) - PRECURSOR_TOLERANCE 환경 변수로 전달됩니다"
+            />
+
+            <NumberInput
+              label="Random Seed"
+              value={randomSeed}
+              onChange={setRandomSeed}
+              placeholder="100"
+              required={true}
+              description="랜덤 시드 값 (정수) - RANDOM_SEED 환경 변수로 전달됩니다"
             />
           </div>
 
@@ -212,14 +253,20 @@ function Step1() {
             )}
             {/* 결과 메시지 */}
             {message && (
-              <div className={`mt-4 p-4 rounded-lg ${
-                message.type === 'success' 
-                  ? 'bg-green-50 border border-green-200' 
-                  : 'bg-red-50 border border-red-200'
-              }`}>
-                <p className={`text-sm ${
-                  message.type === 'success' ? 'text-green-800' : 'text-red-800'
-                }`}>
+              <div
+                className={`mt-4 p-4 rounded-lg ${
+                  message.type === "success"
+                    ? "bg-green-50 border border-green-200"
+                    : "bg-red-50 border border-red-200"
+                }`}
+              >
+                <p
+                  className={`text-sm ${
+                    message.type === "success"
+                      ? "text-green-800"
+                      : "text-red-800"
+                  }`}
+                >
                   {message.text}
                 </p>
               </div>
