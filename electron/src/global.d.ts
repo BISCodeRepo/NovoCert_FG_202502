@@ -59,6 +59,14 @@ interface DockerAPI {
 
 interface DialogAPI {
   selectFolder: () => Promise<{ canceled: boolean; path: string | null }>
+  selectFile: (options?: { 
+    filters?: { name: string; extensions: string[] }[]
+    defaultPath?: string
+  }) => Promise<{ canceled: boolean; path: string | null }>
+}
+
+interface FsAPI {
+  findLatestFile: (directoryPath: string, extension: string) => Promise<{ success: boolean; path: string | null; error: string | null }>
 }
 
 interface Step1Params {
@@ -91,9 +99,26 @@ interface Step2Result {
   error?: string
 }
 
+interface Step3Params {
+  projectName: string
+  spectraPath: string
+  casanovoConfigPath: string
+  modelPath: string
+  outputPath: string
+}
+
+interface Step3Result {
+  success: boolean
+  project?: Project
+  task?: Task
+  containerId?: string
+  error?: string
+}
+
 interface StepAPI {
   runStep1: (params: Step1Params) => Promise<Step1Result>
   runStep2: (params: Step2Params) => Promise<Step2Result>
+  runStep3: (params: Step3Params) => Promise<Step3Result>
 }
 
 declare global {
@@ -101,6 +126,7 @@ declare global {
     db: DatabaseAPI
     docker: DockerAPI
     dialog: DialogAPI
+    fs: FsAPI
     step: StepAPI
     ipcRenderer: {
       on(channel: string, func: (...args: unknown[]) => void): void

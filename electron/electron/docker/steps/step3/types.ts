@@ -1,7 +1,14 @@
 export interface Step3Params {
   projectName: string
-  inputPath: string
+  spectraPath: string        // MGF 파일 경로
+  casanovoConfigPath: string // Casanovo 설정 파일 경로 (Step2의 출력)
+  modelPath: string          // 모델 파일 경로 (.ckpt)
   outputPath: string
+}
+
+export interface Step3ContainerParams extends Step3Params {
+  logPath: string // 로그 파일 경로
+  taskUuid: string // Task의 고유 ID
 }
 
 export interface DockerRunResult {

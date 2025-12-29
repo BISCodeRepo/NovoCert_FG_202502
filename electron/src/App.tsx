@@ -1,18 +1,28 @@
 import { useState } from "react";
 import { Layout } from "./components/layout";
-import { Dashboard, Prepare, Step1, Step2, ProjectDetail, TaskDetail } from "./pages";
+import {
+  Dashboard,
+  Prepare,
+  Step1,
+  Step2,
+  Step3,
+  ProjectDetail,
+  TaskDetail,
+} from "./pages";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<string>("dashboard");
-  const [currentProjectUuid, setCurrentProjectUuid] = useState<string | null>(null);
+  const [currentProjectUuid, setCurrentProjectUuid] = useState<string | null>(
+    null
+  );
   const [currentTaskUuid, setCurrentTaskUuid] = useState<string | null>(null);
 
   const handleNavigate = (page: string, uuid: string) => {
     setCurrentPage(page);
-    if (page === 'project-detail') {
+    if (page === "project-detail") {
       setCurrentProjectUuid(uuid);
       setCurrentTaskUuid(null);
-    } else if (page === 'task-detail') {
+    } else if (page === "task-detail") {
       setCurrentTaskUuid(uuid);
     } else {
       setCurrentProjectUuid(null);
@@ -33,22 +43,34 @@ function App() {
       case "step2":
         return <Step2 />;
       case "step3":
-        return <div>Step 3 (준비 중)</div>;
+        return <Step3 />;
       case "step4":
         return <div>Step 4 (준비 중)</div>;
       case "step5":
         return <div>Step 5 (준비 중)</div>;
       case "project-detail":
         if (currentProjectUuid) {
-          return <ProjectDetail uuid={currentProjectUuid} onNavigate={handleNavigate} />;
+          return (
+            <ProjectDetail
+              uuid={currentProjectUuid}
+              onNavigate={handleNavigate}
+            />
+          );
         }
         return <Dashboard onNavigate={handleNavigate} />;
       case "task-detail":
         if (currentTaskUuid) {
-          return <TaskDetail uuid={currentTaskUuid} onNavigate={handleNavigate} />;
+          return (
+            <TaskDetail uuid={currentTaskUuid} onNavigate={handleNavigate} />
+          );
         }
         if (currentProjectUuid) {
-          return <ProjectDetail uuid={currentProjectUuid} onNavigate={handleNavigate} />;
+          return (
+            <ProjectDetail
+              uuid={currentProjectUuid}
+              onNavigate={handleNavigate}
+            />
+          );
         }
         return <Dashboard onNavigate={handleNavigate} />;
       default:

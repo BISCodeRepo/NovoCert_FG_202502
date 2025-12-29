@@ -1,7 +1,9 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { database } from './database'
+import { findLatestFile } from './utils/fs'
+import { selectFile, selectFolder } from './utils/dialog'
 import { 
   checkDockerInstalled, 
   checkDockerRunning, 
@@ -9,7 +11,8 @@ import {
   downloadMissingImages,
   pullImage,
   executeStep1Workflow,
-  executeStep2Workflow
+  executeStep2Workflow,
+  executeStep3Workflow
 } from './docker'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -164,19 +167,20 @@ function setupIpcHandlers() {
 
   // Dialog 핸들러 - 폴더 선택
   ipcMain.handle('dialog:selectFolder', async () => {
-    if (!win) {
-      return { canceled: true, path: null }
-    }
-    
-    const result = await dialog.showOpenDialog(win, {
-      properties: ['openDirectory', 'createDirectory']
-    })
-    
-    if (result.canceled || result.filePaths.length === 0) {
-      return { canceled: true, path: null }
-    }
-    
-    return { canceled: false, path: result.filePaths[0] }
+    return await selectFolder(win)
+  })
+
+  // Dialog 핸들러 - 파일 선택
+  ipcMain.handle('dialog:selectFile', async (_, options?: { 
+    filters?: { name: string; extensions: string[] }[]
+    defaultPath?: string
+  }) => {
+    return await selectFile(win, options)
+  })
+
+  // 파일 시스템 핸들러 - 디렉토리에서 특정 확장자를 가진 가장 최근 파일 찾기
+  ipcMain.handle('fs:findLatestFile', async (_, directoryPath: string, extension: string) => {
+    return findLatestFile(directoryPath, extension)
   })
 
   // Step1 실행 핸들러
@@ -197,5 +201,16 @@ function setupIpcHandlers() {
     outputPath: string
   }) => {
     return await executeStep2Workflow(database, params)
+  })
+
+  // Step3 실행 핸들러
+  ipcMain.handle('step:runStep3', async (_, params: {
+    projectName: string
+    spectraPath: string
+    casanovoConfigPath: string
+    modelPath: string
+    outputPath: string
+  }) => {
+    return await executeStep3Workflow(database, params)
   })
 }

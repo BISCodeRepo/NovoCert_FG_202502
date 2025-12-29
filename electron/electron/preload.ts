@@ -56,6 +56,15 @@ contextBridge.exposeInMainWorld('docker', {
 // Dialog API 노출
 contextBridge.exposeInMainWorld('dialog', {
   selectFolder: () => ipcRenderer.invoke('dialog:selectFolder'),
+  selectFile: (options?: { 
+    filters?: { name: string; extensions: string[] }[]
+    defaultPath?: string
+  }) => ipcRenderer.invoke('dialog:selectFile', options),
+})
+
+// File System API 노출
+contextBridge.exposeInMainWorld('fs', {
+  findLatestFile: (directoryPath: string, extension: string) => ipcRenderer.invoke('fs:findLatestFile', directoryPath, extension),
 })
 
 // Step API 노출
@@ -72,4 +81,11 @@ contextBridge.exposeInMainWorld('step', {
     projectName: string
     outputPath: string
   }) => ipcRenderer.invoke('step:runStep2', params),
+  runStep3: (params: {
+    projectName: string
+    spectraPath: string
+    casanovoConfigPath: string
+    modelPath: string
+    outputPath: string
+  }) => ipcRenderer.invoke('step:runStep3', params),
 })
