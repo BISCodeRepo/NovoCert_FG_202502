@@ -22,7 +22,7 @@ function PathInput({
         onChange(result.path);
       }
     } catch (error) {
-      console.error('폴더 선택 중 오류 발생:', error);
+      console.error('Error occurred while selecting folder:', error);
     }
   };
 
@@ -43,7 +43,7 @@ function PathInput({
         <button
           onClick={handleBrowse}
           type="button"
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
         >
           Browse
         </button>
