@@ -10,12 +10,12 @@ function Step2() {
     text: string;
   } | null>(null);
 
-  // 모든 필수 파라미터가 입력되었는지 확인
+  // Check if all required parameters are entered
   const isFormValid = () => {
     return projectName.trim() !== "" && outputPath.trim() !== "";
   };
 
-  // Run Step 2 버튼 클릭 핸들러
+  // Run Step 2 button click handler
   const handleRunStep2 = async () => {
     if (!isFormValid()) {
       return;

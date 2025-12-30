@@ -180,7 +180,7 @@ function Prepare() {
               disabled={installStatus.status === "checking"}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium ml-4 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {installStatus.status === "checking" ? "확인 중..." : "확인"}
+              {installStatus.status === "checking" ? "Checking..." : "Check"}
             </button>
           </div>
           <div className="mt-4 ml-11">
@@ -297,7 +297,7 @@ function Prepare() {
               disabled={runningStatus.status === "checking"}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium ml-4 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {runningStatus.status === "checking" ? "확인 중..." : "확인"}
+              {runningStatus.status === "checking" ? "Checking..." : "Check"}
             </button>
           </div>
           <div className="mt-4 ml-11">

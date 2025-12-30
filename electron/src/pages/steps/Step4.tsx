@@ -19,7 +19,7 @@ function Step4() {
     text: string;
   } | null>(null);
 
-  // 모든 필수 파라미터가 입력되었는지 확인
+  // Check if all required parameters are entered
   const isFormValid = () => {
     return (
       projectName.trim() !== "" &&

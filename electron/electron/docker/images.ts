@@ -71,7 +71,7 @@ export async function pullImage(
 }
 
 /**
- * Docker 이미지 존재 여부 확인
+ * Check if the Docker image exists
  */
 export async function checkImageExists(imageName: string): Promise<{
   exists: boolean

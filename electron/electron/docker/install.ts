@@ -14,14 +14,14 @@ export async function checkDockerInstalled(): Promise<{
   error?: string
 }> {
   try {
-    // which/where 명령어로 docker 실행 파일 찾기
+    // which/where command to find the docker executable file
     const findCommand = process.platform === 'win32' ? 'where docker' : 'which docker'
     
     await execAsync(findCommand, {
       env: { ...process.env, PATH: getExtendedPath() }
     })
     
-    // docker 찾았으면 버전 확인
+    // If docker is found, check the version
     const { stdout } = await execAsync('docker --version', {
       env: { ...process.env, PATH: getExtendedPath() }
     })
