@@ -10,10 +10,10 @@ export interface Project {
 }
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
-  pending: "대기",
-  running: "실행중",
-  failed: "실패",
-  success: "성공",
+  pending: "Pending",
+  running: "Running",
+  failed: "Failed",
+  success: "Success",
 };
 
 export const PROJECT_STATUS_COLORS: Record<ProjectStatus, string> = {

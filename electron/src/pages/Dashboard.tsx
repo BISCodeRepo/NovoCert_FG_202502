@@ -32,7 +32,6 @@ function Dashboard({ onNavigate }: DashboardProps) {
   };
 
   const deleteProject = async (uuid: string) => {
-    // 연관된 태스크도 함께 삭제
     await window.db.deleteTasksByProject(uuid);
     await window.db.deleteProject(uuid);
     loadProjects();
@@ -45,23 +44,19 @@ function Dashboard({ onNavigate }: DashboardProps) {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <h1 className="text-4xl font-bold text-gray-900 mb-2">프로젝트 관리</h1>
-      <p className="text-sm text-gray-500 mb-8">
-        Electron + LowDB + Tailwind CSS
-      </p>
+      <h1 className="text-4xl font-bold text-gray-900 mb-2">Projects</h1>
 
       {/* DB 경로 */}
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
         <p className="text-xs text-gray-600">
-          <span className="font-semibold">DB 경로:</span> {dbPath}
+          <span className="font-semibold">Database Path:</span> {dbPath}
         </p>
       </div>
 
-      {/* 프로젝트 목록 */}
       <div className="bg-white rounded-lg shadow-sm">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
-            프로젝트 목록{" "}
+            Project List{" "}
             <span className="text-gray-500">({projects.length})</span>
           </h2>
         </div>
@@ -81,9 +76,9 @@ function Dashboard({ onNavigate }: DashboardProps) {
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            <p className="mt-4 text-gray-500">프로젝트가 없습니다</p>
+            <p className="mt-4 text-gray-500">No projects found</p>
             <p className="text-sm text-gray-400">
-              위에서 새 프로젝트를 추가해보세요
+              Start by creating a new project
             </p>
           </div>
         ) : (
@@ -95,19 +90,19 @@ function Dashboard({ onNavigate }: DashboardProps) {
                     UUID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    프로젝트 이름
+                    Project Name
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    상태
+                    Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    생성일
+                    Created At
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    수정일
+                    Updated At
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    작업
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -166,7 +161,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
                         onClick={() => deleteProject(project.uuid)}
                         className="text-red-600 hover:text-red-900 font-medium"
                       >
-                        삭제
+                        Delete
                       </button>
                     </td>
                   </tr>

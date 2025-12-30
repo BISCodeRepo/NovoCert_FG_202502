@@ -4,7 +4,7 @@ import { generateLogFilePath } from '../../utils'
 import type { Step4ContainerParams, DockerRunResult } from './types'
 
 /**
- * Step4 (Feature Calculation - p3 이미지 사용)을 위한 Docker 컨테이너를 실행합니다.
+ * Run a Docker container for Step4 (Feature Calculation - p3 image)
  */
 export async function runStep4Container(params: Step4ContainerParams): Promise<DockerRunResult> {
   const { projectName, targetMgfDir, targetResultPath, decoyMgfDir, decoyResultPath, outputPath, logPath, taskUuid } = params
@@ -12,16 +12,16 @@ export async function runStep4Container(params: Step4ContainerParams): Promise<D
   const step4Image = REQUIRED_IMAGES.find(img => img.step === 'step4')
   
   if (!step4Image) {
-    return { success: false, error: 'Step4 이미지를 찾을 수 없습니다.' }
+    return { success: false, error: 'Step4 image not found' }
   }
 
   const containerName = `step4-${projectName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`
 
-  // 로그 파일 경로 생성
+  // Generate the log file path
   const logFilePath = generateLogFilePath(logPath, '4', taskUuid)
 
-  // Docker 컨테이너 실행 (bind mount 사용)
-  // docker-compose.yml 기준 (p3 이미지):
+  // Run a Docker container (bind mount)
+  // Based on docker-compose.yml (p3 image):
   // - targetMgfDir -> /app/target/mgf
   // - targetResultPath -> /app/target/result.mztab
   // - decoyMgfDir -> /app/decoy/mgf

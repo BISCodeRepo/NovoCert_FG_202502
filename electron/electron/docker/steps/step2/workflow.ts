@@ -5,11 +5,11 @@ import path from 'node:path'
 import fs from 'node:fs'
 
 /**
- * Step2의 전체 워크플로우를 실행합니다.
- * 1. Project 생성
- * 2. Task 생성 및 Task별 출력 폴더 생성
- * 3. Docker 컨테이너 실행
- * 4. 성공/실패 상태 업데이트
+ * Execute the entire workflow for Step2.
+ * 1. Create a Project
+ * 2. Create a Task and create a Task-specific output folder
+ * 3. Run a Docker container
+ * 4. Update the success/failure status
  */
 export async function executeStep2Workflow(
   database: Database,
@@ -19,7 +19,7 @@ export async function executeStep2Workflow(
   let task
 
   try {
-    // 1. Project 생성
+    // 1. Create a Project
     project = await database.projects.create({
       name: params.projectName,
       status: 'running',
@@ -30,19 +30,19 @@ export async function executeStep2Workflow(
 
     console.log('Created project:', project)
 
-    // 2. Task 생성 (상태: running)
+    // 2. Create a Task (status: running)
     task = await database.tasks.create({
       project_uuid: project.uuid,
       step: '2',
       status: 'running',
       parameters: {
-        // outputPath는 아래에서 Task별 경로로 업데이트됨
+        // outputPath is updated in the Task-specific output folder
       }
     })
 
     console.log('Created task:', task)
 
-    // Task별 고유 출력 폴더 경로 생성
+    // Create a Task-specific output folder
     const baseTaskPath = path.join(params.outputPath, task.uuid)
     const containerOutputPath = path.join(baseTaskPath, 'output')
     const logPath = path.join(baseTaskPath, 'log')
@@ -52,7 +52,7 @@ export async function executeStep2Workflow(
     console.log(`Created task output directory: ${containerOutputPath}`)
     console.log(`Created task log directory: ${logPath}`)
 
-    // Task에 최종 경로들 업데이트
+    // Update the final paths for the Task
     await database.tasks.update(task.uuid, {
       parameters: {
         ...task.parameters,
@@ -60,19 +60,19 @@ export async function executeStep2Workflow(
         logPath: logPath,
       }
     })
-    // task 변수도 최신 정보로 갱신
+    // Update the task variable with the latest information
     task = (await database.tasks.getOne(task.uuid))!
 
-    // 3. Docker 컨테이너 실행 (bind mount 사용)
+    // 3. Run a Docker container (bind mount)
     const dockerResult = await runStep2Container({
       projectName: params.projectName,
-      outputPath: containerOutputPath, // 컨테이너 결과물 경로
-      logPath: logPath,                // 로그 파일 경로
+      outputPath: containerOutputPath, // Container result path
+      logPath: logPath,                // Log file path
       taskUuid: task.uuid
     })
 
     if (!dockerResult.success) {
-      // Docker 실행 실패 시 Task 상태를 failed로 업데이트
+      // If the Docker container fails, update the Task status to failed
       await database.tasks.update(task.uuid, {
         status: 'failed',
         parameters: {
@@ -95,7 +95,7 @@ export async function executeStep2Workflow(
 
     console.log('Docker container started:', dockerResult.containerId)
 
-    // Task 상태 업데이트 - containerId 추가
+    // Update the Task status - add containerId
     await database.tasks.update(task.uuid, {
       parameters: {
         ...task.parameters,
@@ -111,7 +111,7 @@ export async function executeStep2Workflow(
     }
   } catch (error: unknown) {
     console.error('Error in executeStep2Workflow:', error)
-    // 에러 발생 시 생성되었던 project, task가 있다면 failed로 상태 변경
+    // If an error occurs, update the project and task status to failed
     if (task) {
       await database.tasks.update(task.uuid, { status: 'failed', parameters: { ...task.parameters, error: error instanceof Error ? error.message : 'Unknown error' }})
     }

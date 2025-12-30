@@ -90,16 +90,16 @@ function Step1() {
 
           <div className="border-t pt-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Step 설명
+              Step Description
             </h3>
             <div className="space-y-3 text-sm text-gray-600">
-              <p>이 단계에서는 입력 데이터로부터 Decoy Spectra를 생성합니다.</p>
+              <p>In this step, Decoy Spectra are generated from the input data.</p>
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="font-medium text-gray-700 mb-2">필요한 입력:</p>
+                <p className="font-medium text-gray-700 mb-2">Required Input:</p>
                 <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li>프로젝트 이름</li>
-                  <li>입력 폴더 경로 (bind mount to /app/input)</li>
-                  <li>출력 폴더 경로 (bind mount to /app/output)</li>
+                  <li>Project Name</li>
+                  <li>Input Folder Path (bind mount to /app/input)</li>
+                  <li>Output Folder Path (bind mount to /app/output)</li>
                 </ul>
               </div>
             </div>
@@ -121,18 +121,17 @@ function Step1() {
                 />
               </svg>
               <p className="text-xs text-yellow-800">
-                모든 파라미터를 입력한 후 실행 버튼을 클릭하세요.
+                Please enter all parameters and click the Run button.
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 오른쪽: 파라미터 입력 */}
       <div className="flex-1">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            파라미터 설정
+            Parameter Settings
           </h2>
 
           <div className="space-y-6">
@@ -140,9 +139,9 @@ function Step1() {
               label="Project Name"
               value={projectName}
               onChange={setProjectName}
-              placeholder="프로젝트 이름 입력"
+              placeholder="Enter the project name"
               required={true}
-              description="새로 시작할 프로젝트의 이름을 입력하세요"
+              description="Enter the name of the project to start a new one"
             />
 
             <PathInput
@@ -151,7 +150,7 @@ function Step1() {
               onChange={setInputPath}
               placeholder="/path/to/input/folder"
               required={true}
-              description="입력 데이터가 있는 폴더의 전체 경로 (컨테이너 내부 /app/input에 마운트됩니다)"
+              description="The full path of the folder containing the input data (mounted inside the container at /app/input)"
             />
 
             <PathInput
@@ -160,7 +159,7 @@ function Step1() {
               onChange={setOutputPath}
               placeholder="/path/to/output/folder"
               required={true}
-              description="결과를 저장할 폴더의 전체 경로 (컨테이너 내부 /app/output에 마운트됩니다)"
+              description="The full path of the folder to save the results (mounted inside the container at /app/output)"
             />
 
             <NumberInput
@@ -169,7 +168,7 @@ function Step1() {
               onChange={setMemory}
               placeholder="4"
               required={true}
-              description="메모리 할당량 (정수, 단위: GB) - MEMORY 환경 변수로 전달됩니다 (예: 4 → 4G)"
+              description="Memory allocation (integer, unit: GB) - passed as MEMORY environment variable (e.g. 4 → 4G)"
             />
 
             <NumberInput
@@ -178,7 +177,7 @@ function Step1() {
               onChange={setPrecursorTolerance}
               placeholder="20"
               required={true}
-              description="Precursor Tolerance 값 (정수) - PRECURSOR_TOLERANCE 환경 변수로 전달됩니다"
+              description="Precursor Tolerance value (integer) - passed as PRECURSOR_TOLERANCE environment variable"
             />
 
             <NumberInput
@@ -187,7 +186,7 @@ function Step1() {
               onChange={setRandomSeed}
               placeholder="100"
               required={true}
-              description="랜덤 시드 값 (정수) - RANDOM_SEED 환경 변수로 전달됩니다"
+              description="Random seed value (integer) - passed as RANDOM_SEED environment variable"
             />
           </div>
 

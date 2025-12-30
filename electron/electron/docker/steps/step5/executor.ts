@@ -4,7 +4,7 @@ import { generateLogFilePath } from '../../utils'
 import type { Step5ContainerParams, DockerRunResult } from './types'
 
 /**
- * Step5 (Percolator and FDR Control - p4 이미지 사용)을 위한 Docker 컨테이너를 실행합니다.
+ * Run a Docker container for Step5 (Percolator and FDR Control - p4 image)
  */
 export async function runStep5Container(params: Step5ContainerParams): Promise<DockerRunResult> {
   const { projectName, inputPath, outputPath, logPath, taskUuid } = params
@@ -12,16 +12,16 @@ export async function runStep5Container(params: Step5ContainerParams): Promise<D
   const step5Image = REQUIRED_IMAGES.find(img => img.step === 'step5')
   
   if (!step5Image) {
-    return { success: false, error: 'Step5 이미지를 찾을 수 없습니다.' }
+    return { success: false, error: 'Step5 image not found' }
   }
 
   const containerName = `step5-${projectName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`
 
-  // 로그 파일 경로 생성
+  // Generate the log file path
   const logFilePath = generateLogFilePath(logPath, '5', taskUuid)
 
-  // Docker 컨테이너 실행 (bind mount 사용)
-  // docker-compose.yml 기준 (p4 이미지):
+  // Run a Docker container (bind mount)
+  // Based on docker-compose.yml (p4 image):
   // - inputPath -> /app/t_d.pin
   // - outputPath -> /app/output
   return await runDockerContainer({

@@ -200,7 +200,7 @@ function Step3() {
 
           <div className="border-t pt-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Step 설명
+              Step Description
             </h3>
             <div className="space-y-3 text-sm text-gray-600">
               <p>

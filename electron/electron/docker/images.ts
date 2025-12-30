@@ -16,7 +16,7 @@ export interface ImageStatus {
 }
 
 /**
- * Docker 이미지 목록 조회
+ * Get the list of Docker images
  */
 export async function listImages(): Promise<{
   success: boolean
@@ -34,16 +34,16 @@ export async function listImages(): Promise<{
       .filter(line => line.length > 0)
     
     return { success: true, images }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || '이미지 목록을 가져올 수 없습니다.'
+      error: error instanceof Error ? error.message : 'Cannot get image list'
     }
   }
 }
 
 /**
- * Docker 이미지 다운로드
+ * Download a Docker image
  */
 export async function pullImage(
   imageName: string, 
@@ -62,10 +62,10 @@ export async function pullImage(
     })
     
     return { success: true, output: stdout.trim() }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || `이미지 ${imageName} 다운로드에 실패했습니다.`
+      error: error instanceof Error ? error.message : `Failed to download image ${imageName}`
     }
   }
 }
@@ -83,16 +83,16 @@ export async function checkImageExists(imageName: string): Promise<{
     })
     
     return { exists: stdout.trim().length > 0 }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       exists: false,
-      error: error.message
+      error: error instanceof Error ? error.message : 'Cannot check image exists'
     }
   }
 }
 
 /**
- * 필요한 모든 이미지의 상태 확인
+ * Check the status of all required images
  */
 export async function checkRequiredImages(): Promise<{
   success: boolean
@@ -116,23 +116,23 @@ export async function checkRequiredImages(): Promise<{
     }
     
     return { success: true, images: statuses }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || '이미지 상태 확인에 실패했습니다.'
+      error: error instanceof Error ? error.message : 'Cannot check image status'
     }
   }
 }
 
 /**
- * 필요한 이미지 목록 가져오기
+ * Get the list of required images
  */
 export function getRequiredImages(): DockerImageConfig[] {
   return REQUIRED_IMAGES
 }
 
 /**
- * 누락된 이미지 다운로드 (콜백으로 진행 상황 전달)
+ * Download missing images (pass progress through callback)
  */
 export async function downloadMissingImages(
   onProgress?: (progress: {
@@ -152,7 +152,7 @@ export async function downloadMissingImages(
     if (!checkResult.success || !checkResult.images) {
       return {
         success: false,
-        error: checkResult.error || '이미지 확인에 실패했습니다.'
+        error: checkResult.error || 'Failed to check image exists'
       }
     }
     
@@ -168,7 +168,6 @@ export async function downloadMissingImages(
     const results = []
     
     for (const imageInfo of missingImages) {
-      // 다운로드 시작 알림
       if (onProgress) {
         onProgress({
           image: imageInfo.image,
@@ -179,7 +178,7 @@ export async function downloadMissingImages(
       
       const pullResult = await pullImage(imageInfo.image, imageInfo.platform)
       
-      // 다운로드 완료 알림
+      // Download complete notification
       if (onProgress) {
         onProgress({
           image: imageInfo.image,
@@ -197,10 +196,10 @@ export async function downloadMissingImages(
     }
     
     return { success: true, results }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || '이미지 다운로드에 실패했습니다.'
+      error: error instanceof Error ? error.message : 'Failed to download image'
     }
   }
 }

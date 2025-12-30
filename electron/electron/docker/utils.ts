@@ -20,11 +20,11 @@ export function getExtendedPath(): string {
 }
 
 /**
- * 로그 파일 경로를 생성합니다.
- * @param logPath 로그 파일을 저장할 디렉토리 경로
- * @param stepNumber Step 번호 (예: "1", "2")
- * @param taskUuid Task의 고유 ID
- * @returns 생성된 로그 파일 경로
+ * Generate a log file path.
+ * @param logPath The directory path to save the log file
+ * @param stepNumber Step number (e.g. "1", "2")
+ * @param taskUuid The unique ID of the Task
+ * @returns The generated log file path
  */
 export function generateLogFilePath(logPath: string, stepNumber: string, taskUuid: string): string {
   const now = new Date()

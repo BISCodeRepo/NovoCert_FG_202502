@@ -5,8 +5,8 @@ import { getExtendedPath } from './utils'
 const execAsync = promisify(exec)
 
 /**
- * Docker 설치 여부 확인
- * which/where 명령어로 docker 실행 파일을 찾고 버전을 확인합니다.
+ * Check if Docker is installed
+ * Check if Docker is installed by using the which/where command to find the docker executable and check the version.
  */
 export async function checkDockerInstalled(): Promise<{
   installed: boolean
@@ -27,10 +27,10 @@ export async function checkDockerInstalled(): Promise<{
     })
     
     return { installed: true, version: stdout.trim() }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       installed: false,
-      error: 'Docker가 설치되어 있지 않습니다.'
+      error: error instanceof Error ? error.message : 'Docker is not installed'
     }
   }
 }

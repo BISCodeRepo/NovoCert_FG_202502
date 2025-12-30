@@ -17,10 +17,9 @@ function Prepare() {
     status: "pending",
   });
 
-  // 다운로드 진행 상황 리스너 등록
   useEffect(() => {
     const handleDownloadProgress = (
-      _event: any,
+      _event: unknown,
       progress: DockerImageDownloadProgress
     ) => {
       setImagesStatus((prev) => {
@@ -68,13 +67,13 @@ function Prepare() {
       } else {
         setInstallStatus({
           status: "error",
-          error: result.error || "Docker가 설치되어 있지 않습니다.",
+          error: result.error || "Docker is not installed",
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setInstallStatus({
         status: "error",
-        error: error.message || "확인 중 오류가 발생했습니다.",
+        error: error instanceof Error ? error.message : "Error checking installed",
       });
     }
   };
@@ -86,18 +85,18 @@ function Prepare() {
       if (result.running) {
         setRunningStatus({
           status: "success",
-          info: "Docker가 정상적으로 실행 중입니다.",
+          info: "Docker is running normally",
         });
       } else {
         setRunningStatus({
           status: "error",
-          error: result.error || "Docker가 실행되고 있지 않습니다.",
+          error: result.error || "Docker is not running",
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setRunningStatus({
         status: "error",
-        error: error.message || "확인 중 오류가 발생했습니다.",
+        error: error instanceof Error ? error.message : "Error checking running",
       });
     }
   };
@@ -114,13 +113,13 @@ function Prepare() {
       } else {
         setImagesStatus({
           status: "error",
-          error: result.error || "이미지 확인에 실패했습니다.",
+          error: result.error || "Error checking images",
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setImagesStatus({
         status: "error",
-        error: error.message || "확인 중 오류가 발생했습니다.",
+        error: error instanceof Error ? error.message : "Error checking images",
       });
     }
   };
@@ -130,7 +129,6 @@ function Prepare() {
     try {
       const result = await window.docker.downloadMissingImages();
       if (result.success) {
-        // 다운로드 후 다시 확인
         const checkResult = await window.docker.checkRequiredImages();
         if (checkResult.success && checkResult.images) {
           setImagesStatus((prev) => ({
@@ -144,38 +142,37 @@ function Prepare() {
         setImagesStatus((prev) => ({
           status: "error",
           downloadProgress: prev.downloadProgress,
-          error: result.error || "이미지 다운로드에 실패했습니다.",
+          error: result.error || "Error downloading images",
         }));
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setImagesStatus((prev) => ({
         status: "error",
         downloadProgress: prev.downloadProgress,
-        error: error.message || "다운로드 중 오류가 발생했습니다.",
+        error: error instanceof Error ? error.message : "Error downloading images",
       }));
     }
   };
 
   return (
     <div className="max-w-7xl mx-auto">
-      <h1 className="text-4xl font-bold text-gray-900 mb-2">환경 준비</h1>
+      <h1 className="text-4xl font-bold text-gray-900 mb-2">Environment Preparation</h1>
       <p className="text-sm text-gray-500 mb-8">
-        Docker 환경을 확인하고 필요한 이미지를 설치합니다
+        Check the Docker environment and install the necessary images
       </p>
 
       <div className="space-y-6">
-        {/* Docker 설치 확인 */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <span className="text-2xl">🐳</span>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  1. Docker 설치 확인
+                  1. Check Docker Installation
                 </h2>
               </div>
               <p className="text-gray-600 ml-11">
-                시스템에 Docker가 설치되어 있는지 확인합니다.
+                Check if Docker is installed on the system
               </p>
             </div>
             <button
@@ -202,7 +199,7 @@ function Prepare() {
                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <span>상태: 확인 전</span>
+                <span>Status: Pending</span>
               </div>
             )}
             {installStatus.status === "checking" && (
@@ -226,7 +223,7 @@ function Prepare() {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                <span>확인 중...</span>
+                <span>Checking...</span>
               </div>
             )}
             {installStatus.status === "success" && (
@@ -245,7 +242,7 @@ function Prepare() {
                       d="M5 13l4 4L19 7"
                     />
                   </svg>
-                  <span>상태: 설치됨</span>
+                  <span>Status: Installed</span>
                 </div>
                 {installStatus.version && (
                   <p className="text-xs text-gray-500 ml-6">
@@ -270,7 +267,7 @@ function Prepare() {
                       d="M6 18L18 6M6 6l12 12"
                     />
                   </svg>
-                  <span>상태: 설치되지 않음</span>
+                  <span>Status: Not Installed</span>
                 </div>
                 {installStatus.error && (
                   <p className="text-xs text-red-500 ml-6">
@@ -282,18 +279,17 @@ function Prepare() {
           </div>
         </div>
 
-        {/* Docker Daemon 실행 확인 */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <span className="text-2xl">⚙️</span>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  2. Docker Daemon 실행 확인
+                  2. Check Docker Daemon Running
                 </h2>
               </div>
               <p className="text-gray-600 ml-11">
-                Docker 서비스가 현재 실행 중인지 확인합니다.
+                Check if the Docker service is currently running
               </p>
             </div>
             <button
@@ -320,7 +316,7 @@ function Prepare() {
                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <span>상태: 확인 전</span>
+                <span>Status: Pending</span>
               </div>
             )}
             {runningStatus.status === "checking" && (
@@ -344,7 +340,7 @@ function Prepare() {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                <span>확인 중...</span>
+                <span>Checking...</span>
               </div>
             )}
             {runningStatus.status === "success" && (
@@ -363,7 +359,7 @@ function Prepare() {
                       d="M5 13l4 4L19 7"
                     />
                   </svg>
-                  <span>상태: 실행 중</span>
+                  <span>Status: Running</span>
                 </div>
                 {runningStatus.info && (
                   <p className="text-xs text-gray-500 ml-6">
@@ -388,7 +384,7 @@ function Prepare() {
                       d="M6 18L18 6M6 6l12 12"
                     />
                   </svg>
-                  <span>상태: 실행 중이지 않음</span>
+                  <span>Status: Not Running</span>
                 </div>
                 {runningStatus.error && (
                   <p className="text-xs text-red-500 ml-6">
@@ -400,18 +396,17 @@ function Prepare() {
           </div>
         </div>
 
-        {/* Docker Image 다운로드 */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <span className="text-2xl">📦</span>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  3. Docker Image 설치
+                  3. Download Docker Images
                 </h2>
               </div>
               <p className="text-gray-600 ml-11">
-                프로그램에 필요한 Docker 이미지를 다운로드합니다.
+                Download the Docker images needed for the program
               </p>
             </div>
             <div className="flex gap-2 ml-4">
@@ -420,14 +415,14 @@ function Prepare() {
                 disabled={imagesStatus.status === "checking"}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {imagesStatus.status === "checking" ? "확인 중..." : "확인"}
+                {imagesStatus.status === "checking" ? "Checking..." : "Check"}
               </button>
               <button
                 onClick={handleDownloadImages}
                 disabled={imagesStatus.status === "checking"}
                 className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {imagesStatus.status === "checking" ? "설치 중..." : "설치"}
+                {imagesStatus.status === "checking" ? "Installing..." : "Install"}
               </button>
             </div>
           </div>
@@ -448,7 +443,7 @@ function Prepare() {
                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span>상태: 확인 전</span>
+                  <span>Status: Pending</span>
                 </div>
               </div>
             )}
@@ -456,7 +451,6 @@ function Prepare() {
               <div className="space-y-3">
                 {imagesStatus.downloadProgress &&
                 imagesStatus.downloadProgress.length > 0 ? (
-                  // 다운로드 진행 중
                   <>
                     <div className="flex items-center gap-2 text-sm text-blue-600 mb-3">
                       <svg
@@ -478,7 +472,7 @@ function Prepare() {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         />
                       </svg>
-                      <span>이미지 다운로드 중...</span>
+                      <span>Downloading images...</span>
                     </div>
                     {imagesStatus.downloadProgress.map((progress, idx) => (
                       <div
@@ -561,16 +555,16 @@ function Prepare() {
                           }`}
                         >
                           {progress.status === "downloading"
-                            ? "다운로드 중"
+                            ? "Downloading"
                             : progress.status === "success"
-                            ? "완료"
-                            : "실패"}
+                            ? "Completed"
+                            : "Failed"}
                         </span>
                       </div>
                     ))}
                   </>
                 ) : (
-                  // 초기 확인 중
+                  // Initial checking
                   <div className="flex items-center gap-2 text-sm text-blue-600">
                     <svg
                       className="w-4 h-4 animate-spin"
@@ -591,7 +585,7 @@ function Prepare() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    <span>확인 중...</span>
+                    <span>Checking...</span>
                   </div>
                 )}
               </div>
@@ -650,7 +644,7 @@ function Prepare() {
                         img.exists ? "text-green-600" : "text-red-600"
                       }`}
                     >
-                      {img.exists ? "설치됨" : "미설치"}
+                      {img.exists ? "Installed" : "Not Installed"}
                     </span>
                   </div>
                 ))}
@@ -658,7 +652,7 @@ function Prepare() {
                   imagesStatus.downloadResults.length > 0 && (
                     <div className="mt-3 p-3 bg-blue-50 rounded-lg">
                       <p className="text-xs font-medium text-blue-900 mb-2">
-                        다운로드 결과:
+                        Download Results:
                       </p>
                       {imagesStatus.downloadResults.map((result, idx) => (
                         <div
@@ -689,7 +683,7 @@ function Prepare() {
                       d="M6 18L18 6M6 6l12 12"
                     />
                   </svg>
-                  <span>상태: 오류</span>
+                  <span>Status: Error</span>
                 </div>
                 {imagesStatus.error && (
                   <p className="text-xs text-red-500 ml-6">
@@ -702,7 +696,6 @@ function Prepare() {
         </div>
       </div>
 
-      {/* 하단 안내 */}
       <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex gap-3">
           <svg
@@ -719,10 +712,9 @@ function Prepare() {
             />
           </svg>
           <div className="text-sm text-blue-800">
-            <p className="font-semibold mb-1">시작하기 전에</p>
+            <p className="font-semibold mb-1">Before Starting</p>
             <p>
-              모든 항목을 확인하고 설치가 완료되어야 파이프라인을 실행할 수
-              있습니다.
+              All items must be checked and installed before starting the pipeline
             </p>
           </div>
         </div>

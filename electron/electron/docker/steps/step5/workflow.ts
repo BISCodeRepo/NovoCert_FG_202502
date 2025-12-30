@@ -5,11 +5,11 @@ import path from 'node:path'
 import fs from 'node:fs'
 
 /**
- * Step5의 전체 워크플로우를 실행합니다.
- * 1. Project 생성
- * 2. Task 생성 및 Task별 출력 폴더 생성
- * 3. Docker 컨테이너 실행
- * 4. 성공/실패 상태 업데이트
+ * Execute the entire workflow for Step5.
+ * 1. Create a Project
+ * 2. Create a Task and create a Task-specific output folder
+ * 3. Run a Docker container
+ * 4. Update the success/failure status
  */
 export async function executeStep5Workflow(
   database: Database,
@@ -61,20 +61,20 @@ export async function executeStep5Workflow(
         logPath: logPath,
       }
     })
-    // task 변수도 최신 정보로 갱신
+    // Update the task variable with the latest information
     task = (await database.tasks.getOne(task.uuid))!
 
-    // 3. Docker 컨테이너 실행 (bind mount 사용)
+    // 3. Run a Docker container (bind mount)
     const dockerResult = await runStep5Container({
       projectName: params.projectName,
       inputPath: params.inputPath,
-      outputPath: containerOutputPath, // 컨테이너 결과물 경로
-      logPath: logPath,                // 로그 파일 경로
+      outputPath: containerOutputPath, // Container result path
+      logPath: logPath,                // Log file path
       taskUuid: task.uuid
     })
 
     if (!dockerResult.success) {
-      // Docker 실행 실패 시 Task 상태를 failed로 업데이트
+      // If the Docker container fails, update the Task status to failed
       await database.tasks.update(task.uuid, {
         status: 'failed',
         parameters: {
@@ -97,7 +97,7 @@ export async function executeStep5Workflow(
 
     console.log('Docker container started:', dockerResult.containerId)
 
-    // Task 상태 업데이트 - containerId 추가
+    // Update the Task status - add containerId
     await database.tasks.update(task.uuid, {
       parameters: {
         ...task.parameters,
@@ -113,7 +113,7 @@ export async function executeStep5Workflow(
     }
   } catch (error: unknown) {
     console.error('Error in executeStep5Workflow:', error)
-    // 에러 발생 시 생성되었던 project, task가 있다면 failed로 상태 변경
+    // If an error occurs, update the project and task status to failed
     if (task) {
       await database.tasks.update(task.uuid, { status: 'failed', parameters: { ...task.parameters, error: error instanceof Error ? error.message : 'Unknown error' }})
     }

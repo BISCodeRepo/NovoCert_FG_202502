@@ -4,7 +4,7 @@ import { generateLogFilePath } from '../../utils'
 import type { Step3ContainerParams, DockerRunResult } from './types'
 
 /**
- * Step3 (De-novo Peptide Sequencing)을 위한 Docker 컨테이너를 실행합니다.
+ * Run a Docker container for Step3 (De-novo Peptide Sequencing)
  */
 export async function runStep3Container(params: Step3ContainerParams): Promise<DockerRunResult> {
   const { projectName, spectraPath, casanovoConfigPath, modelPath, outputPath, logPath, taskUuid } = params
@@ -12,7 +12,7 @@ export async function runStep3Container(params: Step3ContainerParams): Promise<D
   const step3Image = REQUIRED_IMAGES.find(img => img.step === 'step3')
   
   if (!step3Image) {
-    return { success: false, error: 'Step3 이미지를 찾을 수 없습니다.' }
+    return { success: false, error: 'Step3 image not found' }
   }
 
   const containerName = `step3-${projectName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`
@@ -20,8 +20,8 @@ export async function runStep3Container(params: Step3ContainerParams): Promise<D
   // 로그 파일 경로 생성
   const logFilePath = generateLogFilePath(logPath, '3', taskUuid)
 
-  // Docker 컨테이너 실행 (bind mount 사용)
-  // docker-compose.yml 기준:
+  // Run a Docker container (bind mount)
+  // Based on docker-compose.yml:
   // - spectraPath -> /app/data/mgf/spectra.mgf
   // - casanovoConfigPath -> /app/data/casanovo.yaml
   // - modelPath -> /app/data/model.ckpt

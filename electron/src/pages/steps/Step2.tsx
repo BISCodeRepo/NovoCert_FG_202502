@@ -70,7 +70,7 @@ function Step2() {
 
           <div className="border-t pt-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Step 설명
+              Step Description
             </h3>
             <div className="space-y-3 text-sm text-gray-600">
               <p>이 단계에서는 Casanovo 설정 파일을 다운로드합니다.</p>

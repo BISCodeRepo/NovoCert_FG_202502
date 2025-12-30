@@ -11,10 +11,9 @@ export interface SelectFileResult {
 }
 
 /**
- * 파일 선택 다이얼로그를 표시합니다.
- * @param window 브라우저 윈도우 인스턴스
- * @param options 파일 선택 옵션 (필터, 기본 경로)
- * @returns 선택된 파일 경로 또는 취소 여부
+ * @param window Browser window instance
+ * @param options File selection options (filters, default path)
+ * @returns Selected file path or cancellation status
  */
 export function selectFile(
   window: BrowserWindow | null,
@@ -51,9 +50,9 @@ export interface SelectFolderResult {
 }
 
 /**
- * 폴더 선택 다이얼로그를 표시합니다.
- * @param window 브라우저 윈도우 인스턴스
- * @returns 선택된 폴더 경로 또는 취소 여부
+ * Show a folder selection dialog
+ * @param window Browser window instance
+ * @returns Selected folder path or cancellation status
  */
 export function selectFolder(window: BrowserWindow | null): Promise<SelectFolderResult> {
   if (!window) {
