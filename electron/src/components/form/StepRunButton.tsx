@@ -78,10 +78,10 @@ function StepRunButton({
       </button>
       {!isFormValid && !isRunning && (
         <p className="mt-2 text-sm text-red-600 text-center">
-          모든 필수 파라미터를 입력해주세요
+          Please enter all required parameters.
         </p>
       )}
-      {/* 결과 메시지 */}
+      {/* Result message */}
       {message && (
         <div
           className={`mt-4 p-4 rounded-lg ${
