@@ -24,10 +24,10 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
           const taskData = await window.db.getTasksByProject(uuid);
           setTasks(taskData as Task[]);
         } else {
-          setError("프로젝트를 찾을 수 없습니다.");
+          setError("Project not found.");
         }
       } catch (err) {
-        setError("데이터를 불러오는 중 오류가 발생했습니다.");
+        setError("Error loading data.");
         console.error(err);
       } finally {
         setLoading(false);
@@ -53,7 +53,7 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
           onClick={() => onNavigate("dashboard", "")}
           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
         >
-          대시보드로 돌아가기
+          Go to Dashboard
         </button>
       </div>
     );
@@ -70,11 +70,11 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
           onClick={() => onNavigate("dashboard", "")}
           className="text-sm text-blue-600 hover:underline"
         >
-          &larr; 대시보드로 돌아가기
+          &larr; Go to Dashboard
         </button>
       </div>
 
-      {/* 프로젝트 정보 */}
+      {/* Project information */}
       <div className="bg-white rounded-lg shadow-sm mb-8">
         <div className="px-6 py-4 border-b border-gray-200">
           <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
@@ -97,16 +97,16 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
         </div>
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-200">
             <div>
-                <p className="text-xs text-gray-500 uppercase">생성일</p>
+                <p className="text-xs text-gray-500 uppercase">Created At</p>
                 <p className="text-sm text-gray-800">{project.created_at ? new Date(project.created_at).toLocaleString() : '-'}</p>
             </div>
             <div>
-                <p className="text-xs text-gray-500 uppercase">수정일</p>
+                <p className="text-xs text-gray-500 uppercase">Updated At</p>
                 <p className="text-sm text-gray-800">{project.updated_at ? new Date(project.updated_at).toLocaleString() : '-'}</p>
             </div>
         </div>
         <div className="px-6 py-4 bg-gray-50 rounded-b-lg">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">프로젝트 파라미터</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">Project Parameters</h3>
             <pre className="bg-gray-100 p-3 rounded-md text-xs text-gray-600 overflow-x-auto">
                 {JSON.stringify(project.parameters, null, 2)}
             </pre>
@@ -117,12 +117,12 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
       <div className="bg-white rounded-lg shadow-sm">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
-            관련 태스크 <span className="text-gray-500">({tasks.length})</span>
+            Related Tasks <span className="text-gray-500">({tasks.length})</span>
           </h2>
         </div>
         {tasks.length === 0 ? (
           <div className="p-12 text-center">
-            <p className="text-gray-500">이 프로젝트에 대한 태스크가 없습니다.</p>
+            <p className="text-gray-500">No tasks for this project.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">

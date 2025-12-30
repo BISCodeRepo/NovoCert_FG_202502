@@ -28,14 +28,14 @@ function Step3() {
     text: string;
   } | null>(null);
 
-  // Step1 프로젝트 조회
+  // Get the Step1 projects
   useEffect(() => {
     const loadStep1Projects = async () => {
       try {
         const projects = await window.db.getProjects();
         const tasks = await window.db.getTasks();
 
-        // Step1 task가 있는 프로젝트 필터링
+        // Filter projects that have Step1 tasks
         const step1ProjectsList: Project[] = [];
         for (const project of projects) {
           const projectTasks = tasks.filter(
@@ -57,7 +57,7 @@ function Step3() {
     }
   }, [mgfSourceType]);
 
-  // 선택된 프로젝트의 Step1 task 조회
+  // Get the Step1 task of the selected project
   useEffect(() => {
     const loadStep1Tasks = async () => {
       if (!selectedStep1ProjectUuid) {
@@ -72,7 +72,7 @@ function Step3() {
         );
         const step1TaskList = tasks.filter((task) => task.step === "1");
         setStep1Tasks(step1TaskList);
-        setSelectedStep1TaskUuid(""); // 프로젝트 변경 시 task 초기화
+        setSelectedStep1TaskUuid(""); // Reset task when project changes
       } catch (error) {
         console.error("Step1 task 조회 실패:", error);
       }
@@ -83,7 +83,7 @@ function Step3() {
     }
   }, [mgfSourceType, selectedStep1ProjectUuid]);
 
-  // 선택된 Step1 task의 outputPath에서 가장 최근 .mgf 파일 찾기
+  // Find the most recently modified .mgf file in the outputPath directory of the selected Step1 task
   useEffect(() => {
     const findLatestMgfFile = async () => {
       if (mgfSourceType === "step1" && selectedStep1TaskUuid) {
@@ -93,7 +93,7 @@ function Step3() {
         if (selectedTask?.parameters?.outputPath) {
           const outputPath = selectedTask.parameters.outputPath as string;
           try {
-            // outputPath 디렉토리에서 가장 최근 .mgf 파일 찾기
+            // Find the most recently modified .mgf file in the outputPath directory
             const result = await window.fs.findLatestFile(outputPath, "mgf");
             if (result.success && result.path) {
               setSpectraPath(result.path);
@@ -101,15 +101,15 @@ function Step3() {
               setSpectraPath("");
               setMessage({
                 type: "error",
-                text: result.error || "MGF 파일을 찾을 수 없습니다",
+                text: result.error || "MGF file not found",
               });
             }
           } catch (error) {
-            console.error("MGF 파일 조회 실패:", error);
+            console.error("MGF file lookup failed:", error);
             setSpectraPath("");
             setMessage({
               type: "error",
-              text: "MGF 파일 조회 중 오류가 발생했습니다",
+              text: "Error occurred while looking for MGF file",
             });
           }
         }
@@ -121,7 +121,7 @@ function Step3() {
     findLatestMgfFile();
   }, [mgfSourceType, selectedStep1TaskUuid, step1Tasks]);
 
-  // 모든 필수 파라미터가 입력되었는지 확인
+  // Check if all required parameters are entered
   const isFormValid = () => {
     const spectraPathValid =
       mgfSourceType === "step1"
@@ -139,7 +139,7 @@ function Step3() {
     );
   };
 
-  // Run Step 3 버튼 클릭 핸들러
+  // Run Step 3 button click handler
   const handleRunStep3 = async () => {
     if (!isFormValid()) {
       return;
@@ -149,7 +149,7 @@ function Step3() {
     setMessage(null);
 
     try {
-      // Step1 task에서 선택한 경우 실제 spectraPath는 이미 선택된 파일 경로 사용
+      // If the Step1 task is selected, use the actual spectraPath which is already selected
       const finalSpectraPath = spectraPath;
 
       const result = await window.step.runStep3({
@@ -163,23 +163,23 @@ function Step3() {
       if (result.success) {
         setMessage({
           type: "success",
-          text: `프로젝트 "${projectName}"가 생성되었고, Step 3이 실행 중입니다. (Container ID: ${result.containerId?.substring(
+          text: `Project "${projectName}" has been created and Step 3 is running. (Container ID: ${result.containerId?.substring(
             0,
             12
           )})`,
         });
-        console.log("Step3 실행 결과:", result);
+        console.log("Step3 execution result:", result);
       } else {
         setMessage({
           type: "error",
-          text: `Step 3 실행 실패: ${result.error}`,
+          text: `Step 3 execution failed: ${result.error}`,
         });
       }
     } catch (error: unknown) {
-      console.error("Step3 실행 중 에러:", error);
+      console.error("Step3 execution error:", error);
       setMessage({
         type: "error",
-        text: `예상치 못한 오류: ${
+        text: `Unexpected error: ${
           error instanceof Error ? error.message : "Unknown error"
         }`,
       });
@@ -190,7 +190,6 @@ function Step3() {
 
   return (
     <div className="h-full flex gap-6">
-      {/* 왼쪽: 프로젝트 및 Step 정보 */}
       <div className="w-1/3">
         <div className="bg-white rounded-lg shadow-sm p-6 sticky top-0">
           <div className="mb-6">
@@ -204,17 +203,16 @@ function Step3() {
             </h3>
             <div className="space-y-3 text-sm text-gray-600">
               <p>
-                이 단계에서는 Casanovo를 사용하여 De-novo 펩타이드 시퀀싱을
-                수행합니다.
+                In this step, Casanovo is used to perform de-novo peptide sequencing.
               </p>
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="font-medium text-gray-700 mb-2">필요한 입력:</p>
+                <p className="font-medium text-gray-700 mb-2">Required input:</p>
                 <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li>프로젝트 이름</li>
-                  <li>Spectra MGF 파일 경로</li>
-                  <li>Casanovo 설정 파일 경로 (Step2의 출력)</li>
-                  <li>모델 파일 경로 (.ckpt)</li>
-                  <li>출력 폴더 경로</li>
+                  <li>Project name</li>
+                  <li>Spectra MGF file path</li>
+                  <li>Casanovo configuration file path (Step2 output)</li>
+                  <li>Model file path (.ckpt)</li>
+                  <li>Output folder path</li>
                 </ul>
               </div>
             </div>
@@ -236,18 +234,17 @@ function Step3() {
                 />
               </svg>
               <p className="text-xs text-yellow-800">
-                모든 파라미터를 입력한 후 실행 버튼을 클릭하세요.
+                Please click the Run button after entering all parameters.
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 오른쪽: 파라미터 입력 */}
       <div className="flex-1">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            파라미터 설정
+            Parameter Settings
           </h2>
 
           <div className="space-y-6">
@@ -255,12 +252,11 @@ function Step3() {
               label="Project Name"
               value={projectName}
               onChange={setProjectName}
-              placeholder="프로젝트 이름 입력"
+              placeholder="Enter the project name"
               required={true}
-              description="새로 시작할 프로젝트의 이름을 입력하세요"
+              description="Enter the name of the project to start a new one"
             />
 
-            {/* MGF 파일 소스 선택 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Spectra MGF File Source
@@ -278,7 +274,7 @@ function Step3() {
                     }
                     className="mr-2"
                   />
-                  <span className="text-sm text-gray-700">Step1 프로젝트</span>
+                  <span className="text-sm text-gray-700">Step1 Project</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -291,7 +287,7 @@ function Step3() {
                     }
                     className="mr-2"
                   />
-                  <span className="text-sm text-gray-700">Custom 경로</span>
+                  <span className="text-sm text-gray-700">Custom Path</span>
                 </label>
               </div>
 
@@ -299,7 +295,7 @@ function Step3() {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Step1 프로젝트 선택
+                      Select Step1 Project
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <select
@@ -311,7 +307,7 @@ function Step3() {
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     >
-                      <option value="">Step1 프로젝트 선택</option>
+                      <option value="">Select Step1 Project</option>
                       {step1Projects.map((project) => (
                         <option key={project.uuid} value={project.uuid}>
                           {project.name}
@@ -323,18 +319,18 @@ function Step3() {
                   {selectedStep1ProjectUuid && step1Tasks.length > 0 && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Step1 Task 선택
+                        Select Step1 Task
                         <span className="text-red-500 ml-1">*</span>
                       </label>
                       <select
                         value={selectedStep1TaskUuid}
                         onChange={(e) => {
                           setSelectedStep1TaskUuid(e.target.value);
-                          setSpectraPath(""); // task 변경 시 파일 경로 초기화
+                          setSpectraPath(""); // Reset file path when task changes
                         }}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       >
-                        <option value="">Step1 Task 선택</option>
+                        <option value="">Select Step1 Task</option>
                         {step1Tasks.map((task) => (
                           <option key={task.uuid} value={task.uuid}>
                             Task {task.uuid.substring(0, 8)}... ({task.status})
@@ -355,8 +351,7 @@ function Step3() {
                         {spectraPath}
                       </div>
                       <p className="mt-1 text-xs text-gray-500">
-                        선택한 Step1 task의 출력 디렉토리에서 가장 최근 생성된
-                        .mgf 파일이 자동으로 선택되었습니다
+                        The most recently created .mgf file in the output directory of the selected Step1 task has been automatically selected.
                       </p>
                     </div>
                   )}
@@ -368,7 +363,7 @@ function Step3() {
                   onChange={setSpectraPath}
                   placeholder="/path/to/spectra.mgf"
                   required={true}
-                  description="스펙트라 MGF 파일의 전체 경로 (컨테이너 내부 /app/data/mgf/spectra.mgf에 마운트됩니다)"
+                  description="The full path of the Spectra MGF file (mounted inside the container at /app/data/mgf/spectra.mgf)"
                   filters={[{ name: "MGF Files", extensions: ["mgf"] }]}
                 />
               )}
@@ -380,7 +375,7 @@ function Step3() {
               onChange={setCasanovoConfigPath}
               placeholder="/path/to/casanovo.yaml"
               required={true}
-              description="Casanovo 설정 파일 경로 (Step2의 출력, 컨테이너 내부 /app/data/casanovo.yaml에 마운트됩니다)"
+              description="The full path of the Casanovo configuration file (Step2 output, mounted inside the container at /app/data/casanovo.yaml)"
               filters={[{ name: "YAML Files", extensions: ["yaml", "yml"] }]}
             />
 
@@ -390,7 +385,7 @@ function Step3() {
               onChange={setModelPath}
               placeholder="/path/to/model.ckpt"
               required={true}
-              description="Casanovo 모델 파일 경로 (.ckpt, 컨테이너 내부 /app/data/model.ckpt에 마운트됩니다)"
+              description="The full path of the Casanovo model file (.ckpt, mounted inside the container at /app/data/model.ckpt)"
               filters={[{ name: "Model Files", extensions: ["ckpt"] }]}
             />
 
@@ -400,7 +395,7 @@ function Step3() {
               onChange={setOutputPath}
               placeholder="/path/to/output/folder"
               required={true}
-              description="결과를 저장할 폴더의 전체 경로 (컨테이너 내부 /app/output/에 마운트됩니다)"
+              description="The full path of the folder to save the results (mounted inside the container at /app/output/)"
             />
           </div>
 

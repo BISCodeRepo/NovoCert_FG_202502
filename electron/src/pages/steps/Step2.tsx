@@ -33,23 +33,23 @@ function Step2() {
       if (result.success) {
         setMessage({
           type: "success",
-          text: `프로젝트 "${projectName}"가 생성되었고, Step 2가 실행 중입니다. (Container ID: ${result.containerId?.substring(
+          text: `Project "${projectName}" has been created and Step 2 is running. (Container ID: ${result.containerId?.substring(
             0,
             12
           )})`,
         });
-        console.log("Step2 실행 결과:", result);
+        console.log("Step2 execution result:", result);
       } else {
         setMessage({
           type: "error",
-          text: `Step 2 실행 실패: ${result.error}`,
+          text: `Step 2 execution failed: ${result.error}`,
         });
       }
     } catch (error: unknown) {
-      console.error("Step2 실행 중 에러:", error);
+      console.error("Step2 execution error:", error);
       setMessage({
         type: "error",
-        text: `예상치 못한 오류: ${
+        text: `Unexpected error: ${
           error instanceof Error ? error.message : "Unknown error"
         }`,
       });
@@ -60,7 +60,7 @@ function Step2() {
 
   return (
     <div className="h-full flex gap-6">
-      {/* 왼쪽: 프로젝트 및 Step 정보 */}
+      {/* Left: Project and Step information */}
       <div className="w-1/3">
         <div className="bg-white rounded-lg shadow-sm p-6 sticky top-0">
           <div className="mb-6">
@@ -73,12 +73,12 @@ function Step2() {
               Step Description
             </h3>
             <div className="space-y-3 text-sm text-gray-600">
-              <p>이 단계에서는 Casanovo 설정 파일을 다운로드합니다.</p>
+              <p>In this step, the Casanovo configuration file is downloaded.</p>
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="font-medium text-gray-700 mb-2">필요한 입력:</p>
+                <p className="font-medium text-gray-700 mb-2">Required input:</p>
                 <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li>프로젝트 이름</li>
-                  <li>출력 폴더 경로 (bind mount to /app/output/)</li>
+                  <li>Project name</li>
+                  <li>Output folder path (bind mount to /app/output/)</li>
                 </ul>
               </div>
             </div>
@@ -100,18 +100,18 @@ function Step2() {
                 />
               </svg>
               <p className="text-xs text-yellow-800">
-                모든 파라미터를 입력한 후 실행 버튼을 클릭하세요.
+                Please click the Run button after entering all parameters.
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 오른쪽: 파라미터 입력 */}
+      {/* Right: Parameter input */}
       <div className="flex-1">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            파라미터 설정
+            Parameter Settings
           </h2>
 
           <div className="space-y-6">
@@ -119,9 +119,9 @@ function Step2() {
               label="Project Name"
               value={projectName}
               onChange={setProjectName}
-              placeholder="프로젝트 이름 입력"
+              placeholder="Enter the project name"
               required={true}
-              description="새로 시작할 프로젝트의 이름을 입력하세요"
+              description="Enter the name of the project to start a new one"
             />
 
             <PathInput
@@ -130,7 +130,7 @@ function Step2() {
               onChange={setOutputPath}
               placeholder="/path/to/output/folder"
               required={true}
-              description="Casanovo 설정 파일을 저장할 폴더의 전체 경로 (컨테이너 내부 /app/output/에 마운트됩니다)"
+              description="The full path of the folder to save the Casanovo configuration file (mounted inside the container at /app/output/)"
             />
           </div>
 

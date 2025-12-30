@@ -20,10 +20,10 @@ function TaskDetail({ uuid, onNavigate }: TaskDetailProps) {
         if (taskData) {
           setTask(taskData as Task);
         } else {
-          setError("태스크를 찾을 수 없습니다.");
+          setError("Task not found.");
         }
       } catch (err) {
-        setError("데이터를 불러오는 중 오류가 발생했습니다.");
+        setError("Error loading data.");
         console.error(err);
       } finally {
         setLoading(false);
@@ -36,7 +36,7 @@ function TaskDetail({ uuid, onNavigate }: TaskDetailProps) {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <p className="text-gray-500">로딩 중...</p>
+        <p className="text-gray-500">Loading...</p>
       </div>
     );
   }
@@ -49,7 +49,7 @@ function TaskDetail({ uuid, onNavigate }: TaskDetailProps) {
           onClick={() => onNavigate("dashboard", "")}
           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
         >
-          대시보드로 돌아가기
+          Go to Dashboard
         </button>
       </div>
     );
@@ -66,11 +66,11 @@ function TaskDetail({ uuid, onNavigate }: TaskDetailProps) {
           onClick={() => onNavigate("project-detail", task.project_uuid)}
           className="text-sm text-blue-600 hover:underline"
         >
-          &larr; 프로젝트 상세로 돌아가기
+          &larr; Go to Project Detail
         </button>
       </div>
 
-      {/* 태스크 정보 */}
+      {/* Task information */}
       <div className="bg-white rounded-lg shadow-sm">
         <div className="px-6 py-4 border-b border-gray-200">
           <h1 className="text-2xl font-bold text-gray-900">Task Details</h1>

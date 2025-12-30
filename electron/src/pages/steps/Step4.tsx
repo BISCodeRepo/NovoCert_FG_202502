@@ -53,23 +53,23 @@ function Step4() {
       if (result.success) {
         setMessage({
           type: "success",
-          text: `프로젝트 "${projectName}"가 생성되었고, Step 4가 실행 중입니다. (Container ID: ${result.containerId?.substring(
+          text: `Project "${projectName}" has been created and Step 4 is running. (Container ID: ${result.containerId?.substring(
             0,
             12
           )})`,
         });
-        console.log("Step4 실행 결과:", result);
+        console.log("Step4 execution result:", result);
       } else {
         setMessage({
           type: "error",
-          text: `Step 4 실행 실패: ${result.error}`,
+          text: `Step 4 execution failed: ${result.error}`,
         });
       }
     } catch (error: unknown) {
-      console.error("Step4 실행 중 에러:", error);
+      console.error("Step4 execution error:", error);
       setMessage({
         type: "error",
-        text: `예상치 못한 오류: ${
+        text: `Unexpected error: ${
           error instanceof Error ? error.message : "Unknown error"
         }`,
       });
@@ -80,7 +80,6 @@ function Step4() {
 
   return (
     <div className="h-full flex gap-6">
-      {/* 왼쪽: 프로젝트 및 Step 정보 */}
       <div className="w-1/3">
         <div className="bg-white rounded-lg shadow-sm p-6 sticky top-0">
           <div className="mb-6">
@@ -94,17 +93,17 @@ function Step4() {
             </h3>
             <div className="space-y-3 text-sm text-gray-600">
               <p>
-                이 단계에서는 Feature Calculation을 수행합니다 (p3 이미지 사용).
+                In this step, Feature Calculation is performed (using p3 image).
               </p>
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="font-medium text-gray-700 mb-2">필요한 입력:</p>
+                <p className="font-medium text-gray-700 mb-2">Required input:</p>
                 <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li>프로젝트 이름</li>
-                  <li>Target MGF 디렉토리</li>
-                  <li>Target DNPS 결과 파일 (mztab)</li>
-                  <li>Decoy MGF 디렉토리</li>
-                  <li>Decoy DNPS 결과 파일 (mztab)</li>
-                  <li>출력 폴더 경로</li>
+                  <li>Project name</li>
+                  <li>Target MGF directory</li>
+                  <li>Target DNPS result file (mztab)</li>
+                  <li>Decoy MGF directory</li>
+                  <li>Decoy DNPS result file (mztab)</li>
+                  <li>Output folder path</li>
                 </ul>
               </div>
             </div>
@@ -126,18 +125,17 @@ function Step4() {
                 />
               </svg>
               <p className="text-xs text-yellow-800">
-                모든 파라미터를 입력한 후 실행 버튼을 클릭하세요.
+                Please click the Run button after entering all parameters.
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 오른쪽: 파라미터 입력 */}
       <div className="flex-1">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            파라미터 설정
+            Parameter Settings
           </h2>
 
           <div className="space-y-6">
@@ -145,9 +143,9 @@ function Step4() {
               label="Project Name"
               value={projectName}
               onChange={setProjectName}
-              placeholder="프로젝트 이름 입력"
+              placeholder="Enter the project name"
               required={true}
-              description="새로 시작할 프로젝트의 이름을 입력하세요"
+              description="Enter the name of the project to start a new one"
             />
 
             <PathInput
@@ -156,7 +154,7 @@ function Step4() {
               onChange={setTargetMgfDir}
               placeholder="/path/to/target/mgf"
               required={true}
-              description="Target MGF 파일들이 있는 디렉토리 경로 (컨테이너 내부 /app/target/mgf에 마운트됩니다)"
+              description="The full path of the directory containing the Target MGF files (mounted inside the container at /app/target/mgf)"
             />
 
             <FileInput
@@ -165,7 +163,7 @@ function Step4() {
               onChange={setTargetResultPath}
               placeholder="/path/to/target/result.mztab"
               required={true}
-              description="Target DNPS 결과 파일 경로 (mztab, 컨테이너 내부 /app/target/result.mztab에 마운트됩니다)"
+              description="The full path of the Target DNPS result file (mztab, mounted inside the container at /app/target/result.mztab)"
               filters={[{ name: "MZTAB Files", extensions: ["mztab"] }]}
             />
 
@@ -175,7 +173,7 @@ function Step4() {
               onChange={setDecoyMgfDir}
               placeholder="/path/to/decoy/mgf"
               required={true}
-              description="Decoy MGF 파일들이 있는 디렉토리 경로 (컨테이너 내부 /app/decoy/mgf에 마운트됩니다)"
+              description="The full path of the directory containing the Decoy MGF files (mounted inside the container at /app/decoy/mgf)"
             />
 
             <FileInput
@@ -184,7 +182,7 @@ function Step4() {
               onChange={setDecoyResultPath}
               placeholder="/path/to/decoy/result.mztab"
               required={true}
-              description="Decoy DNPS 결과 파일 경로 (mztab, 컨테이너 내부 /app/decoy/result.mztab에 마운트됩니다)"
+              description="The full path of the Decoy DNPS result file (mztab, mounted inside the container at /app/decoy/result.mztab)"
               filters={[{ name: "MZTAB Files", extensions: ["mztab"] }]}
             />
 
@@ -194,7 +192,7 @@ function Step4() {
               onChange={setOutputPath}
               placeholder="/path/to/output/folder"
               required={true}
-              description="결과를 저장할 폴더의 전체 경로 (컨테이너 내부 /app/output에 마운트됩니다)"
+              description="The full path of the folder to save the results (mounted inside the container at /app/output)"
             />
           </div>
 
