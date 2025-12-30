@@ -6,6 +6,7 @@ import {
   StepRunButton,
 } from "../../components/form";
 import type { Project, Task } from "../../types";
+import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 
 function Step3() {
   const [projectName, setProjectName] = useState("");
@@ -27,6 +28,8 @@ function Step3() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [projectUuid, setProjectUuid] = useState<string | null>(null);
+  const [containerId, setContainerId] = useState<string | null>(null);
 
   // Get the Step1 projects
   useEffect(() => {
@@ -160,14 +163,10 @@ function Step3() {
         outputPath,
       });
 
-      if (result.success) {
-        setMessage({
-          type: "success",
-          text: `Project "${projectName}" has been created and Step 3 is running. (Container ID: ${result.containerId?.substring(
-            0,
-            12
-          )})`,
-        });
+      if (result.success && result.project) {
+        setProjectUuid(result.project.uuid);
+        setContainerId(result.containerId || null);
+        setMessage(null);
         console.log("Step3 execution result:", result);
       } else {
         setMessage({
@@ -406,6 +405,13 @@ function Step3() {
             isFormValid={isFormValid()}
             isRunning={isRunning}
             message={message}
+          />
+          {/* Project Status Monitor */}
+          <ProjectStatusMonitor 
+            projectUuid={projectUuid}
+            projectName={projectName}
+            containerId={containerId}
+            stepNumber={3}
           />
         </div>
       </div>

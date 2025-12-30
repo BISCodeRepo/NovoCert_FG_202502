@@ -5,6 +5,7 @@ import {
   NumberInput,
   StepRunButton,
 } from "../../components/form";
+import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 
 function Step1() {
   const [projectName, setProjectName] = useState("");
@@ -18,6 +19,8 @@ function Step1() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [projectUuid, setProjectUuid] = useState<string | null>(null);
+  const [containerId, setContainerId] = useState<string | null>(null);
 
   // Check if all required parameters are entered
   const isFormValid = () => {
@@ -50,14 +53,10 @@ function Step1() {
         randomSeed: randomSeed.trim(),
       });
 
-      if (result.success) {
-        setMessage({
-          type: "success",
-          text: `프로젝트 "${projectName}"가 생성되었고, Step 1이 실행 중입니다. (Container ID: ${result.containerId?.substring(
-            0,
-            12
-          )})`,
-        });
+      if (result.success && result.project) {
+        setProjectUuid(result.project.uuid);
+        setContainerId(result.containerId || null);
+        setMessage(null);
         console.log("Step1 실행 결과:", result);
       } else {
         setMessage({
@@ -197,6 +196,13 @@ function Step1() {
             isFormValid={isFormValid()}
             isRunning={isRunning}
             message={message}
+          />
+          {/* Project Status Monitor */}
+          <ProjectStatusMonitor 
+            projectUuid={projectUuid}
+            projectName={projectName}
+            containerId={containerId}
+            stepNumber={1}
           />
         </div>
       </div>

@@ -5,6 +5,7 @@ import {
   FileInput,
   StepRunButton,
 } from "../../components/form";
+import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 
 function Step4() {
   const [projectName, setProjectName] = useState("");
@@ -18,6 +19,8 @@ function Step4() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [projectUuid, setProjectUuid] = useState<string | null>(null);
+  const [containerId, setContainerId] = useState<string | null>(null);
 
   // Check if all required parameters are entered
   const isFormValid = () => {
@@ -50,14 +53,10 @@ function Step4() {
         outputPath,
       });
 
-      if (result.success) {
-        setMessage({
-          type: "success",
-          text: `Project "${projectName}" has been created and Step 4 is running. (Container ID: ${result.containerId?.substring(
-            0,
-            12
-          )})`,
-        });
+      if (result.success && result.project) {
+        setProjectUuid(result.project.uuid);
+        setContainerId(result.containerId || null);
+        setMessage(null);
         console.log("Step4 execution result:", result);
       } else {
         setMessage({
@@ -203,6 +202,13 @@ function Step4() {
             isFormValid={isFormValid()}
             isRunning={isRunning}
             message={message}
+          />
+          {/* Project Status Monitor */}
+          <ProjectStatusMonitor 
+            projectUuid={projectUuid}
+            projectName={projectName}
+            containerId={containerId}
+            stepNumber={4}
           />
         </div>
       </div>

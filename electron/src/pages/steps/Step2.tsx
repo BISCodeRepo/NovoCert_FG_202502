@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PathInput, TextInput, StepRunButton } from "../../components/form";
+import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 
 function Step2() {
   const [projectName, setProjectName] = useState("");
@@ -9,6 +10,8 @@ function Step2() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [projectUuid, setProjectUuid] = useState<string | null>(null);
+  const [containerId, setContainerId] = useState<string | null>(null);
 
   // Check if all required parameters are entered
   const isFormValid = () => {
@@ -30,14 +33,10 @@ function Step2() {
         outputPath,
       });
 
-      if (result.success) {
-        setMessage({
-          type: "success",
-          text: `Project "${projectName}" has been created and Step 2 is running. (Container ID: ${result.containerId?.substring(
-            0,
-            12
-          )})`,
-        });
+      if (result.success && result.project) {
+        setProjectUuid(result.project.uuid);
+        setContainerId(result.containerId || null);
+        setMessage(null);
         console.log("Step2 execution result:", result);
       } else {
         setMessage({
@@ -141,6 +140,13 @@ function Step2() {
             isFormValid={isFormValid()}
             isRunning={isRunning}
             message={message}
+          />
+          {/* Project Status Monitor */}
+          <ProjectStatusMonitor 
+            projectUuid={projectUuid}
+            projectName={projectName}
+            containerId={containerId}
+            stepNumber={2}
           />
         </div>
       </div>
