@@ -9,7 +9,6 @@ import {
   Step4,
   Step5,
   ProjectDetail,
-  TaskDetail,
 } from "./pages";
 
 function App() {
@@ -17,18 +16,13 @@ function App() {
   const [currentProjectUuid, setCurrentProjectUuid] = useState<string | null>(
     null
   );
-  const [currentTaskUuid, setCurrentTaskUuid] = useState<string | null>(null);
 
   const handleNavigate = (page: string, uuid: string) => {
     setCurrentPage(page);
     if (page === "project-detail") {
       setCurrentProjectUuid(uuid);
-      setCurrentTaskUuid(null);
-    } else if (page === "task-detail") {
-      setCurrentTaskUuid(uuid);
     } else {
       setCurrentProjectUuid(null);
-      setCurrentTaskUuid(null);
     }
   };
 
@@ -51,21 +45,6 @@ function App() {
       case "step5":
         return <Step5 />;
       case "project-detail":
-        if (currentProjectUuid) {
-          return (
-            <ProjectDetail
-              uuid={currentProjectUuid}
-              onNavigate={handleNavigate}
-            />
-          );
-        }
-        return <Dashboard onNavigate={handleNavigate} />;
-      case "task-detail":
-        if (currentTaskUuid) {
-          return (
-            <TaskDetail uuid={currentTaskUuid} onNavigate={handleNavigate} />
-          );
-        }
         if (currentProjectUuid) {
           return (
             <ProjectDetail
