@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto'
 export interface Project {
   uuid: string
   name: string
+  step: string
   status: string
   parameters: Record<string, unknown>
   created_at: string

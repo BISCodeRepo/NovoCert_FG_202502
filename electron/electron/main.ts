@@ -138,35 +138,6 @@ function setupIpcHandlers() {
     return database.projects.getDbPath()
   })
 
-  // Task handlers
-  ipcMain.handle('db:getTasks', async () => {
-    return await database.tasks.getAll()
-  })
-
-  ipcMain.handle('db:getTasksByProject', async (_, projectUuid) => {
-    return await database.tasks.getByProject(projectUuid)
-  })
-
-  ipcMain.handle('db:getTask', async (_, uuid) => {
-    return await database.tasks.getOne(uuid)
-  })
-
-  ipcMain.handle('db:addTask', async (_, task) => {
-    return await database.tasks.create(task)
-  })
-
-  ipcMain.handle('db:updateTask', async (_, uuid, updates) => {
-    return await database.tasks.update(uuid, updates)
-  })
-
-  ipcMain.handle('db:deleteTask', async (_, uuid) => {
-    return await database.tasks.delete(uuid)
-  })
-
-  ipcMain.handle('db:deleteTasksByProject', async (_, projectUuid) => {
-    return await database.tasks.deleteByProject(projectUuid)
-  })
-
   // Dialog 핸들러 - 폴더 선택
   ipcMain.handle('dialog:selectFolder', async () => {
     return await selectFolder(win)

@@ -8,7 +8,7 @@ export interface Step3Params {
 
 export interface Step3ContainerParams extends Step3Params {
   logPath: string // 로그 파일 경로
-  taskUuid: string // Task의 고유 ID
+  projectUuid: string // Project의 고유 ID
 }
 
 export interface DockerRunResult {
@@ -19,8 +19,15 @@ export interface DockerRunResult {
 
 export interface Step3Result {
   success: boolean
-  project?: { uuid: string; name: string; status: string; parameters: Record<string, unknown> }
-  task?: { uuid: string; project_uuid: string; step: string; status: string; parameters: Record<string, unknown>; created_at: string; updated_at: string }
+  project?: {
+    uuid: string
+    name: string
+    step: string
+    status: string
+    parameters: Record<string, unknown>
+    created_at: string
+    updated_at: string
+  }
   containerId?: string
   error?: string
 }

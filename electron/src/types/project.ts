@@ -4,6 +4,7 @@ export interface Project {
   uuid: string;
   name: string;
   status: ProjectStatus;
+  step: string | null;
   parameters: Record<string, unknown>;
   created_at: string;
   updated_at: string;

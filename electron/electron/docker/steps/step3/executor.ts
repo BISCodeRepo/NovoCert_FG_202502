@@ -7,7 +7,7 @@ import type { Step3ContainerParams, DockerRunResult } from './types'
  * Run a Docker container for Step3 (De-novo Peptide Sequencing)
  */
 export async function runStep3Container(params: Step3ContainerParams): Promise<DockerRunResult> {
-  const { projectName, spectraPath, casanovoConfigPath, modelPath, outputPath, logPath, taskUuid } = params
+  const { projectName, spectraPath, casanovoConfigPath, modelPath, outputPath, logPath, projectUuid } = params
   
   const step3Image = REQUIRED_IMAGES.find(img => img.step === 'step3')
   
@@ -18,7 +18,7 @@ export async function runStep3Container(params: Step3ContainerParams): Promise<D
   const containerName = `step3-${projectName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`
 
   // 로그 파일 경로 생성
-  const logFilePath = generateLogFilePath(logPath, '3', taskUuid)
+  const logFilePath = generateLogFilePath(logPath, '3', projectUuid)
 
   // Run a Docker container (bind mount)
   // Based on docker-compose.yml:

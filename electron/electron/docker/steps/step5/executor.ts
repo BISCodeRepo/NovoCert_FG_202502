@@ -7,7 +7,7 @@ import type { Step5ContainerParams, DockerRunResult } from './types'
  * Run a Docker container for Step5 (Percolator and FDR Control - p4 image)
  */
 export async function runStep5Container(params: Step5ContainerParams): Promise<DockerRunResult> {
-  const { projectName, inputPath, outputPath, logPath, taskUuid } = params
+  const { projectName, inputPath, outputPath, logPath, projectUuid } = params
   
   const step5Image = REQUIRED_IMAGES.find(img => img.step === 'step5')
   
@@ -18,7 +18,7 @@ export async function runStep5Container(params: Step5ContainerParams): Promise<D
   const containerName = `step5-${projectName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`
 
   // Generate the log file path
-  const logFilePath = generateLogFilePath(logPath, '5', taskUuid)
+  const logFilePath = generateLogFilePath(logPath, '5', projectUuid)
 
   // Run a Docker container (bind mount)
   // Based on docker-compose.yml (p4 image):

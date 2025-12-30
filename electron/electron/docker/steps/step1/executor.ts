@@ -7,7 +7,7 @@ import type { Step1ContainerParams, DockerRunResult } from './types'
  * Run a Docker container for Step1 (Decoy Spectra Generation)
  */
 export async function runStep1Container(params: Step1ContainerParams): Promise<DockerRunResult> {
-  const { projectName, inputPath, outputPath, logPath, taskUuid, memory, precursorTolerance, randomSeed } = params
+  const { projectName, inputPath, outputPath, logPath, projectUuid, memory, precursorTolerance, randomSeed } = params
 
   // Find the Step1 image
   const step1Image = REQUIRED_IMAGES.find(img => img.step === 'step1')
@@ -21,7 +21,7 @@ export async function runStep1Container(params: Step1ContainerParams): Promise<D
 
   const containerName = `step1-${projectName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`
   
-  const logFilePath = generateLogFilePath(logPath, '1', taskUuid)
+  const logFilePath = generateLogFilePath(logPath, '1', projectUuid)
 
   const environment: Record<string, string> = {
     PROJECT_NAME: projectName,

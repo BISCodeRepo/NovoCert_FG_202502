@@ -6,8 +6,8 @@ import fs from 'node:fs'
 
 /**
  * Execute the entire workflow for Step2.
- * 1. Create a Project
- * 2. Create a Task and create a Task-specific output folder
+ * 1. Create a Project with step information
+ * 2. Create a Project-specific output folder
  * 3. Run a Docker container
  * 4. Update the success/failure status
  */
@@ -16,107 +16,100 @@ export async function executeStep2Workflow(
   params: Step2Params
 ): Promise<Step2Result> {
   let project
-  let task
 
   try {
-    // 1. Create a Project
+    // 1. Create a Project with step information
     project = await database.projects.create({
       name: params.projectName,
+      step: '2',
       status: 'running',
       parameters: {
-        outputPath: params.outputPath // 프로젝트 레벨에서는 기본 출력 경로 저장
+        outputPath: params.outputPath // 프로젝트 레벨 기본 출력 경로
       }
     })
 
     console.log('Created project:', project)
 
-    // 2. Create a Task (status: running)
-    task = await database.tasks.create({
-      project_uuid: project.uuid,
-      step: '2',
-      status: 'running',
-      parameters: {
-        // outputPath is updated in the Task-specific output folder
-      }
-    })
-
-    console.log('Created task:', task)
-
-    // Create a Task-specific output folder
-    const baseTaskPath = path.join(params.outputPath, task.uuid)
-    const containerOutputPath = path.join(baseTaskPath, 'output')
-    const logPath = path.join(baseTaskPath, 'log')
+    // 2. Create a Project-specific output folder
+    const baseProjectPath = path.join(params.outputPath, project.uuid)
+    const containerOutputPath = path.join(baseProjectPath, 'output')
+    const logPath = path.join(baseProjectPath, 'log')
 
     fs.mkdirSync(containerOutputPath, { recursive: true })
     fs.mkdirSync(logPath, { recursive: true })
-    console.log(`Created task output directory: ${containerOutputPath}`)
-    console.log(`Created task log directory: ${logPath}`)
+    console.log(`Created project output directory: ${containerOutputPath}`)
+    console.log(`Created project log directory: ${logPath}`)
 
-    // Update the final paths for the Task
-    await database.tasks.update(task.uuid, {
+    // Update the project with step2-specific paths
+    const updatedProject = await database.projects.update(project.uuid, {
       parameters: {
-        ...task.parameters,
-        outputPath: containerOutputPath,
-        logPath: logPath,
+        ...project.parameters,
+        step2: {
+          outputPath: containerOutputPath,
+          logPath: logPath,
+        }
       }
     })
-    // Update the task variable with the latest information
-    task = (await database.tasks.getOne(task.uuid))!
+
+    if (!updatedProject) {
+      throw new Error('Failed to update project')
+    }
+    project = updatedProject
 
     // 3. Run a Docker container (bind mount)
     const dockerResult = await runStep2Container({
       projectName: params.projectName,
       outputPath: containerOutputPath, // Container result path
       logPath: logPath,                // Log file path
-      taskUuid: task.uuid
+      projectUuid: project.uuid
     })
 
     if (!dockerResult.success) {
-      // If the Docker container fails, update the Task status to failed
-      await database.tasks.update(task.uuid, {
+      // If the Docker container fails, update the Project status to failed
+      const failedProject = await database.projects.update(project.uuid, {
         status: 'failed',
         parameters: {
-          ...task.parameters,
+          ...project.parameters,
           error: dockerResult.error
         }
-      })
-
-      await database.projects.update(project.uuid, {
-        status: 'failed'
       })
 
       return {
         success: false,
         error: dockerResult.error,
-        project,
-        task
+        project: failedProject || project
       }
     }
 
     console.log('Docker container started:', dockerResult.containerId)
 
-    // Update the Task status - add containerId
-    await database.tasks.update(task.uuid, {
+    // Update the Project status - add containerId
+    const finalProject = await database.projects.update(project.uuid, {
       parameters: {
-        ...task.parameters,
-        containerId: dockerResult.containerId
+        ...project.parameters,
+        step2: {
+          ...(project.parameters.step2 as Record<string, unknown> || {}),
+          containerId: dockerResult.containerId
+        }
       }
     })
 
     return {
       success: true,
-      project,
-      task,
+      project: finalProject || project,
       containerId: dockerResult.containerId
     }
   } catch (error: unknown) {
     console.error('Error in executeStep2Workflow:', error)
-    // If an error occurs, update the project and task status to failed
-    if (task) {
-      await database.tasks.update(task.uuid, { status: 'failed', parameters: { ...task.parameters, error: error instanceof Error ? error.message : 'Unknown error' }})
-    }
+    // If an error occurs, update the project status to failed
     if (project) {
-      await database.projects.update(project.uuid, { status: 'failed' })
+      await database.projects.update(project.uuid, { 
+        status: 'failed',
+        parameters: {
+          ...project.parameters,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        }
+      })
     }
     return {
       success: false,

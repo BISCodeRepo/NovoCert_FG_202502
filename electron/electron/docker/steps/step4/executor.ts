@@ -7,7 +7,7 @@ import type { Step4ContainerParams, DockerRunResult } from './types'
  * Run a Docker container for Step4 (Feature Calculation - p3 image)
  */
 export async function runStep4Container(params: Step4ContainerParams): Promise<DockerRunResult> {
-  const { projectName, targetMgfDir, targetResultPath, decoyMgfDir, decoyResultPath, outputPath, logPath, taskUuid } = params
+  const { projectName, targetMgfDir, targetResultPath, decoyMgfDir, decoyResultPath, outputPath, logPath, projectUuid } = params
   
   const step4Image = REQUIRED_IMAGES.find(img => img.step === 'step4')
   
@@ -18,7 +18,7 @@ export async function runStep4Container(params: Step4ContainerParams): Promise<D
   const containerName = `step4-${projectName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`
 
   // Generate the log file path
-  const logFilePath = generateLogFilePath(logPath, '4', taskUuid)
+  const logFilePath = generateLogFilePath(logPath, '4', projectUuid)
 
   // Run a Docker container (bind mount)
   // Based on docker-compose.yml (p3 image):

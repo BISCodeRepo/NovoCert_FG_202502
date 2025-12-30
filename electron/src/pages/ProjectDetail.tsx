@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { Project, PROJECT_STATUS_LABELS, PROJECT_STATUS_COLORS } from "../types/project";
-import { Task, TASK_STATUS_LABELS, TASK_STATUS_COLORS } from "../types/task";
 
 interface ProjectDetailProps {
   uuid: string;
@@ -10,7 +9,6 @@ interface ProjectDetailProps {
 
 function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
   const [project, setProject] = useState<Project | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,8 +19,6 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
         const projectData = await window.db.getProject(uuid);
         if (projectData) {
           setProject(projectData as Project);
-          const taskData = await window.db.getTasksByProject(uuid);
-          setTasks(taskData as Task[]);
         } else {
           setError("Project not found.");
         }
@@ -94,6 +90,10 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
               {PROJECT_STATUS_LABELS[project.status]}
             </p>
           </div>
+          <div>
+            <p className="text-xs text-gray-500 uppercase">Step</p>
+            <p className="text-sm text-gray-800">{project.step || '-'}</p>
+          </div>
         </div>
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-200">
             <div>
@@ -111,61 +111,6 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
                 {JSON.stringify(project.parameters, null, 2)}
             </pre>
         </div>
-      </div>
-
-      {/* 태스크 목록 */}
-      <div className="bg-white rounded-lg shadow-sm">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Related Tasks <span className="text-gray-500">({tasks.length})</span>
-          </h2>
-        </div>
-        {tasks.length === 0 ? (
-          <div className="p-12 text-center">
-            <p className="text-gray-500">No tasks for this project.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task UUID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Step</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {tasks.map((task) => (
-                  <tr key={task.uuid} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">
-                      <button
-                        onClick={() => onNavigate("task-detail", task.uuid)}
-                        className="text-blue-600 hover:text-blue-800 hover:underline"
-                        title={task.uuid}
-                      >
-                        {task.uuid.split("-")[0]}...
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{task.step}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-3 py-1 inline-block rounded-full text-xs font-semibold ${
-                          TASK_STATUS_COLORS[task.status]
-                        }`}
-                      >
-                        {TASK_STATUS_LABELS[task.status]}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(task.created_at).toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
     </div>
   );

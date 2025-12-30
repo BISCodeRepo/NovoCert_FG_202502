@@ -32,7 +32,6 @@ function Dashboard({ onNavigate }: DashboardProps) {
   };
 
   const deleteProject = async (uuid: string) => {
-    await window.db.deleteTasksByProject(uuid);
     await window.db.deleteProject(uuid);
     loadProjects();
   };
