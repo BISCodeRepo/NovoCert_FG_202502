@@ -12,6 +12,7 @@ interface DockerRunOptions {
   platform?: string
   autoRemove?: boolean
   logFilePath?: string  // log file path (optional)
+  labels?: Record<string, string>  // Docker labels (e.g., { 'project_uuid': 'xxx', 'step': '1' })
 }
 
 interface DockerRunResult {
@@ -34,7 +35,8 @@ export async function runDockerContainer(options: DockerRunOptions): Promise<Doc
     command = [],
     platform,
     autoRemove = true,
-    logFilePath
+    logFilePath,
+    labels = {}
   } = options
 
   return new Promise((resolve) => {
@@ -64,6 +66,11 @@ export async function runDockerContainer(options: DockerRunOptions): Promise<Doc
     // Environment variables
     Object.entries(environment).forEach(([key, value]) => {
       args.push('-e', `${key}=${value}`)
+    })
+
+    // Labels
+    Object.entries(labels).forEach(([key, value]) => {
+      args.push('--label', `${key}=${value}`)
     })
 
     // Image name
@@ -257,6 +264,130 @@ export async function getContainerLogs(containerName: string): Promise<{ success
 
     dockerProcess.on('error', (error) => {
       resolve({ success: false, error: error.message })
+    })
+  })
+}
+
+/**
+ * Check if a container is running.
+ * @param containerId Container ID or name
+ * @returns true if container is running, false otherwise
+ */
+export async function isContainerRunning(containerId: string): Promise<{ success: boolean; running: boolean; error?: string }> {
+  return new Promise((resolve) => {
+    // Use docker ps with filter to check if container is running
+    const dockerProcess = spawn('docker', ['ps', '--filter', `id=${containerId}`, '--format', '{{.ID}}'], {
+      env: {
+        ...process.env,
+        PATH: getExtendedPath()
+      }
+    })
+
+    let output = ''
+    let errorOutput = ''
+
+    dockerProcess.stdout?.on('data', (data) => {
+      output += data.toString()
+    })
+
+    dockerProcess.stderr?.on('data', (data) => {
+      errorOutput += data.toString()
+    })
+
+    dockerProcess.on('close', (code) => {
+      if (code === 0) {
+        // If output is not empty, container is running
+        const running = output.trim().length > 0
+        resolve({ success: true, running })
+      } else {
+        resolve({ success: false, running: false, error: errorOutput || `Docker exited with code ${code}` })
+      }
+    })
+
+    dockerProcess.on('error', (error) => {
+      resolve({ success: false, running: false, error: error.message })
+    })
+  })
+}
+
+/**
+ * Get project UUID from a container by checking its labels.
+ * @param containerId Container ID or name
+ * @returns Project UUID if found, null otherwise
+ */
+export async function getProjectUuidFromContainer(containerId: string): Promise<{ success: boolean; projectUuid: string | null; error?: string }> {
+  return new Promise((resolve) => {
+    // Use docker inspect to get container labels
+    const dockerProcess = spawn('docker', ['inspect', '--format', '{{index .Config.Labels "project_uuid"}}', containerId], {
+      env: {
+        ...process.env,
+        PATH: getExtendedPath()
+      }
+    })
+
+    let output = ''
+    let errorOutput = ''
+
+    dockerProcess.stdout?.on('data', (data) => {
+      output += data.toString()
+    })
+
+    dockerProcess.stderr?.on('data', (data) => {
+      errorOutput += data.toString()
+    })
+
+    dockerProcess.on('close', (code) => {
+      if (code === 0) {
+        const projectUuid = output.trim()
+        resolve({ success: true, projectUuid: projectUuid || null })
+      } else {
+        resolve({ success: false, projectUuid: null, error: errorOutput || `Docker exited with code ${code}` })
+      }
+    })
+
+    dockerProcess.on('error', (error) => {
+      resolve({ success: false, projectUuid: null, error: error.message })
+    })
+  })
+}
+
+/**
+ * Find all running containers for a specific project UUID.
+ * @param projectUuid Project UUID
+ * @returns Array of container IDs
+ */
+export async function findContainersByProject(projectUuid: string): Promise<{ success: boolean; containerIds: string[]; error?: string }> {
+  return new Promise((resolve) => {
+    // Use docker ps with label filter to find containers
+    const dockerProcess = spawn('docker', ['ps', '--filter', `label=project_uuid=${projectUuid}`, '--format', '{{.ID}}'], {
+      env: {
+        ...process.env,
+        PATH: getExtendedPath()
+      }
+    })
+
+    let output = ''
+    let errorOutput = ''
+
+    dockerProcess.stdout?.on('data', (data) => {
+      output += data.toString()
+    })
+
+    dockerProcess.stderr?.on('data', (data) => {
+      errorOutput += data.toString()
+    })
+
+    dockerProcess.on('close', (code) => {
+      if (code === 0) {
+        const containerIds = output.trim().split('\n').filter(id => id.length > 0)
+        resolve({ success: true, containerIds })
+      } else {
+        resolve({ success: false, containerIds: [], error: errorOutput || `Docker exited with code ${code}` })
+      }
+    })
+
+    dockerProcess.on('error', (error) => {
+      resolve({ success: false, containerIds: [], error: error.message })
     })
   })
 }

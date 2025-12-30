@@ -41,7 +41,11 @@ export async function runStep4Container(params: Step4ContainerParams): Promise<D
     platform: step4Image.platform,
     autoRemove: true,
     command: [],
-    logFilePath
+    logFilePath,
+    labels: {
+      'project_uuid': projectUuid,
+      'step': '4'
+    }
   })
 }
 

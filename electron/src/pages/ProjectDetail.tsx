@@ -33,6 +33,54 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
     fetchProjectDetails();
   }, [uuid]);
 
+  // polling: when project is running, check if container is running every 2 seconds
+  useEffect(() => {
+    if (!project || project.status !== 'running') {
+      return;
+    }
+
+    const checkCompletion = async () => {
+      try {
+        // find containerId by step number
+        const stepNumber = project.step;
+        if (!stepNumber) {
+          return;
+        }
+
+        const stepKey = `step${stepNumber}`;
+        const stepData = project.parameters[stepKey] as { containerId?: string } | undefined;
+        const containerId = stepData?.containerId;
+
+        if (!containerId) {
+          return;
+        }
+
+        // check if container is running
+        const result = await window.docker.isContainerRunning(containerId);
+        
+        if (result.success && !result.running) {
+          // update project status to success if container is stopped
+          const updatedProject = await window.db.updateProject(uuid, { status: 'success' });
+          if (updatedProject) {
+            setProject(updatedProject);
+          }
+        }
+      } catch (err) {
+        console.error('Error checking completion:', err);
+      }
+    };
+
+    // immediately check
+    checkCompletion();
+
+    // check every 2 seconds
+    const intervalId = setInterval(checkCompletion, 2000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [project, uuid]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">

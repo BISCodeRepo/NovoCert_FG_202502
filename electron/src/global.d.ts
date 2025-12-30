@@ -55,6 +55,9 @@ interface DockerAPI {
   checkRequiredImages: () => Promise<DockerImagesResult>
   downloadMissingImages: () => Promise<DockerDownloadResult>
   pullImage: (imageName: string) => Promise<{ success: boolean; output?: string; error?: string }>
+  isContainerRunning: (containerId: string) => Promise<{ success: boolean; running: boolean; error?: string }>
+  getProjectUuidFromContainer: (containerId: string) => Promise<{ success: boolean; projectUuid: string | null; error?: string }>
+  findContainersByProject: (projectUuid: string) => Promise<{ success: boolean; containerIds: string[]; error?: string }>
 }
 
 interface DialogAPI {

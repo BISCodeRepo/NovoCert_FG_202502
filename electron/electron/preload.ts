@@ -40,6 +40,9 @@ contextBridge.exposeInMainWorld('docker', {
   checkRequiredImages: () => ipcRenderer.invoke('docker:checkRequiredImages'),
   downloadMissingImages: () => ipcRenderer.invoke('docker:downloadMissingImages'),
   pullImage: (imageName: string) => ipcRenderer.invoke('docker:pullImage', imageName),
+  isContainerRunning: (containerId: string) => ipcRenderer.invoke('docker:isContainerRunning', containerId),
+  getProjectUuidFromContainer: (containerId: string) => ipcRenderer.invoke('docker:getProjectUuidFromContainer', containerId),
+  findContainersByProject: (projectUuid: string) => ipcRenderer.invoke('docker:findContainersByProject', projectUuid),
 })
 
 // Dialog API 노출

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   Project,
-  ProjectStatus,
   PROJECT_STATUS_LABELS,
   PROJECT_STATUS_COLORS,
 } from "../types";
@@ -19,6 +18,58 @@ function Dashboard({ onNavigate }: DashboardProps) {
     loadDbPath();
   }, []);
 
+  // polling: running status projects' container status check
+  useEffect(() => {
+    const checkRunningProjects = async () => {
+      // filter running status projects
+      const runningProjects = projects.filter(p => p.status === 'running');
+      
+      if (runningProjects.length === 0) {
+        return;
+      }
+
+      // check container status for each running project
+      for (const project of runningProjects) {
+        try {
+          const stepNumber = project.step;
+          if (!stepNumber) {
+            continue;
+          }
+
+          const stepKey = `step${stepNumber}`;
+          const stepData = project.parameters[stepKey] as { containerId?: string } | undefined;
+          const containerId = stepData?.containerId;
+
+          if (!containerId) {
+            continue;
+          }
+
+          // check if container is running
+          const result = await window.docker.isContainerRunning(containerId);
+          
+          if (result.success && !result.running) {
+            // update project status to success if container is stopped
+            await window.db.updateProject(project.uuid, { status: 'success' });
+            // refresh project list
+            loadProjects();
+          }
+        } catch (err) {
+          console.error(`Error checking container for project ${project.uuid}:`, err);
+        }
+      }
+    };
+
+    // immediately check
+    checkRunningProjects();
+
+    // check every 2 seconds
+    const intervalId = setInterval(checkRunningProjects, 2000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [projects]);
+
   const loadProjects = async () => {
     const data = (await window.db.getProjects()) as Project[];
     // created_at을 기준으로 내림차순 정렬
@@ -33,11 +84,6 @@ function Dashboard({ onNavigate }: DashboardProps) {
 
   const deleteProject = async (uuid: string) => {
     await window.db.deleteProject(uuid);
-    loadProjects();
-  };
-
-  const updateProjectStatus = async (uuid: string, status: ProjectStatus) => {
-    await window.db.updateProject(uuid, { status });
     loadProjects();
   };
 
@@ -91,16 +137,16 @@ function Dashboard({ onNavigate }: DashboardProps) {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Project Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Created At
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Updated At
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -122,40 +168,22 @@ function Dashboard({ onNavigate }: DashboardProps) {
                         {project.name}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={project.status}
-                        onChange={(e) =>
-                          updateProjectStatus(
-                            project.uuid,
-                            e.target.value as ProjectStatus
-                          )
-                        }
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span
+                        className={`px-3 py-1 inline-block rounded-full text-xs font-semibold ${
                           PROJECT_STATUS_COLORS[project.status]
-                        } border-0 cursor-pointer`}
+                        }`}
                       >
-                        <option value="pending">
-                          {PROJECT_STATUS_LABELS.pending}
-                        </option>
-                        <option value="running">
-                          {PROJECT_STATUS_LABELS.running}
-                        </option>
-                        <option value="failed">
-                          {PROJECT_STATUS_LABELS.failed}
-                        </option>
-                        <option value="success">
-                          {PROJECT_STATUS_LABELS.success}
-                        </option>
-                      </select>
+                        {PROJECT_STATUS_LABELS[project.status]}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                       {project.created_at ? new Date(project.created_at).toLocaleString() : '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                       {project.updated_at ? new Date(project.updated_at).toLocaleString() : '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
                       <button
                         onClick={() => deleteProject(project.uuid)}
                         className="text-red-600 hover:text-red-900 font-medium"

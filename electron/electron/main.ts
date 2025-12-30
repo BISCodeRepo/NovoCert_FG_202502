@@ -14,7 +14,10 @@ import {
   executeStep2Workflow,
   executeStep3Workflow,
   executeStep4Workflow,
-  executeStep5Workflow
+  executeStep5Workflow,
+  isContainerRunning,
+  getProjectUuidFromContainer,
+  findContainersByProject
 } from './docker'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -111,6 +114,18 @@ function setupIpcHandlers() {
 
   ipcMain.handle('docker:pullImage', async (_, imageName: string) => {
     return await pullImage(imageName)
+  })
+
+  ipcMain.handle('docker:isContainerRunning', async (_, containerId: string) => {
+    return await isContainerRunning(containerId)
+  })
+
+  ipcMain.handle('docker:getProjectUuidFromContainer', async (_, containerId: string) => {
+    return await getProjectUuidFromContainer(containerId)
+  })
+
+  ipcMain.handle('docker:findContainersByProject', async (_, projectUuid: string) => {
+    return await findContainersByProject(projectUuid)
   })
 
   // Project handlers

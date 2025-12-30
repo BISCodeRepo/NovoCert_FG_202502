@@ -37,7 +37,11 @@ export async function runStep2Container(params: Step2ContainerParams): Promise<D
     platform: step2Image.platform,
     autoRemove: true,
     command: [],
-    logFilePath  // Save the log to a file
+    logFilePath,  // Save the log to a file
+    labels: {
+      'project_uuid': projectUuid,
+      'step': '2'
+    }
   })
 }
 
