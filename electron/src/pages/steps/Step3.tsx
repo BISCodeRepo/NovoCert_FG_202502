@@ -11,10 +11,16 @@ import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 function Step3() {
   const [projectName, setProjectName] = useState("");
   const [mgfSourceType, setMgfSourceType] = useState<"step1" | "custom">(
-    "custom"
+    "step1"
   );
   const [step1Projects, setStep1Projects] = useState<Project[]>([]);
   const [selectedStep1ProjectUuid, setSelectedStep1ProjectUuid] =
+    useState<string>("");
+  const [configSourceType, setConfigSourceType] = useState<"step2" | "custom">(
+    "step2"
+  );
+  const [step2Projects, setStep2Projects] = useState<Project[]>([]);
+  const [selectedStep2ProjectUuid, setSelectedStep2ProjectUuid] =
     useState<string>("");
   const [spectraPath, setSpectraPath] = useState("");
   const [casanovoConfigPath, setCasanovoConfigPath] = useState("");
@@ -89,6 +95,78 @@ function Step3() {
     findLatestMgfFile();
   }, [mgfSourceType, selectedStep1ProjectUuid, step1Projects]);
 
+  // Get the Step2 projects
+  useEffect(() => {
+    const loadStep2Projects = async () => {
+      try {
+        const projects = await window.db.getProjects();
+
+        // Filter projects with step === "2"
+        const step2ProjectsList = projects.filter(
+          (project) => String(project.step) === "2"
+        );
+
+        setStep2Projects(step2ProjectsList);
+      } catch (error) {
+        console.error("Step2 프로젝트 조회 실패:", error);
+      }
+    };
+
+    if (configSourceType === "step2") {
+      loadStep2Projects();
+    }
+  }, [configSourceType]);
+
+  // Find the most recently modified .yaml or .yml file in the outputPath directory of the selected Step2 project
+  useEffect(() => {
+    const findLatestConfigFile = async () => {
+      if (configSourceType === "step2" && selectedStep2ProjectUuid) {
+        const selectedProject = step2Projects.find(
+          (project) => project.uuid === selectedStep2ProjectUuid
+        );
+        const step2Params = selectedProject?.parameters?.step2 as { outputPath?: string } | undefined;
+        if (step2Params?.outputPath) {
+          const outputPath = step2Params.outputPath;
+          try {
+            // Find the most recently modified .yaml or .yml file in the outputPath directory
+            const yamlResult = await window.fs.findLatestFile(outputPath, "yaml");
+            const ymlResult = await window.fs.findLatestFile(outputPath, "yml");
+            
+            let result;
+            if (yamlResult.success && yamlResult.path) {
+              result = yamlResult;
+            } else if (ymlResult.success && ymlResult.path) {
+              result = ymlResult;
+            } else {
+              result = yamlResult; // Use yamlResult for error message
+            }
+
+            if (result.success && result.path) {
+              setCasanovoConfigPath(result.path);
+            } else {
+              setCasanovoConfigPath("");
+              setMessage({
+                type: "error",
+                text: result.error || "Config file (yaml/yml) not found",
+              });
+            }
+          } catch (error) {
+            console.error("Config file lookup failed:", error);
+            setCasanovoConfigPath("");
+            setMessage({
+              type: "error",
+              text: "Error occurred while looking for config file",
+            });
+          }
+        }
+      } else if (configSourceType === "custom") {
+        setCasanovoConfigPath("");
+      }
+    };
+
+    findLatestConfigFile();
+  }, [configSourceType, selectedStep2ProjectUuid, step2Projects]);
+
   // Check if all required parameters are entered
   const isFormValid = () => {
     const spectraPathValid =
@@ -97,10 +175,16 @@ function Step3() {
           spectraPath.trim() !== ""
         : spectraPath.trim() !== "";
 
+    const configPathValid =
+      configSourceType === "step2"
+        ? selectedStep2ProjectUuid !== "" &&
+          casanovoConfigPath.trim() !== ""
+        : casanovoConfigPath.trim() !== "";
+
     return (
       projectName.trim() !== "" &&
       spectraPathValid &&
-      casanovoConfigPath.trim() !== "" &&
+      configPathValid &&
       modelPath.trim() !== "" &&
       outputPath.trim() !== ""
     );
@@ -306,15 +390,91 @@ function Step3() {
               )}
             </div>
 
-            <FileInput
-              label="Casanovo Config File Path"
-              value={casanovoConfigPath}
-              onChange={setCasanovoConfigPath}
-              placeholder="/path/to/casanovo.yaml"
-              required={true}
-              description="The full path of the Casanovo configuration file (Step2 output, mounted inside the container at /app/data/casanovo.yaml)"
-              filters={[{ name: "YAML Files", extensions: ["yaml", "yml"] }]}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Casanovo Config File Source
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="flex gap-4 mb-3">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="configSource"
+                    value="step2"
+                    checked={configSourceType === "step2"}
+                    onChange={(e) =>
+                      setConfigSourceType(e.target.value as "step2" | "custom")
+                    }
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Step2 Project</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="configSource"
+                    value="custom"
+                    checked={configSourceType === "custom"}
+                    onChange={(e) =>
+                      setConfigSourceType(e.target.value as "step2" | "custom")
+                    }
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Custom Path</span>
+                </label>
+              </div>
+
+              {configSourceType === "step2" ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Step2 Project
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <select
+                      value={selectedStep2ProjectUuid}
+                      onChange={(e) => {
+                        setSelectedStep2ProjectUuid(e.target.value);
+                        setCasanovoConfigPath(""); // 파일 경로 초기화
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    >
+                      <option value="">Select Step2 Project</option>
+                      {step2Projects.map((project) => (
+                        <option key={project.uuid} value={project.uuid}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedStep2ProjectUuid && casanovoConfigPath && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Config 파일 경로
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
+                        {casanovoConfigPath}
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">
+                        The most recently created .yaml or .yml file in the output directory of the selected Step2 project has been automatically selected.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <FileInput
+                  label="Casanovo Config File Path"
+                  value={casanovoConfigPath}
+                  onChange={setCasanovoConfigPath}
+                  placeholder="/path/to/casanovo.yaml"
+                  required={true}
+                  description="The full path of the Casanovo configuration file (Step2 output, mounted inside the container at /app/data/casanovo.yaml)"
+                  filters={[{ name: "YAML Files", extensions: ["yaml", "yml"] }]}
+                />
+              )}
+            </div>
 
             <FileInput
               label="Model File Path"
