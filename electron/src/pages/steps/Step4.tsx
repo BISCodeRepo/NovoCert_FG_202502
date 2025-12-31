@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   PathInput,
   TextInput,
@@ -6,6 +6,7 @@ import {
   StepRunButton,
 } from "../../components/form";
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
+import { useStepProjectSelector } from "../../hooks/useStepProjectSelector";
 
 function Step4() {
   const [projectName, setProjectName] = useState("");
@@ -22,14 +23,111 @@ function Step4() {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
 
+  // Use Step1 project selector for Target MGF Directory
+  const targetMgfSelector = useStepProjectSelector({
+    step: 1,
+    defaultSourceType: "step",
+    returnDirectory: true,
+    onFileFound: (path) => setTargetMgfDir(path),
+    onError: (error) =>
+      setMessage({ type: "error", text: error }),
+  });
+
+  // Use Step1 project selector for Decoy MGF Directory
+  const decoyMgfSelector = useStepProjectSelector({
+    step: 1,
+    defaultSourceType: "step",
+    returnDirectory: true,
+    onFileFound: (path) => setDecoyMgfDir(path),
+    onError: (error) =>
+      setMessage({ type: "error", text: error }),
+  });
+
+  // Use Step3 project selector for Target DNPS Result File
+  const targetResultSelector = useStepProjectSelector({
+    step: 3,
+    defaultSourceType: "step",
+    extensions: ["mztab"],
+    onFileFound: (path) => setTargetResultPath(path),
+    onError: (error) =>
+      setMessage({ type: "error", text: error }),
+  });
+
+  // Use Step3 project selector for Decoy DNPS Result File
+  const decoyResultSelector = useStepProjectSelector({
+    step: 3,
+    defaultSourceType: "step",
+    extensions: ["mztab"],
+    onFileFound: (path) => setDecoyResultPath(path),
+    onError: (error) =>
+      setMessage({ type: "error", text: error }),
+  });
+
+  // Update paths when selectors find paths or switch to custom
+  useEffect(() => {
+    if (targetMgfSelector.sourceType === "custom") {
+      setTargetMgfDir("");
+    } else if (targetMgfSelector.foundFilePath) {
+      setTargetMgfDir(targetMgfSelector.foundFilePath);
+    }
+  }, [targetMgfSelector.sourceType, targetMgfSelector.foundFilePath]);
+
+  useEffect(() => {
+    if (decoyMgfSelector.sourceType === "custom") {
+      setDecoyMgfDir("");
+    } else if (decoyMgfSelector.foundFilePath) {
+      setDecoyMgfDir(decoyMgfSelector.foundFilePath);
+    }
+  }, [decoyMgfSelector.sourceType, decoyMgfSelector.foundFilePath]);
+
+  useEffect(() => {
+    if (targetResultSelector.sourceType === "custom") {
+      setTargetResultPath("");
+    } else if (targetResultSelector.foundFilePath) {
+      setTargetResultPath(targetResultSelector.foundFilePath);
+    }
+  }, [targetResultSelector.sourceType, targetResultSelector.foundFilePath]);
+
+  useEffect(() => {
+    if (decoyResultSelector.sourceType === "custom") {
+      setDecoyResultPath("");
+    } else if (decoyResultSelector.foundFilePath) {
+      setDecoyResultPath(decoyResultSelector.foundFilePath);
+    }
+  }, [decoyResultSelector.sourceType, decoyResultSelector.foundFilePath]);
+
   // Check if all required parameters are entered
   const isFormValid = () => {
+    const targetMgfDirValid =
+      targetMgfSelector.sourceType === "step"
+        ? targetMgfSelector.selectedProjectUuid !== "" &&
+          targetMgfDir.trim() !== ""
+        : targetMgfDir.trim() !== "";
+
+    const decoyMgfDirValid =
+      decoyMgfSelector.sourceType === "step"
+        ? decoyMgfSelector.selectedProjectUuid !== "" &&
+          decoyMgfDir.trim() !== ""
+        : decoyMgfDir.trim() !== "";
+
+    const targetResultPathValid =
+      targetResultSelector.sourceType === "step"
+        ? targetResultSelector.selectedProjectUuid !== "" &&
+          targetResultPath.trim() !== ""
+        : targetResultPath.trim() !== "";
+
+    const decoyResultPathValid =
+      decoyResultSelector.sourceType === "step"
+        ? decoyResultSelector.selectedProjectUuid !== "" &&
+          decoyResultPath.trim() !== ""
+        : decoyResultPath.trim() !== "";
+
     return (
       projectName.trim() !== "" &&
-      targetMgfDir.trim() !== "" &&
-      targetResultPath.trim() !== "" &&
-      decoyMgfDir.trim() !== "" &&
-      decoyResultPath.trim() !== "" &&
+      targetMgfDirValid &&
+      targetResultPathValid &&
+      decoyMgfDirValid &&
+      decoyResultPathValid &&
       outputPath.trim() !== ""
     );
   };
@@ -147,43 +245,319 @@ function Step4() {
               description="Enter the name of the project to start a new one"
             />
 
-            <PathInput
-              label="Target MGF Directory"
-              value={targetMgfDir}
-              onChange={setTargetMgfDir}
-              placeholder="/path/to/target/mgf"
-              required={true}
-              description="The full path of the directory containing the Target MGF files (mounted inside the container at /app/target/mgf)"
-            />
+            {/* Target MGF Directory */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Target MGF Directory Source
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="flex gap-4 mb-3">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="targetMgfSource"
+                    value="step"
+                    checked={targetMgfSelector.sourceType === "step"}
+                    onChange={() => targetMgfSelector.setSourceType("step")}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Step1 Project</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="targetMgfSource"
+                    value="custom"
+                    checked={targetMgfSelector.sourceType === "custom"}
+                    onChange={() => targetMgfSelector.setSourceType("custom")}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Custom Path</span>
+                </label>
+              </div>
 
-            <FileInput
-              label="Target DNPS Result File"
-              value={targetResultPath}
-              onChange={setTargetResultPath}
-              placeholder="/path/to/target/result.mztab"
-              required={true}
-              description="The full path of the Target DNPS result file (mztab, mounted inside the container at /app/target/result.mztab)"
-              filters={[{ name: "MZTAB Files", extensions: ["mztab"] }]}
-            />
+              {targetMgfSelector.sourceType === "step" ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Step1 Project
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <select
+                      value={targetMgfSelector.selectedProjectUuid}
+                      onChange={(e) => {
+                        targetMgfSelector.setSelectedProjectUuid(e.target.value);
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    >
+                      <option value="">Select Step1 Project</option>
+                      {targetMgfSelector.projects.map((project) => (
+                        <option key={project.uuid} value={project.uuid}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-            <PathInput
-              label="Decoy MGF Directory"
-              value={decoyMgfDir}
-              onChange={setDecoyMgfDir}
-              placeholder="/path/to/decoy/mgf"
-              required={true}
-              description="The full path of the directory containing the Decoy MGF files (mounted inside the container at /app/decoy/mgf)"
-            />
+                  {targetMgfSelector.selectedProjectUuid && targetMgfSelector.foundFilePath && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        MGF Directory 경로
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
+                        {targetMgfSelector.foundFilePath}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <PathInput
+                  label="Target MGF Directory"
+                  value={targetMgfDir}
+                  onChange={setTargetMgfDir}
+                  placeholder="/path/to/target/mgf"
+                  required={true}
+                  description="The full path of the directory containing the Target MGF files (mounted inside the container at /app/target/mgf)"
+                />
+              )}
+            </div>
 
-            <FileInput
-              label="Decoy DNPS Result File"
-              value={decoyResultPath}
-              onChange={setDecoyResultPath}
-              placeholder="/path/to/decoy/result.mztab"
-              required={true}
-              description="The full path of the Decoy DNPS result file (mztab, mounted inside the container at /app/decoy/result.mztab)"
-              filters={[{ name: "MZTAB Files", extensions: ["mztab"] }]}
-            />
+            {/* Target DNPS Result File */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Target DNPS Result File Source
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="flex gap-4 mb-3">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="targetResultSource"
+                    value="step"
+                    checked={targetResultSelector.sourceType === "step"}
+                    onChange={() => targetResultSelector.setSourceType("step")}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Step3 Project</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="targetResultSource"
+                    value="custom"
+                    checked={targetResultSelector.sourceType === "custom"}
+                    onChange={() => targetResultSelector.setSourceType("custom")}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Custom Path</span>
+                </label>
+              </div>
+
+              {targetResultSelector.sourceType === "step" ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Step3 Project
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <select
+                      value={targetResultSelector.selectedProjectUuid}
+                      onChange={(e) => {
+                        targetResultSelector.setSelectedProjectUuid(e.target.value);
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    >
+                      <option value="">Select Step3 Project</option>
+                      {targetResultSelector.projects.map((project) => (
+                        <option key={project.uuid} value={project.uuid}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {targetResultSelector.selectedProjectUuid && targetResultSelector.foundFilePath && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Result File Path
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
+                        {targetResultSelector.foundFilePath}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <FileInput
+                  label="Target DNPS Result File"
+                  value={targetResultPath}
+                  onChange={setTargetResultPath}
+                  placeholder="/path/to/target/result.mztab"
+                  required={true}
+                  description="The full path of the Target DNPS result file (mztab, mounted inside the container at /app/target/result.mztab)"
+                  filters={[{ name: "MZTAB Files", extensions: ["mztab"] }]}
+                />
+              )}
+            </div>
+
+            {/* Decoy MGF Directory */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Decoy MGF Directory Source
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="flex gap-4 mb-3">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="decoyMgfSource"
+                    value="step"
+                    checked={decoyMgfSelector.sourceType === "step"}
+                    onChange={() => decoyMgfSelector.setSourceType("step")}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Step1 Project</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="decoyMgfSource"
+                    value="custom"
+                    checked={decoyMgfSelector.sourceType === "custom"}
+                    onChange={() => decoyMgfSelector.setSourceType("custom")}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Custom Path</span>
+                </label>
+              </div>
+
+              {decoyMgfSelector.sourceType === "step" ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Step1 Project
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <select
+                      value={decoyMgfSelector.selectedProjectUuid}
+                      onChange={(e) => {
+                        decoyMgfSelector.setSelectedProjectUuid(e.target.value);
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    >
+                      <option value="">Select Step1 Project</option>
+                      {decoyMgfSelector.projects.map((project) => (
+                        <option key={project.uuid} value={project.uuid}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {decoyMgfSelector.selectedProjectUuid && decoyMgfSelector.foundFilePath && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        MGF Directory Path
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
+                        {decoyMgfSelector.foundFilePath}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <PathInput
+                  label="Decoy MGF Directory"
+                  value={decoyMgfDir}
+                  onChange={setDecoyMgfDir}
+                  placeholder="/path/to/decoy/mgf"
+                  required={true}
+                  description="The full path of the directory containing the Decoy MGF files (mounted inside the container at /app/decoy/mgf)"
+                />
+              )}
+            </div>
+
+            {/* Decoy DNPS Result File */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Decoy DNPS Result File Source
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="flex gap-4 mb-3">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="decoyResultSource"
+                    value="step"
+                    checked={decoyResultSelector.sourceType === "step"}
+                    onChange={() => decoyResultSelector.setSourceType("step")}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Step3 Project</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="decoyResultSource"
+                    value="custom"
+                    checked={decoyResultSelector.sourceType === "custom"}
+                    onChange={() => decoyResultSelector.setSourceType("custom")}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Custom Path</span>
+                </label>
+              </div>
+
+              {decoyResultSelector.sourceType === "step" ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Step3 Project
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <select
+                      value={decoyResultSelector.selectedProjectUuid}
+                      onChange={(e) => {
+                        decoyResultSelector.setSelectedProjectUuid(e.target.value);
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    >
+                      <option value="">Select Step3 Project</option>
+                      {decoyResultSelector.projects.map((project) => (
+                        <option key={project.uuid} value={project.uuid}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {decoyResultSelector.selectedProjectUuid && decoyResultSelector.foundFilePath && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Result File Path
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
+                        {decoyResultSelector.foundFilePath}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <FileInput
+                  label="Decoy DNPS Result File"
+                  value={decoyResultPath}
+                  onChange={setDecoyResultPath}
+                  placeholder="/path/to/decoy/result.mztab"
+                  required={true}
+                  description="The full path of the Decoy DNPS result file (mztab, mounted inside the container at /app/decoy/result.mztab)"
+                  filters={[{ name: "MZTAB Files", extensions: ["mztab"] }]}
+                />
+              )}
+            </div>
 
             <PathInput
               label="Output Folder Path"

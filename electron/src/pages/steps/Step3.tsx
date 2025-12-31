@@ -5,23 +5,11 @@ import {
   FileInput,
   StepRunButton,
 } from "../../components/form";
-import type { Project } from "../../types";
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
+import { useStepProjectSelector } from "../../hooks/useStepProjectSelector";
 
 function Step3() {
   const [projectName, setProjectName] = useState("");
-  const [mgfSourceType, setMgfSourceType] = useState<"step1" | "custom">(
-    "step1"
-  );
-  const [step1Projects, setStep1Projects] = useState<Project[]>([]);
-  const [selectedStep1ProjectUuid, setSelectedStep1ProjectUuid] =
-    useState<string>("");
-  const [configSourceType, setConfigSourceType] = useState<"step2" | "custom">(
-    "step2"
-  );
-  const [step2Projects, setStep2Projects] = useState<Project[]>([]);
-  const [selectedStep2ProjectUuid, setSelectedStep2ProjectUuid] =
-    useState<string>("");
   const [spectraPath, setSpectraPath] = useState("");
   const [casanovoConfigPath, setCasanovoConfigPath] = useState("");
   const [modelPath, setModelPath] = useState("");
@@ -34,150 +22,55 @@ function Step3() {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
 
-  // Get the Step1 projects
+  // Use Step1 project selector for MGF file
+  const mgfSelector = useStepProjectSelector({
+    step: 1,
+    defaultSourceType: "step",
+    extensions: ["mgf"],
+    onFileFound: (path) => setSpectraPath(path),
+    onError: (error) =>
+      setMessage({ type: "error", text: error }),
+  });
+
+  // Use Step2 project selector for Config file
+  const configSelector = useStepProjectSelector({
+    step: 2,
+    defaultSourceType: "step",
+    extensions: ["yaml", "yml"],
+    onFileFound: (path) => setCasanovoConfigPath(path),
+    onError: (error) =>
+      setMessage({ type: "error", text: error }),
+  });
+
+  // Update spectraPath when selector finds file or switches to custom
   useEffect(() => {
-    const loadStep1Projects = async () => {
-      try {
-        const projects = await window.db.getProjects();
-
-        // Filter projects with step === "1"
-        const step1ProjectsList = projects.filter(
-          (project) => String(project.step) === "1"
-        );
-
-        setStep1Projects(step1ProjectsList);
-      } catch (error) {
-        console.error("Step1 프로젝트 조회 실패:", error);
-      }
-    };
-
-    if (mgfSourceType === "step1") {
-      loadStep1Projects();
+    if (mgfSelector.sourceType === "custom") {
+      setSpectraPath("");
+    } else if (mgfSelector.foundFilePath) {
+      setSpectraPath(mgfSelector.foundFilePath);
     }
-  }, [mgfSourceType]);
+  }, [mgfSelector.sourceType, mgfSelector.foundFilePath]);
 
-  // Find the most recently modified .mgf file in the outputPath directory of the selected Step1 project
+  // Update casanovoConfigPath when selector finds file or switches to custom
   useEffect(() => {
-    const findLatestMgfFile = async () => {
-      if (mgfSourceType === "step1" && selectedStep1ProjectUuid) {
-        const selectedProject = step1Projects.find(
-          (project) => project.uuid === selectedStep1ProjectUuid
-        );
-        const step1Params = selectedProject?.parameters?.step1 as { outputPath?: string } | undefined;
-        if (step1Params?.outputPath) {
-          const outputPath = step1Params.outputPath;
-          try {
-            // Find the most recently modified .mgf file in the outputPath directory
-            const result = await window.fs.findLatestFile(outputPath, "mgf");
-            if (result.success && result.path) {
-              setSpectraPath(result.path);
-            } else {
-              setSpectraPath("");
-              setMessage({
-                type: "error",
-                text: result.error || "MGF file not found",
-              });
-            }
-          } catch (error) {
-            console.error("MGF file lookup failed:", error);
-            setSpectraPath("");
-            setMessage({
-              type: "error",
-              text: "Error occurred while looking for MGF file",
-            });
-          }
-        }
-      } else if (mgfSourceType === "custom") {
-        setSpectraPath("");
-      }
-    };
-
-    findLatestMgfFile();
-  }, [mgfSourceType, selectedStep1ProjectUuid, step1Projects]);
-
-  // Get the Step2 projects
-  useEffect(() => {
-    const loadStep2Projects = async () => {
-      try {
-        const projects = await window.db.getProjects();
-
-        // Filter projects with step === "2"
-        const step2ProjectsList = projects.filter(
-          (project) => String(project.step) === "2"
-        );
-
-        setStep2Projects(step2ProjectsList);
-      } catch (error) {
-        console.error("Step2 프로젝트 조회 실패:", error);
-      }
-    };
-
-    if (configSourceType === "step2") {
-      loadStep2Projects();
+    if (configSelector.sourceType === "custom") {
+      setCasanovoConfigPath("");
+    } else if (configSelector.foundFilePath) {
+      setCasanovoConfigPath(configSelector.foundFilePath);
     }
-  }, [configSourceType]);
-
-  // Find the most recently modified .yaml or .yml file in the outputPath directory of the selected Step2 project
-  useEffect(() => {
-    const findLatestConfigFile = async () => {
-      if (configSourceType === "step2" && selectedStep2ProjectUuid) {
-        const selectedProject = step2Projects.find(
-          (project) => project.uuid === selectedStep2ProjectUuid
-        );
-        const step2Params = selectedProject?.parameters?.step2 as { outputPath?: string } | undefined;
-        if (step2Params?.outputPath) {
-          const outputPath = step2Params.outputPath;
-          try {
-            // Find the most recently modified .yaml or .yml file in the outputPath directory
-            const yamlResult = await window.fs.findLatestFile(outputPath, "yaml");
-            const ymlResult = await window.fs.findLatestFile(outputPath, "yml");
-            
-            let result;
-            if (yamlResult.success && yamlResult.path) {
-              result = yamlResult;
-            } else if (ymlResult.success && ymlResult.path) {
-              result = ymlResult;
-            } else {
-              result = yamlResult; // Use yamlResult for error message
-            }
-
-            if (result.success && result.path) {
-              setCasanovoConfigPath(result.path);
-            } else {
-              setCasanovoConfigPath("");
-              setMessage({
-                type: "error",
-                text: result.error || "Config file (yaml/yml) not found",
-              });
-            }
-          } catch (error) {
-            console.error("Config file lookup failed:", error);
-            setCasanovoConfigPath("");
-            setMessage({
-              type: "error",
-              text: "Error occurred while looking for config file",
-            });
-          }
-        }
-      } else if (configSourceType === "custom") {
-        setCasanovoConfigPath("");
-      }
-    };
-
-    findLatestConfigFile();
-  }, [configSourceType, selectedStep2ProjectUuid, step2Projects]);
+  }, [configSelector.sourceType, configSelector.foundFilePath]);
 
   // Check if all required parameters are entered
   const isFormValid = () => {
     const spectraPathValid =
-      mgfSourceType === "step1"
-        ? selectedStep1ProjectUuid !== "" &&
+      mgfSelector.sourceType === "step"
+        ? mgfSelector.selectedProjectUuid !== "" &&
           spectraPath.trim() !== ""
         : spectraPath.trim() !== "";
 
     const configPathValid =
-      configSourceType === "step2"
-        ? selectedStep2ProjectUuid !== "" &&
+      configSelector.sourceType === "step"
+        ? configSelector.selectedProjectUuid !== "" &&
           casanovoConfigPath.trim() !== ""
         : casanovoConfigPath.trim() !== "";
 
@@ -314,11 +207,9 @@ function Step3() {
                   <input
                     type="radio"
                     name="mgfSource"
-                    value="step1"
-                    checked={mgfSourceType === "step1"}
-                    onChange={(e) =>
-                      setMgfSourceType(e.target.value as "step1" | "custom")
-                    }
+                    value="step"
+                    checked={mgfSelector.sourceType === "step"}
+                    onChange={() => mgfSelector.setSourceType("step")}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">Step1 Project</span>
@@ -328,17 +219,15 @@ function Step3() {
                     type="radio"
                     name="mgfSource"
                     value="custom"
-                    checked={mgfSourceType === "custom"}
-                    onChange={(e) =>
-                      setMgfSourceType(e.target.value as "step1" | "custom")
-                    }
+                    checked={mgfSelector.sourceType === "custom"}
+                    onChange={() => mgfSelector.setSourceType("custom")}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">Custom Path</span>
                 </label>
               </div>
 
-              {mgfSourceType === "step1" ? (
+              {mgfSelector.sourceType === "step" ? (
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -346,15 +235,14 @@ function Step3() {
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <select
-                      value={selectedStep1ProjectUuid}
+                      value={mgfSelector.selectedProjectUuid}
                       onChange={(e) => {
-                        setSelectedStep1ProjectUuid(e.target.value);
-                        setSpectraPath(""); // 파일 경로 초기화
+                        mgfSelector.setSelectedProjectUuid(e.target.value);
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     >
                       <option value="">Select Step1 Project</option>
-                      {step1Projects.map((project) => (
+                      {mgfSelector.projects.map((project) => (
                         <option key={project.uuid} value={project.uuid}>
                           {project.name}
                         </option>
@@ -362,17 +250,17 @@ function Step3() {
                     </select>
                   </div>
 
-                  {selectedStep1ProjectUuid && spectraPath && (
+                  {mgfSelector.selectedProjectUuid && mgfSelector.foundFilePath && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         MGF 파일 경로
                         <span className="text-red-500 ml-1">*</span>
                       </label>
                       <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
-                        {spectraPath}
+                        {mgfSelector.foundFilePath}
                       </div>
                       <p className="mt-1 text-xs text-gray-500">
-                        The most recently created .mgf file in the output directory of the selected Step1 task has been automatically selected.
+                        The most recently created .mgf file in the output directory of the selected Step1 project has been automatically selected.
                       </p>
                     </div>
                   )}
@@ -400,11 +288,9 @@ function Step3() {
                   <input
                     type="radio"
                     name="configSource"
-                    value="step2"
-                    checked={configSourceType === "step2"}
-                    onChange={(e) =>
-                      setConfigSourceType(e.target.value as "step2" | "custom")
-                    }
+                    value="step"
+                    checked={configSelector.sourceType === "step"}
+                    onChange={() => configSelector.setSourceType("step")}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">Step2 Project</span>
@@ -414,17 +300,15 @@ function Step3() {
                     type="radio"
                     name="configSource"
                     value="custom"
-                    checked={configSourceType === "custom"}
-                    onChange={(e) =>
-                      setConfigSourceType(e.target.value as "step2" | "custom")
-                    }
+                    checked={configSelector.sourceType === "custom"}
+                    onChange={() => configSelector.setSourceType("custom")}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">Custom Path</span>
                 </label>
               </div>
 
-              {configSourceType === "step2" ? (
+              {configSelector.sourceType === "step" ? (
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -432,15 +316,14 @@ function Step3() {
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <select
-                      value={selectedStep2ProjectUuid}
+                      value={configSelector.selectedProjectUuid}
                       onChange={(e) => {
-                        setSelectedStep2ProjectUuid(e.target.value);
-                        setCasanovoConfigPath(""); // 파일 경로 초기화
+                        configSelector.setSelectedProjectUuid(e.target.value);
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     >
                       <option value="">Select Step2 Project</option>
-                      {step2Projects.map((project) => (
+                      {configSelector.projects.map((project) => (
                         <option key={project.uuid} value={project.uuid}>
                           {project.name}
                         </option>
@@ -448,14 +331,14 @@ function Step3() {
                     </select>
                   </div>
 
-                  {selectedStep2ProjectUuid && casanovoConfigPath && (
+                  {configSelector.selectedProjectUuid && configSelector.foundFilePath && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Config 파일 경로
                         <span className="text-red-500 ml-1">*</span>
                       </label>
                       <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
-                        {casanovoConfigPath}
+                        {configSelector.foundFilePath}
                       </div>
                       <p className="mt-1 text-xs text-gray-500">
                         The most recently created .yaml or .yml file in the output directory of the selected Step2 project has been automatically selected.
