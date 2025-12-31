@@ -3,6 +3,7 @@ import type { Step1Params, Step1Result } from './types'
 import { runStep1Container } from './executor'
 import path from 'node:path'
 import fs from 'node:fs'
+import { generateProjectFolderName } from '../../utils'
 
 /**
  * Execute the entire workflow for Step1.
@@ -30,20 +31,18 @@ export async function executeStep1Workflow(
     })
 
     // 2. Create a Project-specific output folder
-    const baseProjectPath = path.join(params.outputPath, project.uuid)
-    const containerOutputPath = path.join(baseProjectPath, 'output')
-    const logPath = path.join(baseProjectPath, 'log')
+    const projectFolderName = generateProjectFolderName(project.name, project.uuid)
+    const baseProjectPath = path.join(params.outputPath, projectFolderName)
 
-    fs.mkdirSync(containerOutputPath, { recursive: true })
-    fs.mkdirSync(logPath, { recursive: true })
+    fs.mkdirSync(baseProjectPath, { recursive: true })
 
     // Update the project with step1-specific paths
     const updatedProject = await database.projects.update(project.uuid, {
       parameters: {
         ...project.parameters,
         step1: {
-          outputPath: containerOutputPath,
-          logPath: logPath,
+          outputPath: baseProjectPath,
+          logPath: baseProjectPath,
         }
       }
     })
@@ -57,8 +56,8 @@ export async function executeStep1Workflow(
     const dockerResult = await runStep1Container({
       projectName: params.projectName,
       inputPath: params.inputPath,
-      outputPath: containerOutputPath, // 컨테이너 결과물 경로
-      logPath: logPath,                // 로그 파일 경로
+      outputPath: baseProjectPath, // 컨테이너 결과물 경로
+      logPath: baseProjectPath,    // 로그 파일 경로
       projectUuid: project.uuid,
       memory: params.memory,
       precursorTolerance: params.precursorTolerance,

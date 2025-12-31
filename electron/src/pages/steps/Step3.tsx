@@ -5,7 +5,7 @@ import {
   FileInput,
   StepRunButton,
 } from "../../components/form";
-import type { Project, Task } from "../../types";
+import type { Project } from "../../types";
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 
 function Step3() {
@@ -15,9 +15,6 @@ function Step3() {
   );
   const [step1Projects, setStep1Projects] = useState<Project[]>([]);
   const [selectedStep1ProjectUuid, setSelectedStep1ProjectUuid] =
-    useState<string>("");
-  const [step1Tasks, setStep1Tasks] = useState<Task[]>([]);
-  const [selectedStep1TaskUuid, setSelectedStep1TaskUuid] =
     useState<string>("");
   const [spectraPath, setSpectraPath] = useState("");
   const [casanovoConfigPath, setCasanovoConfigPath] = useState("");
@@ -36,18 +33,11 @@ function Step3() {
     const loadStep1Projects = async () => {
       try {
         const projects = await window.db.getProjects();
-        const tasks = await window.db.getTasks();
 
-        // Filter projects that have Step1 tasks
-        const step1ProjectsList: Project[] = [];
-        for (const project of projects) {
-          const projectTasks = tasks.filter(
-            (task) => task.project_uuid === project.uuid && task.step === "1"
-          );
-          if (projectTasks.length > 0) {
-            step1ProjectsList.push(project);
-          }
-        }
+        // Filter projects with step === "1"
+        const step1ProjectsList = projects.filter(
+          (project) => String(project.step) === "1"
+        );
 
         setStep1Projects(step1ProjectsList);
       } catch (error) {
@@ -60,41 +50,16 @@ function Step3() {
     }
   }, [mgfSourceType]);
 
-  // Get the Step1 task of the selected project
-  useEffect(() => {
-    const loadStep1Tasks = async () => {
-      if (!selectedStep1ProjectUuid) {
-        setStep1Tasks([]);
-        setSelectedStep1TaskUuid("");
-        return;
-      }
-
-      try {
-        const tasks = await window.db.getTasksByProject(
-          selectedStep1ProjectUuid
-        );
-        const step1TaskList = tasks.filter((task) => task.step === "1");
-        setStep1Tasks(step1TaskList);
-        setSelectedStep1TaskUuid(""); // Reset task when project changes
-      } catch (error) {
-        console.error("Step1 task 조회 실패:", error);
-      }
-    };
-
-    if (mgfSourceType === "step1" && selectedStep1ProjectUuid) {
-      loadStep1Tasks();
-    }
-  }, [mgfSourceType, selectedStep1ProjectUuid]);
-
-  // Find the most recently modified .mgf file in the outputPath directory of the selected Step1 task
+  // Find the most recently modified .mgf file in the outputPath directory of the selected Step1 project
   useEffect(() => {
     const findLatestMgfFile = async () => {
-      if (mgfSourceType === "step1" && selectedStep1TaskUuid) {
-        const selectedTask = step1Tasks.find(
-          (task) => task.uuid === selectedStep1TaskUuid
+      if (mgfSourceType === "step1" && selectedStep1ProjectUuid) {
+        const selectedProject = step1Projects.find(
+          (project) => project.uuid === selectedStep1ProjectUuid
         );
-        if (selectedTask?.parameters?.outputPath) {
-          const outputPath = selectedTask.parameters.outputPath as string;
+        const step1Params = selectedProject?.parameters?.step1 as { outputPath?: string } | undefined;
+        if (step1Params?.outputPath) {
+          const outputPath = step1Params.outputPath;
           try {
             // Find the most recently modified .mgf file in the outputPath directory
             const result = await window.fs.findLatestFile(outputPath, "mgf");
@@ -122,14 +87,13 @@ function Step3() {
     };
 
     findLatestMgfFile();
-  }, [mgfSourceType, selectedStep1TaskUuid, step1Tasks]);
+  }, [mgfSourceType, selectedStep1ProjectUuid, step1Projects]);
 
   // Check if all required parameters are entered
   const isFormValid = () => {
     const spectraPathValid =
       mgfSourceType === "step1"
         ? selectedStep1ProjectUuid !== "" &&
-          selectedStep1TaskUuid !== "" &&
           spectraPath.trim() !== ""
         : spectraPath.trim() !== "";
 
@@ -301,8 +265,7 @@ function Step3() {
                       value={selectedStep1ProjectUuid}
                       onChange={(e) => {
                         setSelectedStep1ProjectUuid(e.target.value);
-                        setSelectedStep1TaskUuid(""); // 프로젝트 변경 시 task 초기화
-                        setSpectraPath(""); // 파일 경로도 초기화
+                        setSpectraPath(""); // 파일 경로 초기화
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     >
@@ -315,32 +278,7 @@ function Step3() {
                     </select>
                   </div>
 
-                  {selectedStep1ProjectUuid && step1Tasks.length > 0 && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Step1 Task
-                        <span className="text-red-500 ml-1">*</span>
-                      </label>
-                      <select
-                        value={selectedStep1TaskUuid}
-                        onChange={(e) => {
-                          setSelectedStep1TaskUuid(e.target.value);
-                          setSpectraPath(""); // Reset file path when task changes
-                        }}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                      >
-                        <option value="">Select Step1 Task</option>
-                        {step1Tasks.map((task) => (
-                          <option key={task.uuid} value={task.uuid}>
-                            Task {task.uuid.substring(0, 8)}... ({task.status})
-                            - {new Date(task.created_at).toLocaleString()}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {selectedStep1TaskUuid && spectraPath && (
+                  {selectedStep1ProjectUuid && spectraPath && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         MGF 파일 경로

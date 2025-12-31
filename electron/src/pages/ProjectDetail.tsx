@@ -215,45 +215,60 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
       </div>
 
       {/* Project information */}
-      <div className="bg-white rounded-lg shadow-sm mb-8">
-        <div className="px-6 py-4 border-b border-gray-200">
+      <div className="bg-gray-50 rounded-lg shadow-sm mb-8">
+        {/* Header */}
+        <div className="rounded-t-lg px-6 py-4 border-b border-gray-200">
           <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
         </div>
+
+        {/* Main Info Cards */}
         <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <p className="text-xs text-gray-500 uppercase">UUID</p>
-            <p className="text-sm font-mono text-gray-800">{project.uuid}</p>
+          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">UUID</p>
+            <p className="text-xs font-mono text-gray-900 break-all">{project.uuid}</p>
           </div>
-          <div>
-            <p className="text-xs text-gray-500 uppercase">상태</p>
-            <p
-              className={`px-3 py-1 inline-block rounded-full text-xs font-semibold ${
+          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">상태</p>
+            <span
+              className={`px-3 py-1.5 inline-flex items-center rounded-md text-xs font-semibold ${
                 PROJECT_STATUS_COLORS[project.status]
               }`}
             >
               {PROJECT_STATUS_LABELS[project.status]}
+            </span>
+          </div>
+          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Step</p>
+            <p className="text-sm font-semibold text-gray-900">
+              {project.step ? `Step ${typeof project.step === 'string' ? project.step : project.step}` : '-'}
             </p>
           </div>
-          <div>
-            <p className="text-xs text-gray-500 uppercase">Step</p>
-            <p className="text-sm text-gray-800">{project.step || '-'}</p>
+        </div>
+
+        {/* Date Info Cards */}
+        <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Created At</p>
+            <p className="text-sm font-medium text-gray-900">
+              {project.created_at ? new Date(project.created_at).toLocaleString() : '-'}
+            </p>
+          </div>
+          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Updated At</p>
+            <p className="text-sm font-medium text-gray-900">
+              {project.updated_at ? new Date(project.updated_at).toLocaleString() : '-'}
+            </p>
           </div>
         </div>
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-200">
-            <div>
-                <p className="text-xs text-gray-500 uppercase">Created At</p>
-                <p className="text-sm text-gray-800">{project.created_at ? new Date(project.created_at).toLocaleString() : '-'}</p>
-            </div>
-            <div>
-                <p className="text-xs text-gray-500 uppercase">Updated At</p>
-                <p className="text-sm text-gray-800">{project.updated_at ? new Date(project.updated_at).toLocaleString() : '-'}</p>
-            </div>
-        </div>
-        <div className="px-6 py-4 bg-gray-50 rounded-b-lg">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Project Parameters</h3>
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <ParameterViewer data={project.parameters} />
-            </div>
+
+        {/* Parameters Section */}
+        <div className="px-6 pb-6">
+          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm mb-4">
+            <h3 className="text-sm font-semibold text-gray-700">Project Parameters</h3>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+            <ParameterViewer data={project.parameters} />
+          </div>
         </div>
       </div>
     </div>

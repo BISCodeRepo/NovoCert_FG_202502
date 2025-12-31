@@ -3,6 +3,7 @@ import type { Step3Params, Step3Result } from './types'
 import { runStep3Container } from './executor'
 import path from 'node:path'
 import fs from 'node:fs'
+import { generateProjectFolderName } from '../../utils'
 
 /**
  * Execute the entire workflow for Step3.
@@ -32,20 +33,18 @@ export async function executeStep3Workflow(
     })
 
     // 2. Create a Project-specific output folder
-    const baseProjectPath = path.join(params.outputPath, project.uuid)
-    const containerOutputPath = path.join(baseProjectPath, 'output')
-    const logPath = path.join(baseProjectPath, 'log')
+    const projectFolderName = generateProjectFolderName(project.name, project.uuid)
+    const baseProjectPath = path.join(params.outputPath, projectFolderName)
 
-    fs.mkdirSync(containerOutputPath, { recursive: true })
-    fs.mkdirSync(logPath, { recursive: true })
+    fs.mkdirSync(baseProjectPath, { recursive: true })
 
     // Update the project with step3-specific paths
     const updatedProject = await database.projects.update(project.uuid, {
       parameters: {
         ...project.parameters,
         step3: {
-          outputPath: containerOutputPath,
-          logPath: logPath,
+          outputPath: baseProjectPath,
+          logPath: baseProjectPath,
         }
       }
     })
@@ -61,8 +60,8 @@ export async function executeStep3Workflow(
       spectraPath: params.spectraPath,
       casanovoConfigPath: params.casanovoConfigPath,
       modelPath: params.modelPath,
-      outputPath: containerOutputPath, // Container result path
-      logPath: logPath,                // Log file path
+      outputPath: baseProjectPath, // Container result path
+      logPath: baseProjectPath,    // Log file path
       projectUuid: project.uuid
     })
 

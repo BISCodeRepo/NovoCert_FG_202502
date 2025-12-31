@@ -3,6 +3,7 @@ import type { Step5Params, Step5Result } from './types'
 import { runStep5Container } from './executor'
 import path from 'node:path'
 import fs from 'node:fs'
+import { generateProjectFolderName } from '../../utils'
 
 /**
  * Execute the entire workflow for Step5.
@@ -32,22 +33,19 @@ export async function executeStep5Workflow(
     console.log('Created project:', project)
 
     // 2. Create a Project-specific output folder
-    const baseProjectPath = path.join(params.outputPath, project.uuid)
-    const containerOutputPath = path.join(baseProjectPath, 'output')
-    const logPath = path.join(baseProjectPath, 'log')
+    const projectFolderName = generateProjectFolderName(project.name, project.uuid)
+    const baseProjectPath = path.join(params.outputPath, projectFolderName)
 
-    fs.mkdirSync(containerOutputPath, { recursive: true })
-    fs.mkdirSync(logPath, { recursive: true })
-    console.log(`Created project output directory: ${containerOutputPath}`)
-    console.log(`Created project log directory: ${logPath}`)
+    fs.mkdirSync(baseProjectPath, { recursive: true })
+    console.log(`Created project directory: ${baseProjectPath}`)
 
     // Update the project with step5-specific paths
     const updatedProject = await database.projects.update(project.uuid, {
       parameters: {
         ...project.parameters,
         step5: {
-          outputPath: containerOutputPath,
-          logPath: logPath,
+          outputPath: baseProjectPath,
+          logPath: baseProjectPath,
         }
       }
     })
@@ -61,8 +59,8 @@ export async function executeStep5Workflow(
     const dockerResult = await runStep5Container({
       projectName: params.projectName,
       inputPath: params.inputPath,
-      outputPath: containerOutputPath, // Container result path
-      logPath: logPath,                // Log file path
+      outputPath: baseProjectPath, // Container result path
+      logPath: baseProjectPath,    // Log file path
       projectUuid: project.uuid
     })
 

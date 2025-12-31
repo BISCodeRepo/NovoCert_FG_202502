@@ -116,7 +116,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <h1 className="text-4xl font-bold text-gray-900 mb-2">Projects</h1>
+      <h1 className="text-4xl font-bold text-gray-900 mb-4">Projects</h1>
 
       {/* DB 경로 */}
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
@@ -127,22 +127,22 @@ function Dashboard({ onNavigate }: DashboardProps) {
 
       <div className="bg-white rounded-lg shadow-sm">
         <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
               Project List{" "}
-              <span className="text-gray-500">({filteredProjects.length})</span>
+              <span className="text-gray-500 ml-1">({filteredProjects.length})</span>
             </h2>
-            <div className="flex gap-4">
+            <div className="flex items-center gap-4">
               {/* Step 필터 */}
               <div className="flex items-center gap-2">
-                <label htmlFor="step-filter" className="text-sm font-medium text-gray-700">
+                <label htmlFor="step-filter" className="text-sm font-medium text-gray-700 whitespace-nowrap">
                   Step:
                 </label>
                 <select
                   id="step-filter"
                   value={selectedStep}
                   onChange={(e) => setSelectedStep(e.target.value)}
-                  className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-9"
                 >
                   <option value="all">All</option>
                   <option value="step1">Step 1</option>
@@ -154,14 +154,14 @@ function Dashboard({ onNavigate }: DashboardProps) {
               </div>
               {/* Status 필터 */}
               <div className="flex items-center gap-2">
-                <label htmlFor="status-filter" className="text-sm font-medium text-gray-700">
+                <label htmlFor="status-filter" className="text-sm font-medium text-gray-700 whitespace-nowrap">
                   Status:
                 </label>
                 <select
                   id="status-filter"
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-9"
                 >
                   <option value="all">All</option>
                   <option value="pending">Pending</option>

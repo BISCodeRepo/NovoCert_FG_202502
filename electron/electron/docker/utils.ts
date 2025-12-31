@@ -33,3 +33,13 @@ export function generateLogFilePath(logPath: string, stepNumber: string, taskUui
   return path.join(logPath, `step${stepNumber}-${taskUuid}-${dateStr}-${timeStr}.log`)
 }
 
+/**
+ * Generate a project folder name from project name and UUID.
+ * @param projectName The name of the project
+ * @param projectUuid The UUID of the project
+ * @returns The generated folder name in format: {projectName}_{uuidFirst6Chars}
+ */
+export function generateProjectFolderName(projectName: string, projectUuid: string): string {
+  return `${projectName}_${projectUuid.substring(0, 6)}`
+}
+
