@@ -3,9 +3,10 @@ import type { Project } from "../types";
 
 interface StepProjectListProps {
   step: number;
+  refreshTrigger?: string | null; // refresh trigger (new project created)
 }
 
-function StepProjectList({ step }: StepProjectListProps) {
+function StepProjectList({ step, refreshTrigger }: StepProjectListProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -30,6 +31,14 @@ function StepProjectList({ step }: StepProjectListProps) {
     loadProjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
+
+  // Refresh when refreshTrigger changes (new project created)
+  useEffect(() => {
+    if (refreshTrigger) {
+      loadProjects();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger]);
 
   // Polling for running projects
   useEffect(() => {

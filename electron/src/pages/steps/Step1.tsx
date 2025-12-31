@@ -115,7 +115,7 @@ function Step1() {
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
               Step 1 Projects
             </h3>
-            <StepProjectList step={1} />
+            <StepProjectList step={1} refreshTrigger={projectUuid} />
           </div>
 
 
