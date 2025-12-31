@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 interface MenuItem {
   id: string;
   label: string;
@@ -16,17 +14,17 @@ const menuItems: MenuItem[] = [
   {
     id: "dashboard",
     label: "Dashboard",
-    icon: "📊",
+    icon: "",
   },
   {
     id: "prepare",
     label: "Prepare",
-    icon: "📋",
+    icon: "",
   },
   {
     id: "pipeline",
     label: "Pipeline",
-    icon: "🔄",
+    icon: "",
     subItems: [
       { id: "step1", label: "Step 1" },
       { id: "step2", label: "Step 2" },
@@ -38,28 +36,17 @@ const menuItems: MenuItem[] = [
 ];
 
 function Sidebar({ currentPage, onNavigate }: SidebarProps) {
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(["pipeline"])
-  );
-
   const handleMenuClick = (sectionId: string) => {
-    // 하위 메뉴가 있으면 토글, 없으면 네비게이션
-    const item = menuItems.find((i) => i.id === sectionId);
-    if (item?.subItems) {
-      toggleSection(sectionId);
+    // pipeline 클릭 시 step1로 네비게이션
+    if (sectionId === "pipeline") {
+      onNavigate("step1", "");
     } else {
-      onNavigate(sectionId, "");
+      // 하위 메뉴가 없으면 네비게이션
+      const item = menuItems.find((i) => i.id === sectionId);
+      if (!item?.subItems) {
+        onNavigate(sectionId, "");
+      }
     }
-  };
-
-  const toggleSection = (sectionId: string) => {
-    const newExpanded = new Set(expandedSections);
-    if (newExpanded.has(sectionId)) {
-      newExpanded.delete(sectionId);
-    } else {
-      newExpanded.add(sectionId);
-    }
-    setExpandedSections(newExpanded);
   };
 
   return (
@@ -71,7 +58,7 @@ function Sidebar({ currentPage, onNavigate }: SidebarProps) {
               <button
                 onClick={() => handleMenuClick(item.id)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
-                  currentPage === item.id
+                  currentPage === item.id || (item.id === "pipeline" && currentPage.startsWith("step"))
                     ? "bg-blue-600 text-white"
                     : "text-gray-300 hover:bg-gray-800"
                 }`}
@@ -80,25 +67,8 @@ function Sidebar({ currentPage, onNavigate }: SidebarProps) {
                   <span className="text-lg">{item.icon}</span>
                   <span className="font-medium">{item.label}</span>
                 </div>
-                {item.subItems && (
-                  <svg
-                    className={`w-4 h-4 transition-transform ${
-                      expandedSections.has(item.id) ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                )}
               </button>
-              {item.subItems && expandedSections.has(item.id) && (
+              {item.subItems && (
                 <ul className="mt-2 ml-4 space-y-1">
                   {item.subItems.map((subItem) => (
                     <li key={subItem.id}>
@@ -106,7 +76,7 @@ function Sidebar({ currentPage, onNavigate }: SidebarProps) {
                         onClick={() => onNavigate(subItem.id, "")}
                         className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-colors ${
                           currentPage === subItem.id
-                            ? "bg-blue-600 text-white"
+                            ? "bg-gray-700 text-white"
                             : "text-gray-400 hover:bg-gray-800 hover:text-white"
                         }`}
                       >

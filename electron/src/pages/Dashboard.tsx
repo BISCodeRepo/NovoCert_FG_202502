@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Project,
   PROJECT_STATUS_LABELS,
@@ -10,19 +10,46 @@ interface DashboardProps {
 }
 
 function Dashboard({ onNavigate }: DashboardProps) {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [dbPath, setDbPath] = useState("");
+  const [selectedStep, setSelectedStep] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
   useEffect(() => {
     loadProjects();
     loadDbPath();
   }, []);
 
+  // 필터링된 프로젝트 목록
+  const filteredProjects = useMemo(() => {
+    let filtered = allProjects;
+
+    // Step 필터링 (step은 int로 저장되어 있음)
+    if (selectedStep !== "all") {
+      const stepNumber = parseInt(selectedStep.replace("step", ""));
+      filtered = filtered.filter((p) => {
+        if (p.step === null || p.step === undefined) {
+          return false;
+        }
+        // step이 문자열이든 숫자든 모두 처리
+        const projectStep = typeof p.step === "string" ? parseInt(p.step) : p.step;
+        return projectStep === stepNumber;
+      });
+    }
+
+    // Status 필터링
+    if (selectedStatus !== "all") {
+      filtered = filtered.filter((p) => p.status === selectedStatus);
+    }
+
+    return filtered;
+  }, [allProjects, selectedStep, selectedStatus]);
+
   // polling: running status projects' container status check
   useEffect(() => {
     const checkRunningProjects = async () => {
       // filter running status projects
-      const runningProjects = projects.filter(p => p.status === 'running');
+      const runningProjects = allProjects.filter(p => p.status === 'running');
       
       if (runningProjects.length === 0) {
         return;
@@ -68,13 +95,13 @@ function Dashboard({ onNavigate }: DashboardProps) {
     return () => {
       clearInterval(intervalId);
     };
-  }, [projects]);
+  }, [allProjects]);
 
   const loadProjects = async () => {
     const data = (await window.db.getProjects()) as Project[];
     // created_at을 기준으로 내림차순 정렬
     data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    setProjects(data);
+    setAllProjects(data);
   };
 
   const loadDbPath = async () => {
@@ -100,13 +127,54 @@ function Dashboard({ onNavigate }: DashboardProps) {
 
       <div className="bg-white rounded-lg shadow-sm">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Project List{" "}
-            <span className="text-gray-500">({projects.length})</span>
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Project List{" "}
+              <span className="text-gray-500">({filteredProjects.length})</span>
+            </h2>
+            <div className="flex gap-4">
+              {/* Step 필터 */}
+              <div className="flex items-center gap-2">
+                <label htmlFor="step-filter" className="text-sm font-medium text-gray-700">
+                  Step:
+                </label>
+                <select
+                  id="step-filter"
+                  value={selectedStep}
+                  onChange={(e) => setSelectedStep(e.target.value)}
+                  className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">All</option>
+                  <option value="step1">Step 1</option>
+                  <option value="step2">Step 2</option>
+                  <option value="step3">Step 3</option>
+                  <option value="step4">Step 4</option>
+                  <option value="step5">Step 5</option>
+                </select>
+              </div>
+              {/* Status 필터 */}
+              <div className="flex items-center gap-2">
+                <label htmlFor="status-filter" className="text-sm font-medium text-gray-700">
+                  Status:
+                </label>
+                <select
+                  id="status-filter"
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">All</option>
+                  <option value="pending">Pending</option>
+                  <option value="running">Running</option>
+                  <option value="failed">Failed</option>
+                  <option value="success">Success</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {projects.length === 0 ? (
+        {filteredProjects.length === 0 ? (
           <div className="p-12 text-center">
             <svg
               className="mx-auto h-12 w-12 text-gray-400"
@@ -141,6 +209,9 @@ function Dashboard({ onNavigate }: DashboardProps) {
                     Status
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Step
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Created At
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -152,7 +223,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {projects.map((project) => (
+                {filteredProjects.map((project) => (
                   <tr key={project.uuid} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">
                       <button
@@ -176,6 +247,11 @@ function Dashboard({ onNavigate }: DashboardProps) {
                       >
                         {PROJECT_STATUS_LABELS[project.status]}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                      {project.step !== null && project.step !== undefined 
+                        ? `Step ${typeof project.step === 'string' ? project.step : project.step}` 
+                        : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                       {project.created_at ? new Date(project.created_at).toLocaleString() : '-'}

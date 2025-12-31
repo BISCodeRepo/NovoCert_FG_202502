@@ -33,7 +33,7 @@ function App() {
       case "prepare":
         return <Prepare />;
       case "pipeline":
-        return <div>Pipeline 페이지 (준비 중)</div>;
+        return <Step1 />;
       case "step1":
         return <Step1 />;
       case "step2":
