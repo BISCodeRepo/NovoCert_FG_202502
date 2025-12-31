@@ -9,8 +9,9 @@ import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 import { useStepProjectSelector } from "../../hooks/useStepProjectSelector";
 import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
+import type { StepPageProps } from "../../types";
 
-function Step3() {
+function Step3({ onNavigate }: StepPageProps) {
   const [projectName, setProjectName] = useState("");
   const [spectraPath, setSpectraPath] = useState("");
   const [casanovoConfigPath, setCasanovoConfigPath] = useState("");
@@ -165,7 +166,7 @@ function Step3() {
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
               Step 3 Projects
             </h3>
-            <StepProjectList step={3} refreshTrigger={projectUuid} />
+            <StepProjectList step={3} refreshTrigger={projectUuid} onNavigate={onNavigate} />
           </div>
 
 

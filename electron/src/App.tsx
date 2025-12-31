@@ -33,17 +33,17 @@ function App() {
       case "prepare":
         return <Prepare />;
       case "pipeline":
-        return <Step1 />;
+        return <Step1 onNavigate={handleNavigate} />;
       case "step1":
-        return <Step1 />;
+        return <Step1 onNavigate={handleNavigate} />;
       case "step2":
-        return <Step2 />;
+        return <Step2 onNavigate={handleNavigate} />;
       case "step3":
-        return <Step3 />;
+        return <Step3 onNavigate={handleNavigate} />;
       case "step4":
-        return <Step4 />;
+        return <Step4 onNavigate={handleNavigate} />;
       case "step5":
-        return <Step5 />;
+        return <Step5 onNavigate={handleNavigate} />;
       case "project-detail":
         if (currentProjectUuid) {
           return (

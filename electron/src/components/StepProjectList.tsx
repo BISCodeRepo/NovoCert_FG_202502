@@ -4,9 +4,10 @@ import type { Project } from "../types";
 interface StepProjectListProps {
   step: number;
   refreshTrigger?: string | null; // refresh trigger (new project created)
+  onNavigate?: (page: string, uuid: string) => void; // navigation handler
 }
 
-function StepProjectList({ step, refreshTrigger }: StepProjectListProps) {
+function StepProjectList({ step, refreshTrigger, onNavigate }: StepProjectListProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -130,7 +131,16 @@ function StepProjectList({ step, refreshTrigger }: StepProjectListProps) {
           className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
         >
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900">{project.name}</p>
+            {onNavigate ? (
+              <button
+                onClick={() => onNavigate("project-detail", project.uuid)}
+                className="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline transition-colors text-left"
+              >
+                {project.name}
+              </button>
+            ) : (
+              <p className="text-sm font-medium text-gray-900">{project.name}</p>
+            )}
           </div>
           <div className="ml-4 flex items-center gap-2">
             {project.status === "running" && (

@@ -3,8 +3,9 @@ import { PathInput, TextInput, StepRunButton } from "../../components/form";
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
+import type { StepPageProps } from "../../types";
 
-function Step2() {
+function Step2({ onNavigate }: StepPageProps) {
   const [projectName, setProjectName] = useState("");
   const [outputPath, setOutputPath] = useState("");
   const [isRunning, setIsRunning] = useState(false);
@@ -95,7 +96,7 @@ function Step2() {
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
               Step 2 Projects
             </h3>
-            <StepProjectList step={2} refreshTrigger={projectUuid} />
+            <StepProjectList step={2} refreshTrigger={projectUuid} onNavigate={onNavigate} />
           </div>
 
      

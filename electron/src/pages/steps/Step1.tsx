@@ -8,8 +8,9 @@ import {
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
+import type { StepPageProps } from "../../types";
 
-function Step1() {
+function Step1({ onNavigate }: StepPageProps) {
   const [projectName, setProjectName] = useState("");
   const [inputPath, setInputPath] = useState("");
   const [outputPath, setOutputPath] = useState("");
@@ -115,7 +116,7 @@ function Step1() {
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
               Step 1 Projects
             </h3>
-            <StepProjectList step={1} refreshTrigger={projectUuid} />
+            <StepProjectList step={1} refreshTrigger={projectUuid} onNavigate={onNavigate} />
           </div>
 
 

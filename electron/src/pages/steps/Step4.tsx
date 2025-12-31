@@ -9,8 +9,9 @@ import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 import { useStepProjectSelector } from "../../hooks/useStepProjectSelector";
 import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
+import type { StepPageProps } from "../../types";
 
-function Step4() {
+function Step4({ onNavigate }: StepPageProps) {
   const [projectName, setProjectName] = useState("");
   const [targetMgfDir, setTargetMgfDir] = useState("");
   const [targetResultPath, setTargetResultPath] = useState("");
@@ -212,7 +213,7 @@ function Step4() {
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
               Step 4 Projects
             </h3>
-            <StepProjectList step={4} refreshTrigger={projectUuid} />
+            <StepProjectList step={4} refreshTrigger={projectUuid} onNavigate={onNavigate} />
           </div>
         </div>
       </div>
