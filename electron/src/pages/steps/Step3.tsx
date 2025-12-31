@@ -7,6 +7,8 @@ import {
 } from "../../components/form";
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 import { useStepProjectSelector } from "../../hooks/useStepProjectSelector";
+import StepProjectList from "../../components/StepProjectList";
+import StepDescriptionModal from "../../components/StepDescriptionModal";
 
 function Step3() {
   const [projectName, setProjectName] = useState("");
@@ -21,6 +23,7 @@ function Step3() {
   } | null>(null);
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
+  const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
 
   // Use Step1 project selector for MGF file
   const mgfSelector = useStepProjectSelector({
@@ -133,51 +136,39 @@ function Step3() {
       <div className="w-1/3">
         <div className="bg-white rounded-lg shadow-sm p-6 sticky top-0">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Step 3</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-gray-900">Step 3</h2>
+              <button
+                onClick={() => setIsDescriptionModalOpen(true)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                title="Step Description"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </button>
+            </div>
             <p className="text-sm text-gray-500">De-novo Peptide Sequencing</p>
           </div>
 
           <div className="border-t pt-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Step Description
+              Step 3 Projects
             </h3>
-            <div className="space-y-3 text-sm text-gray-600">
-              <p>
-                In this step, Casanovo is used to perform de-novo peptide sequencing.
-              </p>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="font-medium text-gray-700 mb-2">Required input:</p>
-                <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li>Project name</li>
-                  <li>Spectra MGF file path</li>
-                  <li>Casanovo configuration file path (Step2 output)</li>
-                  <li>Model file path (.ckpt)</li>
-                  <li>Output folder path</li>
-                </ul>
-              </div>
-            </div>
+            <StepProjectList step={3} />
           </div>
 
-          <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <div className="flex gap-2">
-              <svg
-                className="w-5 h-5 text-yellow-600 flex-shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-              <p className="text-xs text-yellow-800">
-                Please click the Run button after entering all parameters.
-              </p>
-            </div>
-          </div>
+
         </div>
       </div>
 
@@ -396,6 +387,21 @@ function Step3() {
           />
         </div>
       </div>
+
+      <StepDescriptionModal
+        isOpen={isDescriptionModalOpen}
+        onClose={() => setIsDescriptionModalOpen(false)}
+        stepNumber={3}
+        stepTitle="De-novo Peptide Sequencing"
+        description="In this step, Casanovo is used to perform de-novo peptide sequencing."
+        requiredInputs={[
+          "Project name",
+          "Spectra MGF file path",
+          "Casanovo configuration file path (Step2 output)",
+          "Model file path (.ckpt)",
+          "Output folder path",
+        ]}
+      />
     </div>
   );
 }
