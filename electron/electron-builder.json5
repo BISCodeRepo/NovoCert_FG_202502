@@ -20,6 +20,7 @@
         "arch": ["universal"]
       }
     ],
+    "icon": "build/icon.png",
     "identity": null,
     "category": "public.app-category.utilities",
     "artifactName": "${productName}-Mac-${version}-${arch}.${ext}",
@@ -35,6 +36,7 @@
         ]
       }
     ],
+    "icon": "build/icon.png",
     "artifactName": "${productName}-Windows-${version}-${arch}-Setup.${ext}",
     "publisherName": "NovoCert"
   },
@@ -51,6 +53,7 @@
     "target": [
       "AppImage"
     ],
+    "icon": "build/icon.png",
     "artifactName": "${productName}-Linux-${version}-${arch}.${ext}",
     "category": "Utility"
   }
