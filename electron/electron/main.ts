@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { database } from './database'
@@ -169,6 +169,26 @@ function setupIpcHandlers() {
   // 파일 시스템 핸들러 - 디렉토리에서 특정 확장자를 가진 가장 최근 파일 찾기
   ipcMain.handle('fs:findLatestFile', async (_, directoryPath: string, extension: string) => {
     return findLatestFile(directoryPath, extension)
+  })
+
+  // Shell 핸들러 - 파일/폴더 경로를 파일 탐색기에서 열기
+  ipcMain.handle('shell:openPath', async (_, filePath: string) => {
+    try {
+      await shell.openPath(filePath)
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    }
+  })
+
+  // Shell 핸들러 - 파일을 파일 탐색기에서 선택하여 표시
+  ipcMain.handle('shell:showItemInFolder', async (_, filePath: string) => {
+    try {
+      shell.showItemInFolder(filePath)
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    }
   })
 
   // Step1 실행 핸들러

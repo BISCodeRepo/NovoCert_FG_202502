@@ -59,6 +59,12 @@ contextBridge.exposeInMainWorld('fs', {
   findLatestFile: (directoryPath: string, extension: string) => ipcRenderer.invoke('fs:findLatestFile', directoryPath, extension),
 })
 
+// Shell API 노출
+contextBridge.exposeInMainWorld('shell', {
+  openPath: (filePath: string) => ipcRenderer.invoke('shell:openPath', filePath),
+  showItemInFolder: (filePath: string) => ipcRenderer.invoke('shell:showItemInFolder', filePath),
+})
+
 // Step API 노출
 contextBridge.exposeInMainWorld('step', {
   runStep1: (params: {

@@ -72,6 +72,11 @@ interface FsAPI {
   findLatestFile: (directoryPath: string, extension: string) => Promise<{ success: boolean; path: string | null; error: string | null }>
 }
 
+interface ShellAPI {
+  openPath: (filePath: string) => Promise<{ success: boolean; error?: string }>
+  showItemInFolder: (filePath: string) => Promise<{ success: boolean; error?: string }>
+}
+
 interface Step1Params {
   projectName: string
   inputPath: string
@@ -163,6 +168,7 @@ declare global {
     docker: DockerAPI
     dialog: DialogAPI
     fs: FsAPI
+    shell: ShellAPI
     step: StepAPI
     ipcRenderer: {
       on(channel: string, func: (...args: unknown[]) => void): void
