@@ -155,10 +155,23 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
         const result = await window.docker.isContainerRunning(containerId);
         
         if (result.success && !result.running) {
-          // update project status to success if container is stopped
-          const updatedProject = await window.db.updateProject(uuid, { status: 'success' });
-          if (updatedProject) {
-            setProject(updatedProject);
+          // 컨테이너가 종료되었을 때, 현재 프로젝트 상태를 확인
+          const currentProject = await window.db.getProject(uuid);
+          // 이미 failed 상태로 변경된 경우(강제 중단 등)는 업데이트하지 않음
+          if (currentProject && currentProject.status === 'running') {
+            // 컨테이너의 exit code를 확인하여 실제 성공 여부 판단
+            const exitCodeResult = await window.docker.getContainerExitCode(containerId);
+            if (exitCodeResult.success && exitCodeResult.exitCode !== null) {
+              // exit code가 0이면 성공, 그 외는 실패
+              const newStatus = exitCodeResult.exitCode === 0 ? 'success' : 'failed';
+              const updatedProject = await window.db.updateProject(uuid, { status: newStatus });
+              if (updatedProject) {
+                setProject(updatedProject);
+              }
+            }
+          } else if (currentProject && currentProject.status === 'failed') {
+            // failed 상태로 이미 변경된 경우, 상태만 업데이트
+            setProject(currentProject);
           }
         }
       } catch (err) {

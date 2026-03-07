@@ -70,8 +70,25 @@ function StepProjectList({ step, refreshTrigger, onNavigate }: StepProjectListPr
           const result = await window.docker.isContainerRunning(containerId);
 
           if (result.success && !result.running) {
-            await window.db.updateProject(project.uuid, { status: "success" });
-            loadProjects();
+            // 컨테이너가 종료되었을 때, 현재 프로젝트 상태를 확인
+            const currentProject = await window.db.getProject(project.uuid);
+            // 이미 failed 상태로 변경된 경우(강제 중단 등)는 업데이트하지 않음
+            if (currentProject && currentProject.status === "running") {
+              // 컨테이너의 exit code를 확인하여 실제 성공 여부 판단
+              const exitCodeResult = await window.docker.getContainerExitCode(containerId);
+              if (exitCodeResult.success && exitCodeResult.exitCode !== null) {
+                // exit code가 0이면 성공, 그 외는 실패
+                if (exitCodeResult.exitCode === 0) {
+                  await window.db.updateProject(project.uuid, { status: "success" });
+                } else {
+                  await window.db.updateProject(project.uuid, { status: "failed" });
+                }
+                loadProjects();
+              }
+            } else if (currentProject && currentProject.status === "failed") {
+              // failed 상태로 이미 변경된 경우, 리스트만 새로고침
+              loadProjects();
+            }
           }
         } catch (err) {
           console.error(

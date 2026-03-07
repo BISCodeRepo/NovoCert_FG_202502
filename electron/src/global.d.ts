@@ -56,8 +56,10 @@ interface DockerAPI {
   downloadMissingImages: () => Promise<DockerDownloadResult>
   pullImage: (imageName: string) => Promise<{ success: boolean; output?: string; error?: string }>
   isContainerRunning: (containerId: string) => Promise<{ success: boolean; running: boolean; error?: string }>
+  getContainerExitCode: (containerId: string) => Promise<{ success: boolean; exitCode: number | null; error?: string }>
   getProjectUuidFromContainer: (containerId: string) => Promise<{ success: boolean; projectUuid: string | null; error?: string }>
   findContainersByProject: (projectUuid: string) => Promise<{ success: boolean; containerIds: string[]; error?: string }>
+  stopAndCleanupContainer: (containerId: string) => Promise<{ success: boolean; error?: string }>
 }
 
 interface DialogAPI {

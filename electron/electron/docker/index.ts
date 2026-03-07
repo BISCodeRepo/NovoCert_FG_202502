@@ -15,8 +15,12 @@ export type { DockerImageConfig } from './config'
 export { 
   runDockerContainer,
   stopContainer,
+  killContainer,
+  removeContainer,
+  stopAndCleanupContainer,
   getContainerLogs,
   isContainerRunning,
+  getContainerExitCode,
   getProjectUuidFromContainer,
   findContainersByProject
 } from './container'

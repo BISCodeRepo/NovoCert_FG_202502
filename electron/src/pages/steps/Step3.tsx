@@ -78,12 +78,14 @@ function Step3({ onNavigate }: StepPageProps) {
     const spectraPathValid =
       mgfSelector.sourceType === "step"
         ? mgfSelector.selectedProjectUuid !== "" &&
+          mgfSelector.foundFilePath !== "" &&
           spectraPath.trim() !== ""
         : spectraPath.trim() !== "";
 
     const configPathValid =
       configSelector.sourceType === "step"
         ? configSelector.selectedProjectUuid !== "" &&
+          configSelector.foundFilePath !== "" &&
           casanovoConfigPath.trim() !== ""
         : casanovoConfigPath.trim() !== "";
 

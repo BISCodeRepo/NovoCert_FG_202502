@@ -16,8 +16,10 @@ import {
   executeStep4Workflow,
   executeStep5Workflow,
   isContainerRunning,
+  getContainerExitCode,
   getProjectUuidFromContainer,
-  findContainersByProject
+  findContainersByProject,
+  stopAndCleanupContainer
 } from './docker'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -120,12 +122,20 @@ function setupIpcHandlers() {
     return await isContainerRunning(containerId)
   })
 
+  ipcMain.handle('docker:getContainerExitCode', async (_, containerId: string) => {
+    return await getContainerExitCode(containerId)
+  })
+
   ipcMain.handle('docker:getProjectUuidFromContainer', async (_, containerId: string) => {
     return await getProjectUuidFromContainer(containerId)
   })
 
   ipcMain.handle('docker:findContainersByProject', async (_, projectUuid: string) => {
     return await findContainersByProject(projectUuid)
+  })
+
+  ipcMain.handle('docker:stopAndCleanupContainer', async (_, containerId: string) => {
+    return await stopAndCleanupContainer(containerId)
   })
 
   // Project handlers

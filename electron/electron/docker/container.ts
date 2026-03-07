@@ -232,6 +232,117 @@ export async function stopContainer(containerName: string): Promise<{ success: b
 }
 
 /**
+ * Kill a running container (force stop).
+ */
+export async function killContainer(containerId: string): Promise<{ success: boolean; error?: string }> {
+  return new Promise((resolve) => {
+    const dockerProcess = spawn('docker', ['kill', containerId], {
+      env: {
+        ...process.env,
+        PATH: getExtendedPath()
+      }
+    })
+
+    let errorOutput = ''
+
+    dockerProcess.stderr?.on('data', (data) => {
+      errorOutput += data.toString()
+    })
+
+    dockerProcess.on('close', (code) => {
+      if (code === 0) {
+        resolve({ success: true })
+      } else {
+        resolve({ success: false, error: errorOutput || `Failed to kill container ${containerId}` })
+      }
+    })
+
+    dockerProcess.on('error', (error) => {
+      resolve({ success: false, error: error.message })
+    })
+  })
+}
+
+/**
+ * Remove a container (even if it's running, use force).
+ */
+export async function removeContainer(containerId: string): Promise<{ success: boolean; error?: string }> {
+  return new Promise((resolve) => {
+    const dockerProcess = spawn('docker', ['rm', '-f', containerId], {
+      env: {
+        ...process.env,
+        PATH: getExtendedPath()
+      }
+    })
+
+    let errorOutput = ''
+
+    dockerProcess.stderr?.on('data', (data) => {
+      errorOutput += data.toString()
+    })
+
+    dockerProcess.on('close', (code) => {
+      if (code === 0) {
+        resolve({ success: true })
+      } else {
+        // If container removal is already in progress (--rm option), treat as success
+        if (errorOutput.includes('already in progress') || errorOutput.includes('No such container')) {
+          resolve({ success: true })
+        } else {
+          resolve({ success: false, error: errorOutput || `Failed to remove container ${containerId}` })
+        }
+      }
+    })
+
+    dockerProcess.on('error', (error) => {
+      resolve({ success: false, error: error.message })
+    })
+  })
+}
+
+/**
+ * Stop and clean up a container completely.
+ * 1. Try to stop gracefully (docker stop)
+ * 2. If that fails or container is still running, force kill (docker kill)
+ * 3. Remove the container (docker rm -f)
+ * Note: If container was started with --rm, it may already be removed automatically.
+ */
+export async function stopAndCleanupContainer(containerId: string): Promise<{ success: boolean; error?: string }> {
+  // First, try to stop gracefully
+  const stopResult = await stopContainer(containerId)
+  
+  if (!stopResult.success) {
+    // If stop failed, try to kill
+    const killResult = await killContainer(containerId)
+    if (!killResult.success) {
+      // If kill also failed, still try to remove (might be already stopped)
+      const removeResult = await removeContainer(containerId)
+      // If removal succeeded or container doesn't exist, consider it success
+      if (removeResult.success) {
+        return { success: true }
+      }
+      return { success: false, error: `Failed to stop/kill container: ${stopResult.error || killResult.error}` }
+    }
+  }
+
+  // Remove the container (force remove to ensure cleanup)
+  // Note: If container was started with --rm, it may already be removed automatically
+  const removeResult = await removeContainer(containerId)
+  
+  // If removal succeeded or container is already being removed (--rm), consider it success
+  if (removeResult.success) {
+    return { success: true }
+  }
+
+  // If removal failed but container doesn't exist anymore, consider it success
+  if (removeResult.error?.includes('No such container')) {
+    return { success: true }
+  }
+
+  return { success: false, error: `Container stopped but failed to remove: ${removeResult.error}` }
+}
+
+/**
  * Get the logs of a container.
  */
 export async function getContainerLogs(containerName: string): Promise<{ success: boolean; logs?: string; error?: string }> {
@@ -306,6 +417,59 @@ export async function isContainerRunning(containerId: string): Promise<{ success
 
     dockerProcess.on('error', (error) => {
       resolve({ success: false, running: false, error: error.message })
+    })
+  })
+}
+
+/**
+ * Get container exit code.
+ * @param containerId Container ID or name
+ * @returns Exit code if container has exited, null if still running or error
+ */
+export async function getContainerExitCode(containerId: string): Promise<{ success: boolean; exitCode: number | null; error?: string }> {
+  return new Promise((resolve) => {
+    // Use docker inspect to get container exit code
+    const dockerProcess = spawn('docker', ['inspect', '--format', '{{.State.ExitCode}}', containerId], {
+      env: {
+        ...process.env,
+        PATH: getExtendedPath()
+      }
+    })
+
+    let output = ''
+    let errorOutput = ''
+
+    dockerProcess.stdout?.on('data', (data) => {
+      output += data.toString()
+    })
+
+    dockerProcess.stderr?.on('data', (data) => {
+      errorOutput += data.toString()
+    })
+
+    dockerProcess.on('close', (code) => {
+      if (code === 0) {
+        const exitCodeStr = output.trim()
+        // If container is still running, exit code will be empty or 0
+        // If container has exited, exit code will be the actual exit code
+        if (exitCodeStr === '' || exitCodeStr === '<no value>') {
+          // Container might still be running or not found
+          resolve({ success: true, exitCode: null })
+        } else {
+          const exitCode = parseInt(exitCodeStr, 10)
+          if (isNaN(exitCode)) {
+            resolve({ success: true, exitCode: null })
+          } else {
+            resolve({ success: true, exitCode })
+          }
+        }
+      } else {
+        resolve({ success: false, exitCode: null, error: errorOutput || `Docker exited with code ${code}` })
+      }
+    })
+
+    dockerProcess.on('error', (error) => {
+      resolve({ success: false, exitCode: null, error: error.message })
     })
   })
 }

@@ -41,8 +41,10 @@ contextBridge.exposeInMainWorld('docker', {
   downloadMissingImages: () => ipcRenderer.invoke('docker:downloadMissingImages'),
   pullImage: (imageName: string) => ipcRenderer.invoke('docker:pullImage', imageName),
   isContainerRunning: (containerId: string) => ipcRenderer.invoke('docker:isContainerRunning', containerId),
+  getContainerExitCode: (containerId: string) => ipcRenderer.invoke('docker:getContainerExitCode', containerId),
   getProjectUuidFromContainer: (containerId: string) => ipcRenderer.invoke('docker:getProjectUuidFromContainer', containerId),
   findContainersByProject: (projectUuid: string) => ipcRenderer.invoke('docker:findContainersByProject', projectUuid),
+  stopAndCleanupContainer: (containerId: string) => ipcRenderer.invoke('docker:stopAndCleanupContainer', containerId),
 })
 
 // Dialog API 노출
