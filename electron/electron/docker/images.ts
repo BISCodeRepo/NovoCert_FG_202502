@@ -34,10 +34,10 @@ export async function listImages(): Promise<{
       .filter(line => line.length > 0)
     
     return { success: true, images }
-  } catch (error: unknown) {
+  } catch {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Cannot get image list'
+      error: 'Cannot get image list. Please ensure Docker is installed and running.'
     }
   }
 }
@@ -62,10 +62,10 @@ export async function pullImage(
     })
     
     return { success: true, output: stdout.trim() }
-  } catch (error: unknown) {
+  } catch {
     return {
       success: false,
-      error: error instanceof Error ? error.message : `Failed to download image ${imageName}`
+      error: `Failed to download image: ${imageName}`
     }
   }
 }
@@ -83,10 +83,10 @@ export async function checkImageExists(imageName: string): Promise<{
     })
     
     return { exists: stdout.trim().length > 0 }
-  } catch (error: unknown) {
+  } catch {
     return {
       exists: false,
-      error: error instanceof Error ? error.message : 'Cannot check image exists'
+      error: 'Cannot check if image exists. Please ensure Docker is running.'
     }
   }
 }
@@ -116,10 +116,10 @@ export async function checkRequiredImages(): Promise<{
     }
     
     return { success: true, images: statuses }
-  } catch (error: unknown) {
+  } catch {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Cannot check image status'
+      error: 'Cannot check image status. Please ensure Docker is installed and running.'
     }
   }
 }
@@ -196,10 +196,10 @@ export async function downloadMissingImages(
     }
     
     return { success: true, results }
-  } catch (error: unknown) {
+  } catch {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to download image'
+      error: 'Failed to download images. Please ensure Docker is installed and running.'
     }
   }
 }

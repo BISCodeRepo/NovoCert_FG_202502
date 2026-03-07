@@ -206,7 +206,7 @@ function Step4({ onNavigate }: StepPageProps) {
                 </svg>
               </button>
             </div>
-            <p className="text-sm text-gray-500">Percolator and FDR Control</p>
+            <p className="text-sm text-gray-500">Feature Calculation</p>
           </div>
 
           <div className="border-t pt-6">

@@ -19,16 +19,25 @@ export async function checkDockerRunning(): Promise<{
     })
     return { running: true, info: stdout.trim() }
   } catch (error: unknown) {
-    // If Docker is installed but not running
-    if (error instanceof Error && error.message.includes('Cannot connect to the Docker daemon')) {
+    const errorMsg = error instanceof Error ? error.message : ''
+    
+    if (errorMsg.includes('Cannot connect to the Docker daemon')) {
       return {
         running: false,
-        error: 'Docker is not running. Please run Docker Desktop.'
+        error: 'Docker is not running. Please start Docker Desktop.'
       }
     }
+    
+    if (errorMsg.includes('not found') || errorMsg.includes('not recognized')) {
+      return {
+        running: false,
+        error: 'Docker is not installed. Please install Docker Desktop first.'
+      }
+    }
+
     return {
       running: false,
-      error: error instanceof Error ? error.message : 'Cannot check Docker status'
+      error: 'Cannot check Docker status. Please ensure Docker Desktop is installed and running.'
     }
   }
 }

@@ -27,10 +27,10 @@ export async function checkDockerInstalled(): Promise<{
     })
     
     return { installed: true, version: stdout.trim() }
-  } catch (error: unknown) {
+  } catch {
     return {
       installed: false,
-      error: error instanceof Error ? error.message : 'Docker is not installed'
+      error: 'Docker is not installed. Please install Docker Desktop first.'
     }
   }
 }

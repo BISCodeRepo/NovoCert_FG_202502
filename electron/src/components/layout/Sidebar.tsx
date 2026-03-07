@@ -26,11 +26,11 @@ const menuItems: MenuItem[] = [
     label: "Pipeline",
     icon: "",
     subItems: [
-      { id: "step1", label: "Step 1" },
-      { id: "step2", label: "Step 2" },
-      { id: "step3", label: "Step 3" },
-      { id: "step4", label: "Step 4" },
-      { id: "step5", label: "Step 5" },
+      { id: "step1", label: "1. Decoy Spectra Generation" },
+      { id: "step2", label: "2. Download Casanovo Config" },
+      { id: "step3", label: "3. De-novo Peptide Sequencing" },
+      { id: "step4", label: "4. Feature Calculation" },
+      { id: "step5", label: "5. Percolator and FDR Control" },
     ],
   },
 ];

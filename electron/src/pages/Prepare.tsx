@@ -70,10 +70,10 @@ function Prepare() {
           error: result.error || "Docker is not installed",
         });
       }
-    } catch (error: unknown) {
+    } catch {
       setInstallStatus({
         status: "error",
-        error: error instanceof Error ? error.message : "Error checking installed",
+        error: "Failed to check Docker installation.",
       });
     }
   };
@@ -93,10 +93,10 @@ function Prepare() {
           error: result.error || "Docker is not running",
         });
       }
-    } catch (error: unknown) {
+    } catch {
       setRunningStatus({
         status: "error",
-        error: error instanceof Error ? error.message : "Error checking running",
+        error: "Failed to check Docker status.",
       });
     }
   };
@@ -116,10 +116,10 @@ function Prepare() {
           error: result.error || "Error checking images",
         });
       }
-    } catch (error: unknown) {
+    } catch {
       setImagesStatus({
         status: "error",
-        error: error instanceof Error ? error.message : "Error checking images",
+        error: "Failed to check Docker images.",
       });
     }
   };
@@ -145,11 +145,11 @@ function Prepare() {
           error: result.error || "Error downloading images",
         }));
       }
-    } catch (error: unknown) {
+    } catch {
       setImagesStatus((prev) => ({
         status: "error",
         downloadProgress: prev.downloadProgress,
-        error: error instanceof Error ? error.message : "Error downloading images",
+        error: "Failed to download Docker images.",
       }));
     }
   };
@@ -157,9 +157,33 @@ function Prepare() {
   return (
     <div className="max-w-7xl mx-auto">
       <h1 className="text-4xl font-bold text-gray-900 mb-2">Environment Preparation</h1>
-      <p className="text-sm text-gray-500 mb-8">
+      <p className="text-sm text-gray-500 mb-4">
         Check the Docker environment and install the necessary images
       </p>
+
+      <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex gap-3">
+          <svg
+            className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <div className="text-sm text-blue-800">
+            <p className="font-semibold mb-1">Before Starting</p>
+            <p>
+              All items must be checked and installed before starting the pipeline
+            </p>
+          </div>
+        </div>
+      </div>
 
       <div className="space-y-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
@@ -270,7 +294,7 @@ function Prepare() {
                   <span>Status: Not Installed</span>
                 </div>
                 {installStatus.error && (
-                  <p className="text-xs text-red-500 ml-6">
+                  <p className="text-xs text-red-500 ml-6 break-words max-w-full">
                     {installStatus.error}
                   </p>
                 )}
@@ -387,7 +411,7 @@ function Prepare() {
                   <span>Status: Not Running</span>
                 </div>
                 {runningStatus.error && (
-                  <p className="text-xs text-red-500 ml-6">
+                  <p className="text-xs text-red-500 ml-6 break-words max-w-full">
                     {runningStatus.error}
                   </p>
                 )}
@@ -686,7 +710,7 @@ function Prepare() {
                   <span>Status: Error</span>
                 </div>
                 {imagesStatus.error && (
-                  <p className="text-xs text-red-500 ml-6">
+                  <p className="text-xs text-red-500 ml-6 break-words max-w-full">
                     {imagesStatus.error}
                   </p>
                 )}
@@ -696,29 +720,6 @@ function Prepare() {
         </div>
       </div>
 
-      <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex gap-3">
-          <svg
-            className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <div className="text-sm text-blue-800">
-            <p className="font-semibold mb-1">Before Starting</p>
-            <p>
-              All items must be checked and installed before starting the pipeline
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
