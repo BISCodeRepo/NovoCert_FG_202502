@@ -89,11 +89,24 @@ export function useStepRunningProject({
               // Don't set state for this project since it's no longer running
             }
           } else {
-            // No containerId found, but project is marked as running - mark as failed
-            console.log(`[useStepRunningProject] No containerId found for running project, marking as failed`);
+            // No containerId found - this could mean:
+            // 1. Container hasn't started yet (project just created)
+            // 2. Container was removed (--rm) after successful completion
+            // 3. Project creation failed before container started
+            // Don't mark as failed immediately - wait for container to start or check if project is very old
+            console.log(`[useStepRunningProject] No containerId found for running project`);
             const currentProject = await window.db.getProject(runningProject.uuid);
             if (currentProject && currentProject.status === 'running') {
-              await window.db.updateProject(runningProject.uuid, { status: 'failed' });
+              // Check if project is older than 30 seconds (container should have started by then)
+              const projectAge = Date.now() - new Date(currentProject.created_at).getTime();
+              if (projectAge > 30000) {
+                // Project is older than 30 seconds but no containerId - likely failed
+                console.log(`[useStepRunningProject] Project is older than 30s with no containerId, marking as failed`);
+                await window.db.updateProject(runningProject.uuid, { status: 'failed' });
+              } else {
+                // Project is new, container might not have started yet - wait
+                console.log(`[useStepRunningProject] Project is new (${projectAge}ms old), waiting for container to start`);
+              }
             }
           }
         }

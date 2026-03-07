@@ -25,7 +25,7 @@ npm run dev
 npm run build:mac
 ```
 
-Output: `release/1.0.4/NovoCert-Mac-{version}-universal.dmg`
+Output: `release/1.0.5/NovoCert-Mac-{version}-universal.dmg`
 
 ### Windows
 
@@ -33,7 +33,7 @@ Output: `release/1.0.4/NovoCert-Mac-{version}-universal.dmg`
 npm run build:win
 ```
 
-Output: `release/1.0.4/NovoCert-Windows-{version}-x64-Setup.exe`
+Output: `release/1.0.5/NovoCert-Windows-{version}-x64-Setup.exe`
 
 ## Other Commands
 
