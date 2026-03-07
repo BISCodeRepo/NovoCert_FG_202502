@@ -19,6 +19,7 @@ export {
   removeContainer,
   stopAndCleanupContainer,
   getContainerLogs,
+  getLogFileTail,
   isContainerRunning,
   getContainerExitCode,
   getProjectUuidFromContainer,

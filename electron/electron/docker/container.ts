@@ -2,6 +2,7 @@ import { spawn, ChildProcess } from 'node:child_process'
 import { getExtendedPath } from './utils'
 import fs from 'node:fs'
 import path from 'node:path'
+import { Transform } from 'node:stream'
 
 interface DockerRunOptions {
   image: string
@@ -167,10 +168,20 @@ export async function runDockerContainer(options: DockerRunOptions): Promise<Doc
   })
 }
 
+// Track active log collection processes to prevent duplicates and enable cleanup
+const activeLogProcesses = new Map<string, { process: ReturnType<typeof spawn>; stream: fs.WriteStream }>()
+
 /**
  * Collect container logs in background and save to file.
+ * Prevents duplicate log collection for the same container.
  */
 function startLogCollection(containerId: string, logFilePath: string) {
+  // Check if log collection is already running for this container
+  if (activeLogProcesses.has(containerId)) {
+    console.log(`[startLogCollection] Log collection already running for container ${containerId}, skipping`)
+    return
+  }
+
   const logProcess = spawn('docker', ['logs', '-f', containerId], {
     env: {
       ...process.env,
@@ -178,56 +189,114 @@ function startLogCollection(containerId: string, logFilePath: string) {
     }
   })
 
-  const logStream = fs.createWriteStream(logFilePath, { flags: 'a' })
-
-  logProcess.stdout?.on('data', (data) => {
-    logStream.write(`[STDOUT] ${data.toString()}`)
+  // Create write stream with explicit buffer size to prevent memory buildup
+  const logStream = fs.createWriteStream(logFilePath, { 
+    flags: 'a',
+    highWaterMark: 64 * 1024 // 64KB buffer (default is 16KB, but we want to reduce writes)
   })
 
-  logProcess.stderr?.on('data', (data) => {
-    logStream.write(`[STDERR] ${data.toString()}`)
-  })
+  // Track this process
+  activeLogProcesses.set(containerId, { process: logProcess, stream: logStream })
+
+  // 접두사를 붙여주는 안전한 변환 스트림 생성기
+  const createPrefixStream = (prefix: string) => {
+    return new Transform({
+      transform(chunk, _encoding, callback) {
+        // chunk를 메모리에 누적하지 않고 바로 다음 스트림으로 전달
+        callback(null, `${prefix}${chunk.toString()}`)
+      }
+    })
+  }
+
+  // Transform streams for cleanup tracking
+  const stdoutTransform = logProcess.stdout ? createPrefixStream('[STDOUT] ') : null
+  const stderrTransform = logProcess.stderr ? createPrefixStream('[STDERR] ') : null
+
+  // Cleanup function
+  const cleanup = () => {
+    activeLogProcesses.delete(containerId)
+    // Remove all event listeners to prevent memory leaks
+    logProcess.removeAllListeners()
+    // Destroy transform streams
+    if (stdoutTransform && !stdoutTransform.destroyed) {
+      stdoutTransform.destroy()
+    }
+    if (stderrTransform && !stderrTransform.destroyed) {
+      stderrTransform.destroy()
+    }
+    // Ensure stream is closed and flushed
+    if (!logStream.destroyed) {
+      logStream.end(() => {
+        // Stream is fully closed
+      })
+    }
+    // Kill the process if it's still running
+    if (!logProcess.killed && logProcess.pid) {
+      try {
+        logProcess.kill('SIGTERM')
+      } catch (error) {
+        // Process might already be terminated
+      }
+    }
+  }
+
+  // on('data') 대신 pipe()를 사용하여 Backpressure(메모리 폭발) 완벽 차단
+  if (logProcess.stdout && stdoutTransform) {
+    logProcess.stdout
+      .pipe(stdoutTransform)
+      .pipe(logStream, { end: false }) // end: false는 stdout이 끝나도 logStream을 닫지 않음
+  }
+
+  if (logProcess.stderr && stderrTransform) {
+    logProcess.stderr
+      .pipe(stderrTransform)
+      .pipe(logStream, { end: false })
+  }
 
   logProcess.on('close', async (code) => {
     // Note: 'code' is the exit code of the 'docker logs -f' process, not the container
     // We need to check the actual container exit code
-    logStream.write(`\n=== Log collection process finished (exit code: ${code}) ===\n`)
-    
-    // Get the actual container exit code (single attempt)
-    try {
-      const exitCodeResult = await getContainerExitCode(containerId)
+    if (!logStream.destroyed) {
+      logStream.write(`\n=== Log collection process finished (exit code: ${code}) ===\n`)
       
-      if (exitCodeResult.success && exitCodeResult.exitCode !== null) {
-        logStream.write(`=== Container actual exit code: ${exitCodeResult.exitCode} ===\n`)
-        if (exitCodeResult.exitCode === 0) {
-          logStream.write(`=== Container completed successfully ===\n`)
+      // Get the actual container exit code (single attempt)
+      try {
+        const exitCodeResult = await getContainerExitCode(containerId)
+        
+        if (exitCodeResult.success && exitCodeResult.exitCode !== null) {
+          logStream.write(`=== Container actual exit code: ${exitCodeResult.exitCode} ===\n`)
+          if (exitCodeResult.exitCode === 0) {
+            logStream.write(`=== Container completed successfully ===\n`)
+          } else {
+            logStream.write(`=== Container exited with error (exit code: ${exitCodeResult.exitCode}) ===\n`)
+          }
         } else {
-          logStream.write(`=== Container exited with error (exit code: ${exitCodeResult.exitCode}) ===\n`)
+          // Container not found or exit code unavailable (likely removed by --rm)
+          logStream.write(`=== Could not retrieve container exit code ===\n`)
+          if (exitCodeResult.error) {
+            logStream.write(`Error: ${exitCodeResult.error}\n`)
+          }
+          // If log collection process exited with code 0, it usually means container finished normally
+          if (code === 0) {
+            logStream.write(`=== Log collection finished normally, assuming container completed (exit code: 0) ===\n`)
+          }
         }
-      } else {
-        // Container not found or exit code unavailable (likely removed by --rm)
-        logStream.write(`=== Could not retrieve container exit code ===\n`)
-        if (exitCodeResult.error) {
-          logStream.write(`Error: ${exitCodeResult.error}\n`)
-        }
-        // If log collection process exited with code 0, it usually means container finished normally
+      } catch (error) {
+        logStream.write(`=== Error checking container exit code: ${error instanceof Error ? error.message : 'Unknown error'} ===\n`)
         if (code === 0) {
           logStream.write(`=== Log collection finished normally, assuming container completed (exit code: 0) ===\n`)
         }
       }
-    } catch (error) {
-      logStream.write(`=== Error checking container exit code: ${error instanceof Error ? error.message : 'Unknown error'} ===\n`)
-      if (code === 0) {
-        logStream.write(`=== Log collection finished normally, assuming container completed (exit code: 0) ===\n`)
-      }
     }
     
-    logStream.end()
+    cleanup()
   })
 
   logProcess.on('error', (error) => {
-    logStream.write(`\n=== Log collection error: ${error.message} ===\n`)
-    logStream.end()
+    if (!logStream.destroyed) {
+      logStream.write(`\n=== Log collection error: ${error.message} ===\n`)
+    }
+    cleanup()
   })
 }
 
@@ -334,12 +403,30 @@ export async function removeContainer(containerId: string): Promise<{ success: b
 
 /**
  * Stop and clean up a container completely.
- * 1. Try to stop gracefully (docker stop)
- * 2. If that fails or container is still running, force kill (docker kill)
- * 3. Remove the container (docker rm -f)
+ * 1. Stop any active log collection for this container
+ * 2. Try to stop gracefully (docker stop)
+ * 3. If that fails or container is still running, force kill (docker kill)
+ * 4. Remove the container (docker rm -f)
  * Note: If container was started with --rm, it may already be removed automatically.
  */
 export async function stopAndCleanupContainer(containerId: string): Promise<{ success: boolean; error?: string }> {
+  // Stop log collection for this container if it's running
+  if (activeLogProcesses.has(containerId)) {
+    const { process: logProcess, stream } = activeLogProcesses.get(containerId)!
+    try {
+      if (!logProcess.killed && logProcess.pid) {
+        logProcess.kill('SIGTERM')
+      }
+      if (!stream.destroyed) {
+        stream.end()
+      }
+      logProcess.removeAllListeners()
+      activeLogProcesses.delete(containerId)
+    } catch (error) {
+      console.error(`Error stopping log collection for container ${containerId}:`, error)
+    }
+  }
+
   // First, try to stop gracefully
   const stopResult = await stopContainer(containerId)
   
@@ -376,10 +463,14 @@ export async function stopAndCleanupContainer(containerId: string): Promise<{ su
 
 /**
  * Get the logs of a container.
+ * ⚠️ WARNING: This function loads all logs into memory, which can cause memory issues for large logs.
+ * Consider using getLogFileTail() instead to read only the last N lines from the log file.
+ * 
+ * @deprecated Use getLogFileTail() for reading log files instead of loading all logs into memory.
  */
 export async function getContainerLogs(containerName: string): Promise<{ success: boolean; logs?: string; error?: string }> {
   return new Promise((resolve) => {
-    const dockerProcess = spawn('docker', ['logs', containerName], {
+    const dockerProcess = spawn('docker', ['logs', '--tail', '1000', containerName], {
       env: {
         ...process.env,
         PATH: getExtendedPath()
@@ -388,9 +479,23 @@ export async function getContainerLogs(containerName: string): Promise<{ success
 
     let logs = ''
     let errorOutput = ''
+    let totalSize = 0
+    const MAX_SIZE = 10 * 1024 * 1024 // 10MB limit to prevent memory explosion
 
     dockerProcess.stdout?.on('data', (data) => {
-      logs += data.toString()
+      totalSize += data.length
+      if (totalSize < MAX_SIZE) {
+        logs += data.toString()
+      } else {
+        // Stop collecting if size exceeds limit
+        if (!dockerProcess.killed) {
+          dockerProcess.kill('SIGTERM')
+        }
+        resolve({ 
+          success: false, 
+          error: `Log size exceeds ${MAX_SIZE / 1024 / 1024}MB limit. Use getLogFileTail() to read log file directly.` 
+        })
+      }
     })
 
     dockerProcess.stderr?.on('data', (data) => {
@@ -401,11 +506,67 @@ export async function getContainerLogs(containerName: string): Promise<{ success
       if (code === 0) {
         resolve({ success: true, logs: logs + errorOutput })
       } else {
-        resolve({ success: false, error: errorOutput })
+        resolve({ success: false, error: errorOutput || `Docker exited with code ${code}` })
       }
     })
 
     dockerProcess.on('error', (error) => {
+      resolve({ success: false, error: error.message })
+    })
+  })
+}
+
+/**
+ * Read the last N lines from a log file without loading the entire file into memory.
+ * This is the recommended way to read log files, especially for large files.
+ * 
+ * @param logFilePath Path to the log file
+ * @param lines Number of lines to read from the end (default: 1000)
+ * @returns Last N lines of the log file
+ */
+export async function getLogFileTail(logFilePath: string, lines: number = 1000): Promise<{ success: boolean; logs?: string; error?: string }> {
+  return new Promise((resolve) => {
+    // Check if file exists
+    if (!fs.existsSync(logFilePath)) {
+      resolve({ success: false, error: `Log file not found: ${logFilePath}` })
+      return
+    }
+
+    // Use tail command (Unix/Mac) or PowerShell (Windows) to read last N lines
+    // This avoids loading the entire file into memory
+    const isWindows = process.platform === 'win32'
+    const command = isWindows ? 'powershell' : 'tail'
+    const args = isWindows 
+      ? ['-Command', `Get-Content "${logFilePath}" -Tail ${lines}`]
+      : ['-n', String(lines), logFilePath]
+
+    const tailProcess = spawn(command, args, {
+      env: {
+        ...process.env,
+        PATH: getExtendedPath()
+      }
+    })
+
+    let logs = ''
+    let errorOutput = ''
+
+    tailProcess.stdout?.on('data', (data) => {
+      logs += data.toString()
+    })
+
+    tailProcess.stderr?.on('data', (data) => {
+      errorOutput += data.toString()
+    })
+
+    tailProcess.on('close', (code) => {
+      if (code === 0) {
+        resolve({ success: true, logs })
+      } else {
+        resolve({ success: false, error: errorOutput || `Tail command exited with code ${code}` })
+      }
+    })
+
+    tailProcess.on('error', (error) => {
       resolve({ success: false, error: error.message })
     })
   })
