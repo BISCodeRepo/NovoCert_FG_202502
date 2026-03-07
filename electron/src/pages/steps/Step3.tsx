@@ -8,6 +8,7 @@ import {
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 import { useStepProjectSelector } from "../../hooks/useStepProjectSelector";
 import { useStepRunningProject } from "../../hooks/useStepRunningProject";
+import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
 import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import type { StepPageProps } from "../../types";
@@ -34,6 +35,9 @@ function Step3({ onNavigate }: StepPageProps) {
     setContainerId,
     setProjectName,
   });
+
+  // Check if there's a running project (polling status)
+  const hasRunningProject = useStepRunningStatus(projectUuid);
 
   // Use Step1 project selector for MGF file
   const mgfSelector = useStepProjectSelector({
@@ -387,7 +391,7 @@ function Step3({ onNavigate }: StepPageProps) {
             stepNumber={3}
             onClick={handleRunStep3}
             isFormValid={isFormValid()}
-            isRunning={isRunning}
+            isRunning={isRunning || hasRunningProject}
             message={message}
           />
           {/* Project Status Monitor */}

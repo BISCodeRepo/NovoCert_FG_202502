@@ -9,6 +9,7 @@ import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useStepRunningProject } from "../../hooks/useStepRunningProject";
+import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
 import type { StepPageProps } from "../../types";
 
 function Step1({ onNavigate }: StepPageProps) {
@@ -34,6 +35,9 @@ function Step1({ onNavigate }: StepPageProps) {
     setContainerId,
     setProjectName,
   });
+
+  // Check if there's a running project (polling status)
+  const hasRunningProject = useStepRunningStatus(projectUuid);
 
   // Input folder validation
   const [inputFiles, setInputFiles] = useState<string[]>([]);
@@ -382,7 +386,7 @@ function Step1({ onNavigate }: StepPageProps) {
             stepNumber={1}
             onClick={handleRunStep1}
             isFormValid={isFormValid()}
-            isRunning={isRunning}
+            isRunning={isRunning || hasRunningProject}
             message={message}
           />
           {/* Project Status Monitor */}
