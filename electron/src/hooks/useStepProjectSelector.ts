@@ -4,8 +4,8 @@ import type { Project } from "../types";
 interface UseStepProjectSelectorOptions {
   step: number;
   defaultSourceType?: "step" | "custom";
-  extensions?: string[]; // 파일 확장자 (파일 찾기용)
-  returnDirectory?: boolean; // true면 디렉토리 경로 반환, false면 파일 경로 반환
+  extensions?: string[]; // file extensions (for file finding)
+  returnDirectory?: boolean; // true returns directory path, false returns file path
   onFileFound?: (path: string) => void;
   onError?: (error: string) => void;
 }
@@ -18,6 +18,7 @@ interface UseStepProjectSelectorReturn {
   setSelectedProjectUuid: (uuid: string) => void;
   foundFilePath: string;
   isLoading: boolean;
+  error: string | null;
 }
 
 export function useStepProjectSelector({
@@ -33,6 +34,7 @@ export function useStepProjectSelector({
   const [selectedProjectUuid, setSelectedProjectUuid] = useState<string>("");
   const [foundFilePath, setFoundFilePath] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Load projects for the specified step
   useEffect(() => {
@@ -50,8 +52,10 @@ export function useStepProjectSelector({
         );
         setProjects(stepProjects);
       } catch (error) {
-        console.error(`Step${step} 프로젝트 조회 실패:`, error);
-        onError?.(`Step${step} 프로젝트 조회 실패`);
+        console.error(`Failed to load Step${step} projects:`, error);
+        const errorMsg = `Failed to load Step${step} projects`;
+        setError(errorMsg);
+        onError?.(errorMsg);
       } finally {
         setIsLoading(false);
       }
@@ -65,6 +69,7 @@ export function useStepProjectSelector({
     const findFile = async () => {
       if (sourceType !== "step" || !selectedProjectUuid) {
         setFoundFilePath("");
+        setError(null);
         return;
       }
 
@@ -74,6 +79,7 @@ export function useStepProjectSelector({
 
       if (!selectedProject) {
         setFoundFilePath("");
+        setError(null);
         return;
       }
 
@@ -84,6 +90,7 @@ export function useStepProjectSelector({
 
       if (!stepParams?.outputPath) {
         setFoundFilePath("");
+        setError(null);
         return;
       }
 
@@ -108,22 +115,26 @@ export function useStepProjectSelector({
 
           if (foundPath) {
             setFoundFilePath(foundPath);
+            setError(null);
             onFileFound?.(foundPath);
           } else {
             setFoundFilePath("");
-            onError?.(
-              `파일을 찾을 수 없습니다. (확장자: ${extensions.join(", ")})`
-            );
+            const errorMsg = `Cannot find a file with the extension: ${extensions.join(", ")}`;
+            setError(errorMsg);
+            onError?.(errorMsg);
           }
         } else {
           // No extensions and not directory - just return outputPath
           setFoundFilePath(outputPath);
+          setError(null);
           onFileFound?.(outputPath);
         }
       } catch (error) {
-        console.error("경로 검색 실패:", error);
+        console.error("Error finding file:", error);
         setFoundFilePath("");
-        onError?.("경로 검색 중 오류가 발생했습니다");
+        const errorMsg = "Error finding file";
+        setError(errorMsg);
+        onError?.(errorMsg);
       }
     };
 
@@ -135,6 +146,7 @@ export function useStepProjectSelector({
     if (sourceType === "custom") {
       setFoundFilePath("");
       setSelectedProjectUuid("");
+      setError(null);
     }
   }, [sourceType]);
 
@@ -146,6 +158,7 @@ export function useStepProjectSelector({
     setSelectedProjectUuid,
     foundFilePath,
     isLoading,
+    error,
   };
 }
 

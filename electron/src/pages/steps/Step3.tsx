@@ -45,8 +45,6 @@ function Step3({ onNavigate }: StepPageProps) {
     defaultSourceType: "step",
     extensions: ["mgf"],
     onFileFound: (path) => setSpectraPath(path),
-    onError: (error) =>
-      setMessage({ type: "error", text: error }),
   });
 
   // Use Step2 project selector for Config file
@@ -55,8 +53,6 @@ function Step3({ onNavigate }: StepPageProps) {
     defaultSourceType: "step",
     extensions: ["yaml", "yml"],
     onFileFound: (path) => setCasanovoConfigPath(path),
-    onError: (error) =>
-      setMessage({ type: "error", text: error }),
   });
 
   // Update spectraPath when selector finds file or switches to custom
@@ -65,8 +61,9 @@ function Step3({ onNavigate }: StepPageProps) {
       setSpectraPath("");
     } else if (mgfSelector.foundFilePath) {
       setSpectraPath(mgfSelector.foundFilePath);
-      }
-  }, [mgfSelector.sourceType, mgfSelector.foundFilePath]);
+    }
+    // Trigger validation when path changes
+  }, [mgfSelector.sourceType, mgfSelector.foundFilePath, mgfSelector.error]);
 
   // Update casanovoConfigPath when selector finds file or switches to custom
   useEffect(() => {
@@ -75,7 +72,8 @@ function Step3({ onNavigate }: StepPageProps) {
     } else if (configSelector.foundFilePath) {
       setCasanovoConfigPath(configSelector.foundFilePath);
     }
-  }, [configSelector.sourceType, configSelector.foundFilePath]);
+    // Trigger validation when path changes
+  }, [configSelector.sourceType, configSelector.foundFilePath, configSelector.error]);
 
   // Check if all required parameters are entered
   const isFormValid = () => {
@@ -257,18 +255,27 @@ function Step3({ onNavigate }: StepPageProps) {
                     </select>
                   </div>
 
-                  {mgfSelector.selectedProjectUuid && mgfSelector.foundFilePath && (
+                  {mgfSelector.selectedProjectUuid && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        MGF 파일 경로
-                        <span className="text-red-500 ml-1">*</span>
-                      </label>
-                      <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
-                        {mgfSelector.foundFilePath}
-                      </div>
-                      <p className="mt-1 text-xs text-gray-500">
-                        The most recently created .mgf file in the output directory of the selected Step1 project has been automatically selected.
-                      </p>
+                      {mgfSelector.foundFilePath ? (
+                        <>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            MGF 파일 경로
+                            <span className="text-red-500 ml-1">*</span>
+                          </label>
+                          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
+                            {mgfSelector.foundFilePath}
+                          </div>
+                          <p className="mt-1 text-xs text-gray-500">
+                            The most recently created .mgf file in the output directory of the selected Step1 project has been automatically selected.
+                          </p>
+                        </>
+                      ) : null}
+                      {mgfSelector.error && (
+                        <p className="mt-2 text-sm text-red-600">
+                          {mgfSelector.error}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -338,18 +345,27 @@ function Step3({ onNavigate }: StepPageProps) {
                     </select>
                   </div>
 
-                  {configSelector.selectedProjectUuid && configSelector.foundFilePath && (
+                  {configSelector.selectedProjectUuid && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Config 파일 경로
-                        <span className="text-red-500 ml-1">*</span>
-                      </label>
-                      <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
-                        {configSelector.foundFilePath}
-                      </div>
-                      <p className="mt-1 text-xs text-gray-500">
-                        The most recently created .yaml or .yml file in the output directory of the selected Step2 project has been automatically selected.
-                      </p>
+                      {configSelector.foundFilePath ? (
+                        <>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Config 파일 경로
+                            <span className="text-red-500 ml-1">*</span>
+                          </label>
+                          <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
+                            {configSelector.foundFilePath}
+                          </div>
+                          <p className="mt-1 text-xs text-gray-500">
+                            The most recently created .yaml or .yml file in the output directory of the selected Step2 project has been automatically selected.
+                          </p>
+                        </>
+                      ) : null}
+                      {configSelector.error && (
+                        <p className="mt-2 text-sm text-red-600">
+                          {configSelector.error}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
