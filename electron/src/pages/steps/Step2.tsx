@@ -139,6 +139,58 @@ function Step2({ onNavigate }: StepPageProps) {
             />
           </div>
 
+          {/* Model Download Information */}
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <svg
+                className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-blue-900 mb-2">
+                  Casanovo Model Required for Step 3
+                </h3>
+                <p className="text-sm text-blue-800 mb-3">
+                  Step 3 (De novo Peptide Sequencing) requires a Casanovo model file (.ckpt). 
+                  Please download the model from the official GitHub releases page before proceeding to Step 3.
+                </p>
+                <a
+                  href="https://github.com/Noble-Lab/casanovo/releases"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
+                  Download Model from GitHub Releases
+                </a>
+                <p className="text-xs text-blue-700 mt-2">
+                  Look for files with <code className="bg-blue-100 px-1 py-0.5 rounded">.ckpt</code> extension in the releases.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Run Button */}
           <StepRunButton
             stepNumber={2}
@@ -162,7 +214,7 @@ function Step2({ onNavigate }: StepPageProps) {
         onClose={() => setIsDescriptionModalOpen(false)}
         stepNumber={2}
         stepTitle="Download Casanovo Config"
-        description="In this step, the Casanovo configuration file is downloaded."
+        description="In this step, the Casanovo configuration file is downloaded. Note: Step 3 requires a Casanovo model file (.ckpt) which can be downloaded from the GitHub releases page."
         requiredInputs={[
           "Project name",
           "Output folder path (bind mount to /app/output/)",
