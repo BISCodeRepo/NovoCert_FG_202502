@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { database } from './database'
-import { findLatestFile } from './utils/fs'
+import { findLatestFile, listFiles } from './utils/fs'
 import { selectFile, selectFolder } from './utils/dialog'
 import { 
   checkDockerInstalled, 
@@ -164,6 +164,11 @@ function setupIpcHandlers() {
     defaultPath?: string
   }) => {
     return await selectFile(win, options)
+  })
+
+  // 파일 시스템 핸들러 - 디렉토리 내 파일 목록 조회
+  ipcMain.handle('fs:listFiles', async (_, directoryPath: string) => {
+    return listFiles(directoryPath)
   })
 
   // 파일 시스템 핸들러 - 디렉토리에서 특정 확장자를 가진 가장 최근 파일 찾기

@@ -1,6 +1,44 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+export interface ListFilesResult {
+  success: boolean
+  files: string[]
+  error: string | null
+}
+
+/**
+ * List files in a directory
+ * @param directoryPath The path to the directory
+ * @returns List of file names in the directory
+ */
+export function listFiles(directoryPath: string): ListFilesResult {
+  try {
+    if (!fs.existsSync(directoryPath)) {
+      return { success: false, files: [], error: 'Directory does not exist' }
+    }
+
+    const stats = fs.statSync(directoryPath)
+    if (!stats.isDirectory()) {
+      return { success: false, files: [], error: 'Not a directory' }
+    }
+
+    const entries = fs.readdirSync(directoryPath)
+    const files = entries.filter(entry => {
+      const fullPath = path.join(directoryPath, entry)
+      return fs.statSync(fullPath).isFile()
+    })
+
+    return { success: true, files, error: null }
+  } catch (error) {
+    return {
+      success: false,
+      files: [],
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    }
+  }
+}
+
 export interface FindLatestFileResult {
   success: boolean
   path: string | null

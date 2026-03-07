@@ -56,6 +56,7 @@ contextBridge.exposeInMainWorld('dialog', {
 
 // File System API 노출
 contextBridge.exposeInMainWorld('fs', {
+  listFiles: (directoryPath: string) => ipcRenderer.invoke('fs:listFiles', directoryPath),
   findLatestFile: (directoryPath: string, extension: string) => ipcRenderer.invoke('fs:findLatestFile', directoryPath, extension),
 })
 

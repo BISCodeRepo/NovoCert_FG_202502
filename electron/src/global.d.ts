@@ -69,6 +69,7 @@ interface DialogAPI {
 }
 
 interface FsAPI {
+  listFiles: (directoryPath: string) => Promise<{ success: boolean; files: string[]; error: string | null }>
   findLatestFile: (directoryPath: string, extension: string) => Promise<{ success: boolean; path: string | null; error: string | null }>
 }
 

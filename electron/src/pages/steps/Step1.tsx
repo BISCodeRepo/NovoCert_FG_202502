@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   PathInput,
   TextInput,
@@ -26,6 +26,82 @@ function Step1({ onNavigate }: StepPageProps) {
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
 
+  // Input folder validation
+  const [inputFiles, setInputFiles] = useState<string[]>([]);
+  const [inputValidation, setInputValidation] = useState<{
+    status: "idle" | "checking" | "valid" | "warning" | "error";
+    message: string;
+  }>({ status: "idle", message: "" });
+
+  const validateInputFolder = useCallback(async (folderPath: string) => {
+    if (!folderPath.trim()) {
+      setInputFiles([]);
+      setInputValidation({ status: "idle", message: "" });
+      return;
+    }
+
+    setInputValidation({ status: "checking", message: "Checking folder..." });
+
+    try {
+      const result = await window.fs.listFiles(folderPath);
+      if (!result.success) {
+        setInputFiles([]);
+        setInputValidation({
+          status: "error",
+          message: result.error || "Cannot read folder.",
+        });
+        return;
+      }
+
+      setInputFiles(result.files);
+
+      if (result.files.length === 0) {
+        setInputValidation({
+          status: "error",
+          message: "Folder is empty. No files found.",
+        });
+        return;
+      }
+
+      const mgfFiles = result.files.filter((f) =>
+        f.toLowerCase().endsWith(".mgf")
+      );
+      const nonMgfFiles = result.files.filter(
+        (f) => !f.toLowerCase().endsWith(".mgf")
+      );
+
+      if (mgfFiles.length === 0) {
+        setInputValidation({
+          status: "error",
+          message: `No .mgf files found. ${result.files.length} file(s) found with other extensions.`,
+        });
+      } else if (nonMgfFiles.length > 0) {
+        setInputValidation({
+          status: "warning",
+          message: `${mgfFiles.length} .mgf file(s) found, but ${nonMgfFiles.length} non-.mgf file(s) also exist.`,
+        });
+      } else {
+        setInputValidation({
+          status: "valid",
+          message: `${mgfFiles.length} .mgf file(s) found.`,
+        });
+      }
+    } catch {
+      setInputFiles([]);
+      setInputValidation({
+        status: "error",
+        message: "Failed to check folder.",
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      validateInputFolder(inputPath);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [inputPath, validateInputFolder]);
+
   // Check if all required parameters are entered
   const isFormValid = () => {
     return (
@@ -34,7 +110,8 @@ function Step1({ onNavigate }: StepPageProps) {
       outputPath.trim() !== "" &&
       memory.trim() !== "" &&
       precursorTolerance.trim() !== "" &&
-      randomSeed.trim() !== ""
+      randomSeed.trim() !== "" &&
+      (inputValidation.status === "valid" || inputValidation.status === "warning")
     );
   };
 
@@ -139,14 +216,120 @@ function Step1({ onNavigate }: StepPageProps) {
               description="Enter the name of the project to start a new one"
             />
 
-            <PathInput
-              label="Input Folder Path"
-              value={inputPath}
-              onChange={setInputPath}
-              placeholder="/path/to/input/folder"
-              required={true}
-              description="The full path of the folder containing the input data (mounted inside the container at /app/input)"
-            />
+            <div>
+              <PathInput
+                label="Input Folder Path"
+                value={inputPath}
+                onChange={setInputPath}
+                placeholder="/path/to/input/folder"
+                required={true}
+                description="The full path of the folder containing the input data (mounted inside the container at /app/input)"
+              />
+              {inputValidation.status !== "idle" && (
+                <div className="mt-2">
+                  <div
+                    className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${
+                      inputValidation.status === "checking"
+                        ? "bg-blue-50 text-blue-700"
+                        : inputValidation.status === "valid"
+                        ? "bg-green-50 text-green-700"
+                        : inputValidation.status === "warning"
+                        ? "bg-yellow-50 text-yellow-700"
+                        : "bg-red-50 text-red-700"
+                    }`}
+                  >
+                    {inputValidation.status === "checking" && (
+                      <svg
+                        className="w-3.5 h-3.5 animate-spin flex-shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                    )}
+                    {inputValidation.status === "valid" && (
+                      <svg
+                        className="w-3.5 h-3.5 flex-shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    )}
+                    {inputValidation.status === "warning" && (
+                      <svg
+                        className="w-3.5 h-3.5 flex-shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                        />
+                      </svg>
+                    )}
+                    {inputValidation.status === "error" && (
+                      <svg
+                        className="w-3.5 h-3.5 flex-shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    )}
+                    <span>{inputValidation.message}</span>
+                  </div>
+                  {inputFiles.length > 0 && (
+                    <details className="mt-1">
+                      <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                        Show files ({inputFiles.length})
+                      </summary>
+                      <ul className="mt-1 max-h-32 overflow-y-auto bg-gray-50 rounded-lg p-2 space-y-0.5">
+                        {inputFiles.map((file, idx) => (
+                          <li
+                            key={idx}
+                            className={`text-xs font-mono ${
+                              file.toLowerCase().endsWith(".mgf")
+                                ? "text-green-700"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {file}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
+                </div>
+              )}
+            </div>
 
             <PathInput
               label="Output Folder Path"
