@@ -7,6 +7,7 @@ import {
 } from "../../components/form";
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 import { useStepProjectSelector } from "../../hooks/useStepProjectSelector";
+import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import type { StepPageProps } from "../../types";
@@ -26,6 +27,14 @@ function Step4({ onNavigate }: StepPageProps) {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+
+  // Check for running projects when page loads
+  useStepRunningProject({
+    step: 4,
+    setProjectUuid,
+    setContainerId,
+    setProjectName,
+  });
 
   // Use Step1 project selector for Target MGF Directory
   const targetMgfSelector = useStepProjectSelector({

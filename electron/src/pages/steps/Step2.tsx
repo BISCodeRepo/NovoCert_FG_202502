@@ -3,6 +3,7 @@ import { PathInput, TextInput, StepRunButton } from "../../components/form";
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
+import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import type { StepPageProps } from "../../types";
 
 function Step2({ onNavigate }: StepPageProps) {
@@ -16,6 +17,14 @@ function Step2({ onNavigate }: StepPageProps) {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+
+  // Check for running projects when page loads
+  useStepRunningProject({
+    step: 2,
+    setProjectUuid,
+    setContainerId,
+    setProjectName,
+  });
 
   // Check if all required parameters are entered
   const isFormValid = () => {
@@ -74,19 +83,19 @@ function Step2({ onNavigate }: StepPageProps) {
                 className="text-gray-400 hover:text-gray-600 transition-colors"
                 title="Step Description"
               >
-                <svg
+              <svg
                   className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
                     d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                />
+              </svg>
               </button>
             </div>
             <p className="text-sm text-gray-500">Download Casanovo Config</p>

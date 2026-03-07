@@ -8,6 +8,7 @@ import {
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
+import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import type { StepPageProps } from "../../types";
 
 function Step1({ onNavigate }: StepPageProps) {
@@ -25,6 +26,14 @@ function Step1({ onNavigate }: StepPageProps) {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+
+  // Check for running projects when page loads
+  useStepRunningProject({
+    step: 1,
+    setProjectUuid,
+    setContainerId,
+    setProjectName,
+  });
 
   // Input folder validation
   const [inputFiles, setInputFiles] = useState<string[]>([]);

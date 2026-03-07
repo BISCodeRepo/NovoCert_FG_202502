@@ -30,9 +30,9 @@ export const REQUIRED_IMAGES: DockerImageConfig[] = [
     step: 'step2'
   },
   {
-    name: 'NovoCert P2-2 - De-novo Peptide Sequencing',
+    name: 'NovoCert P2-2 - De novo Peptide Sequencing',
     image: 'huswim/novocert-p2-2',
-    description: 'De-novo Peptide Sequencing',
+    description: 'De novo Peptide Sequencing',
     platform: 'linux/arm64',
     step: 'step3'
   },

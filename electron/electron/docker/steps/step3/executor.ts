@@ -4,7 +4,7 @@ import { generateLogFilePath } from '../../utils'
 import type { Step3ContainerParams, DockerRunResult } from './types'
 
 /**
- * Run a Docker container for Step3 (De-novo Peptide Sequencing)
+ * Run a Docker container for Step3 (De novo Peptide Sequencing)
  */
 export async function runStep3Container(params: Step3ContainerParams): Promise<DockerRunResult> {
   const { projectName, spectraPath, casanovoConfigPath, modelPath, outputPath, logPath, projectUuid } = params

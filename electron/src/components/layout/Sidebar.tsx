@@ -28,7 +28,7 @@ const menuItems: MenuItem[] = [
     subItems: [
       { id: "step1", label: "1. Decoy Spectra Generation" },
       { id: "step2", label: "2. Download Casanovo Config" },
-      { id: "step3", label: "3. De-novo Peptide Sequencing" },
+      { id: "step3", label: "3. De novo Peptide Sequencing" },
       { id: "step4", label: "4. Feature Calculation" },
       { id: "step5", label: "5. Percolator and FDR Control" },
     ],
