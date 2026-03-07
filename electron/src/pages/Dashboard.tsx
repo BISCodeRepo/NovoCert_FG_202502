@@ -81,10 +81,21 @@ function Dashboard({ onNavigate }: DashboardProps) {
             if (currentProject && currentProject.status === 'running') {
               // check the exit code of the container to determine the actual success or failure
               const exitCodeResult = await window.docker.getContainerExitCode(containerId);
+              console.log(`[Dashboard] Container ${containerId} exit code:`, exitCodeResult.exitCode);
+              console.log(`[Dashboard] Exit code type: ${typeof exitCodeResult.exitCode}, value: ${exitCodeResult.exitCode}`);
               if (exitCodeResult.success && exitCodeResult.exitCode !== null) {
                 // if the exit code is 0, then success, otherwise failure
                 const newStatus = exitCodeResult.exitCode === 0 ? 'success' : 'failed';
+                console.log(`[Dashboard] Exit Code = ${exitCodeResult.exitCode}, Status = ${newStatus}`);
                 await window.db.updateProject(project.uuid, { status: newStatus });
+                // refresh project list
+                loadProjects();
+              } else {
+                // Container not found - likely removed by --rm after successful completion
+                // If container is not running and we can't get exit code, assume success
+                console.log(`[Dashboard] Cannot get exit code, assuming success (container likely removed by --rm)`);
+                console.log(`[Dashboard] success: ${exitCodeResult.success}, exitCode: ${exitCodeResult.exitCode}`);
+                await window.db.updateProject(project.uuid, { status: 'success' });
                 // refresh project list
                 loadProjects();
               }

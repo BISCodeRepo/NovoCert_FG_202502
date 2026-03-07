@@ -40,6 +40,37 @@ function Step4({ onNavigate }: StepPageProps) {
   // Check if there's a running project (polling status)
   const hasRunningProject = useStepRunningStatus(projectUuid);
 
+  // Persist input values
+  useEffect(() => {
+    const saved = localStorage.getItem('step4_inputs');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.projectName) setProjectName(parsed.projectName);
+        if (parsed.targetMgfDir) setTargetMgfDir(parsed.targetMgfDir);
+        if (parsed.targetResultPath) setTargetResultPath(parsed.targetResultPath);
+        if (parsed.decoyMgfDir) setDecoyMgfDir(parsed.decoyMgfDir);
+        if (parsed.decoyResultPath) setDecoyResultPath(parsed.decoyResultPath);
+        if (parsed.outputPath) setOutputPath(parsed.outputPath);
+      } catch (error) {
+        console.error('Error loading saved Step4 inputs:', error);
+      }
+    }
+  }, []);
+
+  // Save input values when they change
+  useEffect(() => {
+    const inputs = {
+      projectName,
+      targetMgfDir,
+      targetResultPath,
+      decoyMgfDir,
+      decoyResultPath,
+      outputPath,
+    };
+    localStorage.setItem('step4_inputs', JSON.stringify(inputs));
+  }, [projectName, targetMgfDir, targetResultPath, decoyMgfDir, decoyResultPath, outputPath]);
+
   // Use Step1 project selector for Target MGF Directory
   const targetMgfSelector = useStepProjectSelector({
     step: 1,

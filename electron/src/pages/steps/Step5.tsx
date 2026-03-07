@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   PathInput,
   TextInput,
@@ -35,6 +35,31 @@ function Step5({ onNavigate }: StepPageProps) {
 
   // Check if there's a running project (polling status)
   const hasRunningProject = useStepRunningStatus(projectUuid);
+
+  // Persist input values
+  useEffect(() => {
+    const saved = localStorage.getItem('step5_inputs');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.projectName) setProjectName(parsed.projectName);
+        if (parsed.inputPath) setInputPath(parsed.inputPath);
+        if (parsed.outputPath) setOutputPath(parsed.outputPath);
+      } catch (error) {
+        console.error('Error loading saved Step5 inputs:', error);
+      }
+    }
+  }, []);
+
+  // Save input values when they change
+  useEffect(() => {
+    const inputs = {
+      projectName,
+      inputPath,
+      outputPath,
+    };
+    localStorage.setItem('step5_inputs', JSON.stringify(inputs));
+  }, [projectName, inputPath, outputPath]);
 
   // Check if all required parameters are entered
   const isFormValid = () => {

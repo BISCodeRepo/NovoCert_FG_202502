@@ -44,11 +44,24 @@ function StepProjectList({ step, refreshTrigger, onNavigate }: StepProjectListPr
   // Polling for running projects
   useEffect(() => {
     const checkRunningProjects = async () => {
-      const runningProjects = projects.filter((p) => p.status === "running");
+      // Always fetch latest projects from DB to get current status
+      const allProjects = await window.db.getProjects();
+      const stepProjects = allProjects
+        .filter((project) => String(project.step) === String(step))
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      
+      const runningProjects = stepProjects.filter((p) => p.status === "running");
 
       if (runningProjects.length === 0) {
+        // No running projects, but refresh the list in case status changed
+        setProjects(stepProjects);
         return;
       }
+
+      let hasUpdates = false;
 
       for (const project of runningProjects) {
         try {
@@ -76,18 +89,22 @@ function StepProjectList({ step, refreshTrigger, onNavigate }: StepProjectListPr
             if (currentProject && currentProject.status === "running") {
               // check the exit code of the container to determine the actual success or failure
               const exitCodeResult = await window.docker.getContainerExitCode(containerId);
+              console.log(`[StepProjectList] Container ${containerId} exit code:`, exitCodeResult.exitCode);
+              console.log(`[StepProjectList] Exit code type: ${typeof exitCodeResult.exitCode}, value: ${exitCodeResult.exitCode}`);
               if (exitCodeResult.success && exitCodeResult.exitCode !== null) {
                 // if the exit code is 0, then success, otherwise failure
-                if (exitCodeResult.exitCode === 0) {
-                  await window.db.updateProject(project.uuid, { status: "success" });
-                } else {
-                  await window.db.updateProject(project.uuid, { status: "failed" });
-                }
-                loadProjects();
+                const newStatus = exitCodeResult.exitCode === 0 ? "success" : "failed";
+                console.log(`[StepProjectList] Exit Code = ${exitCodeResult.exitCode}, Status = ${newStatus}`);
+                await window.db.updateProject(project.uuid, { status: newStatus });
+                hasUpdates = true;
+              } else {
+                // Container not found - likely removed by --rm after successful completion
+                // If container is not running and we can't get exit code, assume success
+                console.log(`[StepProjectList] Cannot get exit code, assuming success (container likely removed by --rm)`);
+                console.log(`[StepProjectList] success: ${exitCodeResult.success}, exitCode: ${exitCodeResult.exitCode}`);
+                await window.db.updateProject(project.uuid, { status: "success" });
+                hasUpdates = true;
               }
-            } else if (currentProject && currentProject.status === "failed") {
-              // already failed, only update the list
-              loadProjects();
             }
           }
         } catch (err) {
@@ -96,6 +113,14 @@ function StepProjectList({ step, refreshTrigger, onNavigate }: StepProjectListPr
             err
           );
         }
+      }
+
+      // Reload projects if there were any updates
+      if (hasUpdates) {
+        await loadProjects();
+      } else {
+        // Even if no updates, refresh the list to show any status changes from other sources
+        setProjects(stepProjects);
       }
     };
 
@@ -107,7 +132,7 @@ function StepProjectList({ step, refreshTrigger, onNavigate }: StepProjectListPr
       clearInterval(intervalId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projects, step]);
+  }, [step]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

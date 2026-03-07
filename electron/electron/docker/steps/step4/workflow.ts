@@ -3,7 +3,7 @@ import type { Step4Params, Step4Result } from './types'
 import { runStep4Container } from './executor'
 import path from 'node:path'
 import fs from 'node:fs'
-import { generateProjectFolderName } from '../../utils'
+import { generateProjectFolderName, generateLogFilePath } from '../../utils'
 
 /**
  * Execute the entire workflow for Step4.
@@ -33,14 +33,27 @@ export async function executeStep4Workflow(
       }
     })
 
-    console.log('Created project:', project)
-
     // 2. Create a Project-specific output folder
     const projectFolderName = generateProjectFolderName(project.name, project.uuid)
     const baseProjectPath = path.join(params.outputPath, projectFolderName)
 
     fs.mkdirSync(baseProjectPath, { recursive: true })
-    console.log(`Created project directory: ${baseProjectPath}`)
+
+    // Generate log file path for workflow logs
+    const workflowLogPath = generateLogFilePath(baseProjectPath, '4', project.uuid)
+    
+    // Helper function to log to both console and file
+    const logToFile = (message: string) => {
+      console.log(message)
+      try {
+        fs.appendFileSync(workflowLogPath, `${new Date().toISOString()} [WORKFLOW] ${message}\n`)
+      } catch (error) {
+        // Ignore file write errors
+      }
+    }
+
+    logToFile(`Created project: ${JSON.stringify(project)}`)
+    logToFile(`Created project directory: ${baseProjectPath}`)
 
     // Update the project with step4-specific paths
     const updatedProject = await database.projects.update(project.uuid, {
@@ -87,7 +100,7 @@ export async function executeStep4Workflow(
       }
     }
 
-    console.log('Docker container started:', dockerResult.containerId)
+    logToFile(`Docker container started: ${dockerResult.containerId}`)
 
     // Update the Project status - add containerId
     const finalProject = await database.projects.update(project.uuid, {
@@ -106,7 +119,19 @@ export async function executeStep4Workflow(
       containerId: dockerResult.containerId
     }
   } catch (error: unknown) {
-    console.error('Error in executeStep4Workflow:', error)
+    const errorMessage = `Error in executeStep4Workflow: ${error instanceof Error ? error.message : 'Unknown error'}`
+    console.error(errorMessage, error)
+    // Try to log to file if log path exists
+    if (project) {
+      try {
+        const projectFolderName = generateProjectFolderName(project.name, project.uuid)
+        const baseProjectPath = path.join(params.outputPath, projectFolderName)
+        const workflowLogPath = generateLogFilePath(baseProjectPath, '4', project.uuid)
+        fs.appendFileSync(workflowLogPath, `${new Date().toISOString()} [ERROR] ${errorMessage}\n`)
+      } catch {
+        // Ignore file write errors
+      }
+    }
     // If an error occurs, update the project status to failed
     if (project) {
       await database.projects.update(project.uuid, { 

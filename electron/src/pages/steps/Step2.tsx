@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PathInput, TextInput, StepRunButton } from "../../components/form";
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 import StepProjectList from "../../components/StepProjectList";
@@ -29,6 +29,29 @@ function Step2({ onNavigate }: StepPageProps) {
 
   // Check if there's a running project (polling status)
   const hasRunningProject = useStepRunningStatus(projectUuid);
+
+  // Persist input values
+  useEffect(() => {
+    const saved = localStorage.getItem('step2_inputs');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.projectName) setProjectName(parsed.projectName);
+        if (parsed.outputPath) setOutputPath(parsed.outputPath);
+      } catch (error) {
+        console.error('Error loading saved Step2 inputs:', error);
+      }
+    }
+  }, []);
+
+  // Save input values when they change
+  useEffect(() => {
+    const inputs = {
+      projectName,
+      outputPath,
+    };
+    localStorage.setItem('step2_inputs', JSON.stringify(inputs));
+  }, [projectName, outputPath]);
 
   // Check if all required parameters are entered
   const isFormValid = () => {

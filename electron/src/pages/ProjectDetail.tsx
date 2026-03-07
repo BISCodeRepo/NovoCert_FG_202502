@@ -161,10 +161,22 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
           if (currentProject && currentProject.status === 'running') {
             // check the exit code of the container to determine the actual success or failure
             const exitCodeResult = await window.docker.getContainerExitCode(containerId);
+            console.log(`[ProjectDetail] Container ${containerId} exit code:`, exitCodeResult.exitCode);
+            console.log(`[ProjectDetail] Exit code type: ${typeof exitCodeResult.exitCode}, value: ${exitCodeResult.exitCode}`);
             if (exitCodeResult.success && exitCodeResult.exitCode !== null) {
               // if the exit code is 0, then success, otherwise failure
               const newStatus = exitCodeResult.exitCode === 0 ? 'success' : 'failed';
+              console.log(`[ProjectDetail] Exit Code = ${exitCodeResult.exitCode}, Status = ${newStatus}`);
               const updatedProject = await window.db.updateProject(uuid, { status: newStatus });
+              if (updatedProject) {
+                setProject(updatedProject);
+              }
+            } else {
+              // Container not found - likely removed by --rm after successful completion
+              // If container is not running and we can't get exit code, assume success
+              console.log(`[ProjectDetail] Cannot get exit code, assuming success (container likely removed by --rm)`);
+              console.log(`[ProjectDetail] success: ${exitCodeResult.success}, exitCode: ${exitCodeResult.exitCode}`);
+              const updatedProject = await window.db.updateProject(uuid, { status: 'success' });
               if (updatedProject) {
                 setProject(updatedProject);
               }

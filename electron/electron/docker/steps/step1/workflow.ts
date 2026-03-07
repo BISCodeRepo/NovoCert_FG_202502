@@ -3,7 +3,7 @@ import type { Step1Params, Step1Result } from './types'
 import { runStep1Container } from './executor'
 import path from 'node:path'
 import fs from 'node:fs'
-import { generateProjectFolderName } from '../../utils'
+import { generateProjectFolderName, generateLogFilePath } from '../../utils'
 
 /**
  * Execute the entire workflow for Step1.
@@ -35,6 +35,19 @@ export async function executeStep1Workflow(
     const baseProjectPath = path.join(params.outputPath, projectFolderName)
 
     fs.mkdirSync(baseProjectPath, { recursive: true })
+
+    // Generate log file path for workflow logs
+    const workflowLogPath = generateLogFilePath(baseProjectPath, '1', project.uuid)
+    
+    // Helper function to log to both console and file
+    const logToFile = (message: string) => {
+      console.log(message)
+      try {
+        fs.appendFileSync(workflowLogPath, `${new Date().toISOString()} [WORKFLOW] ${message}\n`)
+      } catch (error) {
+        // Ignore file write errors
+      }
+    }
 
     // Update the project with step1-specific paths
     const updatedProject = await database.projects.update(project.uuid, {
@@ -81,7 +94,7 @@ export async function executeStep1Workflow(
       }
     }
 
-    console.log('Docker container started:', dockerResult.containerId)
+    logToFile(`Docker container started: ${dockerResult.containerId}`)
 
     // Update the Project status - add containerId
     const finalProject = await database.projects.update(project.uuid, {
@@ -100,7 +113,19 @@ export async function executeStep1Workflow(
       containerId: dockerResult.containerId
     }
   } catch (error: unknown) {
-    console.error('Error in executeStep1Workflow:', error)
+    const errorMessage = `Error in executeStep1Workflow: ${error instanceof Error ? error.message : 'Unknown error'}`
+    console.error(errorMessage, error)
+    // Try to log to file if log path exists
+    if (project) {
+      try {
+        const projectFolderName = generateProjectFolderName(project.name, project.uuid)
+        const baseProjectPath = path.join(params.outputPath, projectFolderName)
+        const workflowLogPath = generateLogFilePath(baseProjectPath, '1', project.uuid)
+        fs.appendFileSync(workflowLogPath, `${new Date().toISOString()} [ERROR] ${errorMessage}\n`)
+      } catch {
+        // Ignore file write errors
+      }
+    }
     // If an error occurs, update the project status to failed
     if (project) {
       await database.projects.update(project.uuid, { 

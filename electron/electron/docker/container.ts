@@ -188,8 +188,40 @@ function startLogCollection(containerId: string, logFilePath: string) {
     logStream.write(`[STDERR] ${data.toString()}`)
   })
 
-  logProcess.on('close', (code) => {
-    logStream.write(`\n=== Container finished (exit code: ${code}) ===\n`)
+  logProcess.on('close', async (code) => {
+    // Note: 'code' is the exit code of the 'docker logs -f' process, not the container
+    // We need to check the actual container exit code
+    logStream.write(`\n=== Log collection process finished (exit code: ${code}) ===\n`)
+    
+    // Get the actual container exit code (single attempt)
+    try {
+      const exitCodeResult = await getContainerExitCode(containerId)
+      
+      if (exitCodeResult.success && exitCodeResult.exitCode !== null) {
+        logStream.write(`=== Container actual exit code: ${exitCodeResult.exitCode} ===\n`)
+        if (exitCodeResult.exitCode === 0) {
+          logStream.write(`=== Container completed successfully ===\n`)
+        } else {
+          logStream.write(`=== Container exited with error (exit code: ${exitCodeResult.exitCode}) ===\n`)
+        }
+      } else {
+        // Container not found or exit code unavailable (likely removed by --rm)
+        logStream.write(`=== Could not retrieve container exit code ===\n`)
+        if (exitCodeResult.error) {
+          logStream.write(`Error: ${exitCodeResult.error}\n`)
+        }
+        // If log collection process exited with code 0, it usually means container finished normally
+        if (code === 0) {
+          logStream.write(`=== Log collection finished normally, assuming container completed (exit code: 0) ===\n`)
+        }
+      }
+    } catch (error) {
+      logStream.write(`=== Error checking container exit code: ${error instanceof Error ? error.message : 'Unknown error'} ===\n`)
+      if (code === 0) {
+        logStream.write(`=== Log collection finished normally, assuming container completed (exit code: 0) ===\n`)
+      }
+    }
+    
     logStream.end()
   })
 
@@ -428,8 +460,9 @@ export async function isContainerRunning(containerId: string): Promise<{ success
  */
 export async function getContainerExitCode(containerId: string): Promise<{ success: boolean; exitCode: number | null; error?: string }> {
   return new Promise((resolve) => {
-    // Use docker inspect to get container exit code
-    const dockerProcess = spawn('docker', ['inspect', '--format', '{{.State.ExitCode}}', containerId], {
+    // Use docker inspect to get both container status and exit code
+    // Format: "STATUS|EXITCODE" (e.g., "exited|0" or "running|0")
+    const dockerProcess = spawn('docker', ['inspect', '--format', '{{.State.Status}}|{{.State.ExitCode}}', containerId], {
       env: {
         ...process.env,
         PATH: getExtendedPath()
@@ -449,19 +482,33 @@ export async function getContainerExitCode(containerId: string): Promise<{ succe
 
     dockerProcess.on('close', (code) => {
       if (code === 0) {
-        const exitCodeStr = output.trim()
-        // If container is still running, exit code will be empty or 0
-        // If container has exited, exit code will be the actual exit code
-        if (exitCodeStr === '' || exitCodeStr === '<no value>') {
-          // Container might still be running or not found
+        const outputStr = output.trim()
+        if (outputStr === '' || outputStr === '<no value>') {
+          // Container not found
           resolve({ success: true, exitCode: null })
-        } else {
-          const exitCode = parseInt(exitCodeStr, 10)
-          if (isNaN(exitCode)) {
+          return
+        }
+
+        // Parse status and exit code
+        const parts = outputStr.split('|')
+        const status = parts[0]?.trim()
+        const exitCodeStr = parts[1]?.trim()
+
+        // Only return exit code if container has actually exited
+        if (status === 'exited' || status === 'dead') {
+          if (exitCodeStr === '' || exitCodeStr === '<no value>') {
             resolve({ success: true, exitCode: null })
           } else {
-            resolve({ success: true, exitCode })
+            const exitCode = parseInt(exitCodeStr, 10)
+            if (isNaN(exitCode)) {
+              resolve({ success: true, exitCode: null })
+            } else {
+              resolve({ success: true, exitCode })
+            }
           }
+        } else {
+          // Container is still running or in another state
+          resolve({ success: true, exitCode: null })
         }
       } else {
         resolve({ success: false, exitCode: null, error: errorOutput || `Docker exited with code ${code}` })

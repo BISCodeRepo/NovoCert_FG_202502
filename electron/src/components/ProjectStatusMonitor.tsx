@@ -10,6 +10,7 @@ interface ProjectStatusMonitorProps {
 function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumber }: ProjectStatusMonitorProps) {
   const [projectStatus, setProjectStatus] = useState<string | null>(null);
   const [isStopping, setIsStopping] = useState(false);
+  const [logFilePath, setLogFilePath] = useState<string | null>(null);
 
   // when the project UUID is changed, initialize and load the status
   useEffect(() => {
@@ -23,6 +24,25 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
         const project = await window.db.getProject(projectUuid);
         if (project) {
           setProjectStatus(project.status);
+          
+          // Find log file path
+          if (stepNumber) {
+            const stepKey = `step${stepNumber}`;
+            const stepData = project.parameters[stepKey] as { logPath?: string } | undefined;
+            const logPath = stepData?.logPath;
+            
+            if (logPath) {
+              // Find the latest .log file in the log directory
+              try {
+                const result = await window.fs.findLatestFile(logPath, 'log');
+                if (result.success && result.path) {
+                  setLogFilePath(result.path);
+                }
+              } catch (err) {
+                console.error('Error finding log file:', err);
+              }
+            }
+          }
         }
       } catch (err) {
         console.error('Error loading project status:', err);
@@ -30,7 +50,7 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
     };
 
     loadProjectStatus();
-  }, [projectUuid]);
+  }, [projectUuid, stepNumber]);
 
   // polling: check the container status every 2 seconds when the project is running
   useEffect(() => {
@@ -61,10 +81,22 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
                   if (project.status === 'running') {
                     // check the exit code of the container to determine the actual success or failure
                     const exitCodeResult = await window.docker.getContainerExitCode(containerId);
+                    console.log(`[ProjectStatusMonitor] Container ${containerId} exit code:`, exitCodeResult.exitCode);
+                    console.log(`[ProjectStatusMonitor] Exit code type: ${typeof exitCodeResult.exitCode}, value: ${exitCodeResult.exitCode}`);
                     if (exitCodeResult.success && exitCodeResult.exitCode !== null) {
                       // if the exit code is 0, then success, otherwise failure
                       const newStatus = exitCodeResult.exitCode === 0 ? 'success' : 'failed';
+                      console.log(`[ProjectStatusMonitor] Exit Code = ${exitCodeResult.exitCode}, Status = ${newStatus}`);
                       const updatedProject = await window.db.updateProject(projectUuid, { status: newStatus });
+                      if (updatedProject) {
+                        setProjectStatus(updatedProject.status);
+                      }
+                    } else {
+                      // Container not found - likely removed by --rm after successful completion
+                      // If container is not running and we can't get exit code, assume success
+                      console.log(`[ProjectStatusMonitor] Cannot get exit code, assuming success (container likely removed by --rm)`);
+                      console.log(`[ProjectStatusMonitor] success: ${exitCodeResult.success}, exitCode: ${exitCodeResult.exitCode}`);
+                      const updatedProject = await window.db.updateProject(projectUuid, { status: 'success' });
                       if (updatedProject) {
                         setProjectStatus(updatedProject.status);
                       }
@@ -96,6 +128,26 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
       clearInterval(intervalId);
     };
   }, [projectUuid, projectStatus]);
+
+  // Handle viewing log file
+  const handleViewLog = async () => {
+    if (!logFilePath) {
+      alert('Log file not found');
+      return;
+    }
+
+    try {
+      // Try to open the file with the default application
+      const result = await window.shell.openPath(logFilePath);
+      if (result.error) {
+        // If opening failed, try to show the file in folder
+        await window.shell.showItemInFolder(logFilePath);
+      }
+    } catch (error) {
+      console.error('Error opening log file:', error);
+      alert(`Failed to open log file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
 
   // Handle container stop and cleanup
   const handleStopContainer = async () => {
@@ -132,7 +184,7 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
     return null;
   }
 
-  const showCreatedMessage = containerId && projectName && stepNumber;
+  const showCreatedMessage = projectName && stepNumber;
 
   return (
     <div className="mt-6 p-5 bg-white border border-gray-200 rounded-lg shadow-sm">
@@ -212,61 +264,92 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
                   </>
                 )}
               </p>
-              <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-                <span className="font-medium">Container ID:</span>
-                <span className="font-mono bg-gray-50 px-2 py-1 rounded border border-gray-200">
-                  {containerId.substring(0, 12)}...
-                </span>
-              </div>
-              {projectStatus === 'running' && (
-                <button
-                  onClick={handleStopContainer}
-                  disabled={isStopping}
-                  className="mt-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {isStopping ? (
-                    <>
-                      <svg
-                        className="w-4 h-4 animate-spin"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      Stopping...
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                      Stop & Cleanup Container
-                    </>
-                  )}
-                </button>
+              {containerId && (
+                <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                  <span className="font-medium">Container ID:</span>
+                  <span className="font-mono bg-gray-50 px-2 py-1 rounded border border-gray-200">
+                    {containerId.substring(0, 12)}...
+                  </span>
+                </div>
               )}
+              <div className="mt-2 flex items-center gap-2">
+                {logFilePath && (
+                  <button
+                    onClick={handleViewLog}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                    View Log
+                  </button>
+                )}
+                {projectStatus === 'running' && containerId && (
+                  <button
+                    onClick={handleStopContainer}
+                    disabled={isStopping}
+                    className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {isStopping ? (
+                      <>
+                        <svg
+                          className="w-4 h-4 animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        Stopping...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                        Stop & Cleanup Container
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -39,6 +39,37 @@ function Step1({ onNavigate }: StepPageProps) {
   // Check if there's a running project (polling status)
   const hasRunningProject = useStepRunningStatus(projectUuid);
 
+  // Persist input values
+  useEffect(() => {
+    const saved = localStorage.getItem('step1_inputs');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.projectName) setProjectName(parsed.projectName);
+        if (parsed.inputPath) setInputPath(parsed.inputPath);
+        if (parsed.outputPath) setOutputPath(parsed.outputPath);
+        if (parsed.memory) setMemory(parsed.memory);
+        if (parsed.precursorTolerance) setPrecursorTolerance(parsed.precursorTolerance);
+        if (parsed.randomSeed) setRandomSeed(parsed.randomSeed);
+      } catch (error) {
+        console.error('Error loading saved Step1 inputs:', error);
+      }
+    }
+  }, []);
+
+  // Save input values when they change
+  useEffect(() => {
+    const inputs = {
+      projectName,
+      inputPath,
+      outputPath,
+      memory,
+      precursorTolerance,
+      randomSeed,
+    };
+    localStorage.setItem('step1_inputs', JSON.stringify(inputs));
+  }, [projectName, inputPath, outputPath, memory, precursorTolerance, randomSeed]);
+
   // Input folder validation
   const [inputFiles, setInputFiles] = useState<string[]>([]);
   const [inputValidation, setInputValidation] = useState<{

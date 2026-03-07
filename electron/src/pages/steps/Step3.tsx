@@ -39,6 +39,35 @@ function Step3({ onNavigate }: StepPageProps) {
   // Check if there's a running project (polling status)
   const hasRunningProject = useStepRunningStatus(projectUuid);
 
+  // Persist input values
+  useEffect(() => {
+    const saved = localStorage.getItem('step3_inputs');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.projectName) setProjectName(parsed.projectName);
+        if (parsed.spectraPath) setSpectraPath(parsed.spectraPath);
+        if (parsed.casanovoConfigPath) setCasanovoConfigPath(parsed.casanovoConfigPath);
+        if (parsed.modelPath) setModelPath(parsed.modelPath);
+        if (parsed.outputPath) setOutputPath(parsed.outputPath);
+      } catch (error) {
+        console.error('Error loading saved Step3 inputs:', error);
+      }
+    }
+  }, []);
+
+  // Save input values when they change
+  useEffect(() => {
+    const inputs = {
+      projectName,
+      spectraPath,
+      casanovoConfigPath,
+      modelPath,
+      outputPath,
+    };
+    localStorage.setItem('step3_inputs', JSON.stringify(inputs));
+  }, [projectName, spectraPath, casanovoConfigPath, modelPath, outputPath]);
+
   // Use Step1 project selector for MGF file
   const mgfSelector = useStepProjectSelector({
     step: 1,
