@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-// 확장된 PATH로 명령어 실행을 위한 유틸리티
+// Extended PATH for command execution
 export function getExtendedPath(): string {
   const basePath = process.env.PATH || ''
   
@@ -8,7 +8,7 @@ export function getExtendedPath(): string {
     return basePath
   }
   
-  // macOS/Linux: 일반적인 Docker 설치 경로 추가
+  // macOS/Linux: Add common Docker installation paths
   const additionalPaths = [
     '/usr/local/bin',
     '/usr/bin',

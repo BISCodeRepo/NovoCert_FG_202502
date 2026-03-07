@@ -1,5 +1,5 @@
 /**
- * Step2 관련 타입 정의
+ * Step2 type definitions
  */
 
 export interface Step2Params {
@@ -8,8 +8,8 @@ export interface Step2Params {
 }
 
 export interface Step2ContainerParams extends Step2Params {
-  logPath: string // 로그 파일 경로
-  projectUuid: string // Project의 고유 ID
+  logPath: string // Log file path
+  projectUuid: string // Project unique ID
 }
 
 export interface DockerRunResult {

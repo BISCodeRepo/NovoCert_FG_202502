@@ -17,7 +17,7 @@ export async function runStep3Container(params: Step3ContainerParams): Promise<D
 
   const containerName = `step3-${projectName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`
 
-  // 로그 파일 경로 생성
+  // Generate log file path
   const logFilePath = generateLogFilePath(logPath, '3', projectUuid)
 
   // Run a Docker container (bind mount)

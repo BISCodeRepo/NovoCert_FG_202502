@@ -20,24 +20,24 @@ function Dashboard({ onNavigate }: DashboardProps) {
     loadDbPath();
   }, []);
 
-  // 필터링된 프로젝트 목록
+  // filtered project list
   const filteredProjects = useMemo(() => {
     let filtered = allProjects;
 
-    // Step 필터링 (step은 int로 저장되어 있음)
+    // Step filtering (step is stored as int)
     if (selectedStep !== "all") {
       const stepNumber = parseInt(selectedStep.replace("step", ""));
       filtered = filtered.filter((p) => {
         if (p.step === null || p.step === undefined) {
           return false;
         }
-        // step이 문자열이든 숫자든 모두 처리
+        // handle both string and number step
         const projectStep = typeof p.step === "string" ? parseInt(p.step) : p.step;
         return projectStep === stepNumber;
       });
     }
 
-    // Status 필터링
+    // Status filtering
     if (selectedStatus !== "all") {
       filtered = filtered.filter((p) => p.status === selectedStatus);
     }
@@ -75,21 +75,21 @@ function Dashboard({ onNavigate }: DashboardProps) {
           const result = await window.docker.isContainerRunning(containerId);
           
           if (result.success && !result.running) {
-            // 컨테이너가 종료되었을 때, 현재 프로젝트 상태를 확인
+            // when the container is stopped, check the current project status
             const currentProject = await window.db.getProject(project.uuid);
-            // 이미 failed 상태로 변경된 경우(강제 중단 등)는 업데이트하지 않음
+            // do not update if the project is already failed
             if (currentProject && currentProject.status === 'running') {
-              // 컨테이너의 exit code를 확인하여 실제 성공 여부 판단
+              // check the exit code of the container to determine the actual success or failure
               const exitCodeResult = await window.docker.getContainerExitCode(containerId);
               if (exitCodeResult.success && exitCodeResult.exitCode !== null) {
-                // exit code가 0이면 성공, 그 외는 실패
+                // if the exit code is 0, then success, otherwise failure
                 const newStatus = exitCodeResult.exitCode === 0 ? 'success' : 'failed';
                 await window.db.updateProject(project.uuid, { status: newStatus });
                 // refresh project list
                 loadProjects();
               }
             } else if (currentProject && currentProject.status === 'failed') {
-              // failed 상태로 이미 변경된 경우, 리스트만 새로고침
+              // already failed, only update the list
               loadProjects();
             }
           }
@@ -112,7 +112,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
 
   const loadProjects = async () => {
     const data = (await window.db.getProjects()) as Project[];
-    // created_at을 기준으로 내림차순 정렬
+    // sort by created_at in descending order
     data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     setAllProjects(data);
   };
@@ -131,7 +131,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
     <div className="max-w-7xl mx-auto">
       <h1 className="text-4xl font-bold text-gray-900 mb-4">Projects</h1>
 
-      {/* DB 경로 */}
+      {/* DB path */}
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
         <p className="text-xs text-gray-600">
           <span className="font-semibold">Database Path:</span> {dbPath}
@@ -146,7 +146,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
               <span className="text-gray-500 ml-1">({filteredProjects.length})</span>
             </h2>
             <div className="flex items-center gap-4">
-              {/* Step 필터 */}
+              {/* Step filter */}
               <div className="flex items-center gap-2">
                 <label htmlFor="step-filter" className="text-sm font-medium text-gray-700 whitespace-nowrap">
                   Step:
@@ -165,7 +165,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
                   <option value="step5">Step 5</option>
                 </select>
               </div>
-              {/* Status 필터 */}
+              {/* Status filter */}
               <div className="flex items-center gap-2">
                 <label htmlFor="status-filter" className="text-sm font-medium text-gray-700 whitespace-nowrap">
                   Status:

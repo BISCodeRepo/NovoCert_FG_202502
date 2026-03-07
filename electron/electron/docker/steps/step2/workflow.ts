@@ -25,7 +25,7 @@ export async function executeStep2Workflow(
       step: '2',
       status: 'running',
       parameters: {
-        outputPath: params.outputPath // 프로젝트 레벨 기본 출력 경로
+        outputPath: params.outputPath // Project-level default output path
       }
     })
 

@@ -260,7 +260,7 @@ function Step3({ onNavigate }: StepPageProps) {
                       {mgfSelector.foundFilePath ? (
                         <>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            MGF 파일 경로
+                            MGF File Path
                             <span className="text-red-500 ml-1">*</span>
                           </label>
                           <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
@@ -350,7 +350,7 @@ function Step3({ onNavigate }: StepPageProps) {
                       {configSelector.foundFilePath ? (
                         <>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Config 파일 경로
+                            Config File Path
                             <span className="text-red-500 ml-1">*</span>
                           </label>
                           <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">

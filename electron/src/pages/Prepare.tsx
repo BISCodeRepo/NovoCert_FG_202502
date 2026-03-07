@@ -30,11 +30,11 @@ function Prepare() {
 
         let newProgress;
         if (existingIndex >= 0) {
-          // 기존 항목 업데이트
+          // update existing item
           newProgress = [...currentProgress];
           newProgress[existingIndex] = progress;
         } else {
-          // 새 항목 추가
+          // add new item
           newProgress = [...currentProgress, progress];
         }
 

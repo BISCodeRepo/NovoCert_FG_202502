@@ -37,11 +37,11 @@ const menuItems: MenuItem[] = [
 
 function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   const handleMenuClick = (sectionId: string) => {
-    // pipeline 클릭 시 step1로 네비게이션
+    // when pipeline is clicked, navigate to step1
     if (sectionId === "pipeline") {
       onNavigate("step1", "");
     } else {
-      // 하위 메뉴가 없으면 네비게이션
+      // if there is no submenu, navigate to the section
       const item = menuItems.find((i) => i.id === sectionId);
       if (!item?.subItems) {
         onNavigate(sectionId, "");

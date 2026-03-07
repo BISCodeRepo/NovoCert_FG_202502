@@ -128,7 +128,7 @@ function Step1({ onNavigate }: StepPageProps) {
     );
   };
 
-  // Run Step 1 버튼 클릭 핸들러
+  // Run Step 1 button click handler
   const handleRunStep1 = async () => {
     if (!isFormValid()) {
       return;
@@ -151,18 +151,18 @@ function Step1({ onNavigate }: StepPageProps) {
         setProjectUuid(result.project.uuid);
         setContainerId(result.containerId || null);
         setMessage(null);
-        console.log("Step1 실행 결과:", result);
+        console.log("Step1 execution result:", result);
       } else {
         setMessage({
           type: "error",
-          text: `Step 1 실행 실패: ${result.error}`,
+          text: `Step 1 execution failed: ${result.error}`,
         });
       }
     } catch (error: unknown) {
-      console.error("Step1 실행 중 에러:", error);
+      console.error("Step1 execution error:", error);
       setMessage({
         type: "error",
-        text: `예상치 못한 오류: ${
+        text: `Unexpected error: ${
           error instanceof Error ? error.message : "Unknown error"
         }`,
       });
@@ -173,7 +173,7 @@ function Step1({ onNavigate }: StepPageProps) {
 
   return (
     <div className="h-full flex gap-6">
-      {/* 왼쪽: 프로젝트 및 Step 정보 */}
+      {/* Left: Project and Step information */}
       <div className="w-1/3">
         <div className="bg-white rounded-lg shadow-sm p-6 sticky top-0">
           <div className="mb-6">

@@ -149,7 +149,7 @@ function Step4({ onNavigate }: StepPageProps) {
     );
   };
 
-  // Run Step 4 버튼 클릭 핸들러
+  // Run Step 4 button click handler
   const handleRunStep4 = async () => {
     if (!isFormValid()) {
       return;
@@ -304,7 +304,7 @@ function Step4({ onNavigate }: StepPageProps) {
                   {targetMgfSelector.selectedProjectUuid && targetMgfSelector.foundFilePath && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        MGF Directory 경로
+                        MGF Directory Path
                         <span className="text-red-500 ml-1">*</span>
                       </label>
                       <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">

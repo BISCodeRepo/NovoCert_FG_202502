@@ -1,6 +1,6 @@
 export interface Step5Params {
   projectName: string
-  inputPath: string        // PIN 파일 경로
+  inputPath: string        // PIN file path
   outputPath: string
 }
 

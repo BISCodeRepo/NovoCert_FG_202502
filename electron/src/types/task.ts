@@ -2,7 +2,7 @@ export type TaskStatus = "pending" | "running" | "failed" | "success";
 
 export interface Task {
   uuid: string;
-  project_uuid: string; // 외래키
+  project_uuid: string; // Foreign key
   step: string;
   status: TaskStatus;
   parameters: Record<string, unknown>;

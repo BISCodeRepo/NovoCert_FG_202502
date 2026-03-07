@@ -17,16 +17,16 @@ function ParameterViewer({ data, level = 0 }: ParameterViewerProps) {
 
   const isPath = (value: unknown): boolean => {
     if (typeof value !== "string") return false;
-    // 경로처럼 보이는 문자열인지 확인 (/, \, : 포함)
+    // check if the string looks like a path (/, \, : included)
     return /^[/\\]|^[A-Za-z]:[/\\]/.test(value);
   };
 
   const handlePathClick = async (filePath: string) => {
     try {
-      // 파일인지 폴더인지 확인하기 위해 먼저 openPath 시도
+      // first try to openPath to check if it is a file or a folder
       const result = await window.shell.openPath(filePath);
       if (!result.success) {
-        // 실패하면 showItemInFolder 시도 (파일인 경우)
+        // if failed, try to showItemInFolder (if it is a file)
         await window.shell.showItemInFolder(filePath);
       }
     } catch (error) {
@@ -66,7 +66,7 @@ function ParameterViewer({ data, level = 0 }: ParameterViewerProps) {
                   <button
                     onClick={() => handlePathClick(String(value))}
                     className="w-full text-left text-xs text-gray-800 break-words font-mono bg-white px-4 py-2.5 rounded-md border border-gray-300 shadow-sm hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition-colors group"
-                    title="클릭하여 파일 탐색기에서 열기"
+                    title="Click to open in file explorer"
                   >
                     <div className="flex items-center gap-2">
                       <svg
@@ -155,14 +155,14 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
         const result = await window.docker.isContainerRunning(containerId);
         
         if (result.success && !result.running) {
-          // 컨테이너가 종료되었을 때, 현재 프로젝트 상태를 확인
+          // when the container is stopped, check the current project status
           const currentProject = await window.db.getProject(uuid);
-          // 이미 failed 상태로 변경된 경우(강제 중단 등)는 업데이트하지 않음
+          // do not update if the project is already failed
           if (currentProject && currentProject.status === 'running') {
-            // 컨테이너의 exit code를 확인하여 실제 성공 여부 판단
+            // check the exit code of the container to determine the actual success or failure
             const exitCodeResult = await window.docker.getContainerExitCode(containerId);
             if (exitCodeResult.success && exitCodeResult.exitCode !== null) {
-              // exit code가 0이면 성공, 그 외는 실패
+              // if the exit code is 0, then success, otherwise failure
               const newStatus = exitCodeResult.exitCode === 0 ? 'success' : 'failed';
               const updatedProject = await window.db.updateProject(uuid, { status: newStatus });
               if (updatedProject) {
@@ -170,7 +170,7 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
               }
             }
           } else if (currentProject && currentProject.status === 'failed') {
-            // failed 상태로 이미 변경된 경우, 상태만 업데이트
+            // already failed, only update the status
             setProject(currentProject);
           }
         }
@@ -193,7 +193,7 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <p className="text-gray-500">로딩 중...</p>
+        <p className="text-gray-500">Loading...</p>
       </div>
     );
   }
@@ -241,7 +241,7 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
             <p className="text-xs font-mono text-gray-900 break-all">{project.uuid}</p>
           </div>
           <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">상태</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Status</p>
             <span
               className={`px-3 py-1.5 inline-flex items-center rounded-md text-xs font-semibold ${
                 PROJECT_STATUS_COLORS[project.status]

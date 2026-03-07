@@ -65,7 +65,7 @@ function Step5({ onNavigate }: StepPageProps) {
         setProjectUuid(result.project.uuid);
         setContainerId(result.containerId || null);
         setMessage(null);
-        console.log("Step5 실행 결과:", result);
+        console.log("Step5 execution result:", result);
       } else {
         setMessage({
           type: "error",

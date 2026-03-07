@@ -1,26 +1,26 @@
 /**
- * Step1 관련 타입 정의
+ * Step1 type definitions
  */
 
 export interface Step1Params {
   projectName: string
   inputPath: string
   outputPath: string
-  memory: string           // MEMORY 환경 변수 (필수)
-  precursorTolerance: string  // PRECURSOR_TOLERANCE 환경 변수 (필수)
-  randomSeed: string       // RANDOM_SEED 환경 변수 (필수)
+  memory: string           // MEMORY environment variable (required)
+  precursorTolerance: string  // PRECURSOR_TOLERANCE environment variable (required)
+  randomSeed: string       // RANDOM_SEED environment variable (required)
 }
 
 export interface Step1ContainerParams extends Step1Params {
-  logPath: string // 로그 파일 경로
-  projectUuid: string // Project의 고유 ID
+  logPath: string // Log file path
+  projectUuid: string // Project unique ID
 }
 
 export interface DockerRunResult {
   success: boolean
   containerId?: string
   error?: string
-  logFilePath?: string  // 로그 파일 경로
+  logFilePath?: string  // Log file path
 }
 
 export interface Step1Result {

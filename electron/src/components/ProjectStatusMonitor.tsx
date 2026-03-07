@@ -11,7 +11,7 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
   const [projectStatus, setProjectStatus] = useState<string | null>(null);
   const [isStopping, setIsStopping] = useState(false);
 
-  // 프로젝트 UUID가 변경되면 상태 초기화 및 로드
+  // when the project UUID is changed, initialize and load the status
   useEffect(() => {
     if (!projectUuid) {
       setProjectStatus(null);
@@ -32,7 +32,7 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
     loadProjectStatus();
   }, [projectUuid]);
 
-  // 폴링: 프로젝트가 running 상태일 때 2초마다 컨테이너 상태 확인
+  // polling: check the container status every 2 seconds when the project is running
   useEffect(() => {
     if (!projectUuid || projectStatus !== 'running') {
       return;
@@ -44,8 +44,8 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
         if (project) {
           setProjectStatus(project.status);
           
-          // running 상태이고 컨테이너가 종료되었는지 확인
-          // failed 상태로 변경된 경우는 업데이트하지 않음
+          // running status and check if the container is stopped
+          // do not update if the project is already failed
           if (project.status === 'running') {
             const stepNumber = project.step;
             if (stepNumber) {
@@ -56,13 +56,13 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
               if (containerId) {
                 const result = await window.docker.isContainerRunning(containerId);
                 if (result.success && !result.running) {
-                  // 컨테이너가 종료되었을 때, 현재 프로젝트 상태를 확인
-                  // 이미 failed 상태로 변경된 경우(강제 중단 등)는 업데이트하지 않음
+                  // when the container is stopped, check the current project status
+                  // do not update if the project is already failed
                   if (project.status === 'running') {
-                    // 컨테이너의 exit code를 확인하여 실제 성공 여부 판단
+                    // check the exit code of the container to determine the actual success or failure
                     const exitCodeResult = await window.docker.getContainerExitCode(containerId);
                     if (exitCodeResult.success && exitCodeResult.exitCode !== null) {
-                      // exit code가 0이면 성공, 그 외는 실패
+                      // if the exit code is 0, then success, otherwise failure
                       const newStatus = exitCodeResult.exitCode === 0 ? 'success' : 'failed';
                       const updatedProject = await window.db.updateProject(projectUuid, { status: newStatus });
                       if (updatedProject) {
@@ -70,14 +70,14 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
                       }
                     }
                   } else if (project.status === 'failed') {
-                    // failed 상태로 이미 변경된 경우, 상태만 업데이트
+                    // already failed, only update the status
                     setProjectStatus('failed');
                   }
                 }
               }
             }
           } else if (project.status === 'failed') {
-            // failed 상태로 변경된 경우 상태 업데이트
+            // already failed, only update the status
             setProjectStatus('failed');
           }
         }
@@ -86,10 +86,10 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
       }
     };
 
-    // 즉시 한 번 체크
+    // immediately check once
     checkProjectStatus();
 
-    // 2초마다 체크
+    // check every 2 seconds
     const intervalId = setInterval(checkProjectStatus, 2000);
 
     return () => {
@@ -127,7 +127,7 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
     }
   };
 
-  // 프로젝트 UUID가 없거나 상태가 없으면 표시하지 않음
+  // do not show if the project UUID is not set or the status is not set
   if (!projectUuid || !projectStatus) {
     return null;
   }

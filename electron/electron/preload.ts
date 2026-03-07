@@ -20,7 +20,7 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   },
 })
 
-// Database API 노출
+// Expose Database API
 contextBridge.exposeInMainWorld('db', {
   // Projects
   getProjects: () => ipcRenderer.invoke('db:getProjects'),
@@ -33,7 +33,7 @@ contextBridge.exposeInMainWorld('db', {
   getDbPath: () => ipcRenderer.invoke('db:getDbPath'),
 })
 
-// Docker API 노출
+// Expose Docker API
 contextBridge.exposeInMainWorld('docker', {
   checkInstalled: () => ipcRenderer.invoke('docker:checkInstalled'),
   checkRunning: () => ipcRenderer.invoke('docker:checkRunning'),
@@ -47,7 +47,7 @@ contextBridge.exposeInMainWorld('docker', {
   stopAndCleanupContainer: (containerId: string) => ipcRenderer.invoke('docker:stopAndCleanupContainer', containerId),
 })
 
-// Dialog API 노출
+// Expose Dialog API
 contextBridge.exposeInMainWorld('dialog', {
   selectFolder: () => ipcRenderer.invoke('dialog:selectFolder'),
   selectFile: (options?: { 
@@ -56,19 +56,19 @@ contextBridge.exposeInMainWorld('dialog', {
   }) => ipcRenderer.invoke('dialog:selectFile', options),
 })
 
-// File System API 노출
+// Expose File System API
 contextBridge.exposeInMainWorld('fs', {
   listFiles: (directoryPath: string) => ipcRenderer.invoke('fs:listFiles', directoryPath),
   findLatestFile: (directoryPath: string, extension: string) => ipcRenderer.invoke('fs:findLatestFile', directoryPath, extension),
 })
 
-// Shell API 노출
+// Expose Shell API
 contextBridge.exposeInMainWorld('shell', {
   openPath: (filePath: string) => ipcRenderer.invoke('shell:openPath', filePath),
   showItemInFolder: (filePath: string) => ipcRenderer.invoke('shell:showItemInFolder', filePath),
 })
 
-// Step API 노출
+// Expose Step API
 contextBridge.exposeInMainWorld('step', {
   runStep1: (params: {
     projectName: string

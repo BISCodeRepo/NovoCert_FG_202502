@@ -26,7 +26,7 @@ export async function executeStep1Workflow(
       status: 'running',
       parameters: {
         inputPath: params.inputPath,
-        outputPath: params.outputPath // 프로젝트 레벨 기본 출력 경로
+        outputPath: params.outputPath // Project-level default output path
       }
     })
 
@@ -56,8 +56,8 @@ export async function executeStep1Workflow(
     const dockerResult = await runStep1Container({
       projectName: params.projectName,
       inputPath: params.inputPath,
-      outputPath: baseProjectPath, // 컨테이너 결과물 경로
-      logPath: baseProjectPath,    // 로그 파일 경로
+      outputPath: baseProjectPath, // Container output path
+      logPath: baseProjectPath,    // Log file path
       projectUuid: project.uuid,
       memory: params.memory,
       precursorTolerance: params.precursorTolerance,

@@ -33,7 +33,7 @@ function FileInput({
         onChange(result.path);
       }
     } catch (error) {
-      console.error('파일 선택 중 오류 발생:', error);
+      console.error('Error selecting file:', error);
     }
   };
 

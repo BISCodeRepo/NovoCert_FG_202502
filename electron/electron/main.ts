@@ -84,16 +84,16 @@ app.on('activate', () => {
 })
 
 app.whenReady().then(async () => {
-  // 데이터베이스 초기화
+  // Initialize database
   await database.init()
   
-  // IPC 핸들러 등록
+  // Register IPC handlers
   setupIpcHandlers()
   
   createWindow()
 })
 
-// IPC 핸들러 설정
+// Setup IPC handlers
 function setupIpcHandlers() {
   // Docker handlers
   ipcMain.handle('docker:checkInstalled', async () => {
@@ -163,12 +163,12 @@ function setupIpcHandlers() {
     return database.projects.getDbPath()
   })
 
-  // Dialog 핸들러 - 폴더 선택
+  // Dialog handler - select folder
   ipcMain.handle('dialog:selectFolder', async () => {
     return await selectFolder(win)
   })
 
-  // Dialog 핸들러 - 파일 선택
+  // Dialog handler - select file
   ipcMain.handle('dialog:selectFile', async (_, options?: { 
     filters?: { name: string; extensions: string[] }[]
     defaultPath?: string
@@ -176,17 +176,17 @@ function setupIpcHandlers() {
     return await selectFile(win, options)
   })
 
-  // 파일 시스템 핸들러 - 디렉토리 내 파일 목록 조회
+  // File system handler - list files in directory
   ipcMain.handle('fs:listFiles', async (_, directoryPath: string) => {
     return listFiles(directoryPath)
   })
 
-  // 파일 시스템 핸들러 - 디렉토리에서 특정 확장자를 가진 가장 최근 파일 찾기
+  // File system handler - find the most recent file with a specific extension in the directory
   ipcMain.handle('fs:findLatestFile', async (_, directoryPath: string, extension: string) => {
     return findLatestFile(directoryPath, extension)
   })
 
-  // Shell 핸들러 - 파일/폴더 경로를 파일 탐색기에서 열기
+  // Shell handler - open file/folder path in file explorer
   ipcMain.handle('shell:openPath', async (_, filePath: string) => {
     try {
       await shell.openPath(filePath)
@@ -196,7 +196,7 @@ function setupIpcHandlers() {
     }
   })
 
-  // Shell 핸들러 - 파일을 파일 탐색기에서 선택하여 표시
+  // Shell handler - show item in folder
   ipcMain.handle('shell:showItemInFolder', async (_, filePath: string) => {
     try {
       shell.showItemInFolder(filePath)
@@ -206,7 +206,7 @@ function setupIpcHandlers() {
     }
   })
 
-  // Step1 실행 핸들러
+  // Step1 handler
   ipcMain.handle('step:runStep1', async (_, params: {
     projectName: string
     inputPath: string
@@ -218,7 +218,7 @@ function setupIpcHandlers() {
     return await executeStep1Workflow(database, params)
   })
 
-  // Step2 실행 핸들러
+  // Step2 handler
   ipcMain.handle('step:runStep2', async (_, params: {
     projectName: string
     outputPath: string
@@ -226,7 +226,7 @@ function setupIpcHandlers() {
     return await executeStep2Workflow(database, params)
   })
 
-  // Step3 실행 핸들러
+  // Step3 handler
   ipcMain.handle('step:runStep3', async (_, params: {
     projectName: string
     spectraPath: string
@@ -237,7 +237,7 @@ function setupIpcHandlers() {
     return await executeStep3Workflow(database, params)
   })
 
-  // Step4 실행 핸들러
+  // Step4 handler
   ipcMain.handle('step:runStep4', async (_, params: {
     projectName: string
     targetMgfDir: string
@@ -249,7 +249,7 @@ function setupIpcHandlers() {
     return await executeStep4Workflow(database, params)
   })
 
-  // Step5 실행 핸들러
+  // Step5 handler
   ipcMain.handle('step:runStep5', async (_, params: {
     projectName: string
     inputPath: string

@@ -1,18 +1,18 @@
 # Docker Steps
 
-각 Step별 Docker 컨테이너 실행을 위한 모듈입니다.
+Modules for executing Docker containers for each Step.
 
-## 📁 구조
+## 📁 Structure
 
 ```
 docker/steps/
-├── index.ts                # 모든 step 함수 export
-├── README.md              # 이 문서
+├── index.ts                # Export all step functions
+├── README.md              # This document
 ├── step1/                 # Step 1: Decoy Spectra Generation
-│   ├── index.ts          # step1 모듈 export
-│   ├── types.ts          # Step1 관련 타입 정의
-│   ├── executor.ts       # Docker 컨테이너 실행 로직
-│   └── workflow.ts       # 전체 워크플로우 (Project → Task → Docker)
+│   ├── index.ts          # step1 module export
+│   ├── types.ts          # Step1 related type definitions
+│   ├── executor.ts       # Docker container execution logic
+│   └── workflow.ts       # Complete workflow (Project → Task → Docker)
 ├── step2/                 # Step 2: (TODO)
 │   ├── index.ts
 │   ├── types.ts
@@ -31,38 +31,38 @@ docker/steps/
     └── executor.ts
 ```
 
-## 🎯 파일 역할
+## 🎯 File Roles
 
 ### `types.ts`
-Step별 파라미터, 결과 타입 정의
+Step-specific parameter and result type definitions
 ```typescript
 export interface StepXParams { ... }
 export interface StepXResult { ... }
 ```
 
 ### `executor.ts`
-Docker 컨테이너 실행 로직만 담당
+Handles only Docker container execution logic
 ```typescript
 export async function runStepXContainer(params: StepXParams) { ... }
 ```
 
-### `workflow.ts` (선택)
-전체 워크플로우 로직 (Project 생성 → Task 생성 → Docker 실행 → 상태 업데이트)
+### `workflow.ts` (Optional)
+Complete workflow logic (Project creation → Task creation → Docker execution → Status update)
 ```typescript
 export async function executeStepXWorkflow(database: Database, params: StepXParams) { ... }
 ```
 
 ### `index.ts`
-모듈 export
+Module export
 ```typescript
 export { runStepXContainer } from './executor'
-export { executeStepXWorkflow } from './workflow'  // 있는 경우
+export { executeStepXWorkflow } from './workflow'  // if exists
 export type { StepXParams, StepXResult } from './types'
 ```
 
-## 📝 Step별 수정 방법
+## 📝 How to Modify Each Step
 
-### 1. 파라미터 추가 (`types.ts`)
+### 1. Add Parameters (`types.ts`)
 
 ```typescript
 export interface Step2Params {
@@ -70,20 +70,20 @@ export interface Step2Params {
   inputPath: string
   outputPath: string
   
-  // 여기에 Step2 전용 파라미터 추가
+  // Add Step2-specific parameters here
   configPath?: string
   threads?: number
 }
 ```
 
-### 2. Docker 실행 옵션 수정 (`executor.ts`)
+### 2. Modify Docker Execution Options (`executor.ts`)
 
 #### Volumes (Bind Mounts)
 ```typescript
 volumes: [
   `${inputPath}:/app/input`,
   `${outputPath}:/app/output`,
-  `${configPath}:/app/config`,  // 추가
+  `${configPath}:/app/config`,  // added
 ]
 ```
 
@@ -91,18 +91,18 @@ volumes: [
 ```typescript
 environment: {
   PROJECT_NAME: projectName,
-  THREADS: params.threads?.toString() || '4',  // 추가
+  THREADS: params.threads?.toString() || '4',  // added
 }
 ```
 
 #### Command
 ```typescript
-command: ['--verbose', '--format', 'json']  // 필요시 추가
+command: ['--verbose', '--format', 'json']  // add if needed
 ```
 
-### 3. Workflow 추가 (선택)
+### 3. Add Workflow (Optional)
 
-전체 워크플로우가 필요한 경우 `workflow.ts` 파일 생성:
+If a complete workflow is needed, create a `workflow.ts` file:
 
 ```typescript
 import type { Database } from '../../../database'
@@ -113,19 +113,19 @@ export async function executeStep2Workflow(
   database: Database,
   params: Step2Params
 ): Promise<Step2Result> {
-  // 1. Project 생성/조회
-  // 2. Task 생성
-  // 3. Docker 실행
-  // 4. 상태 업데이트
+  // 1. Create/Retrieve Project
+  // 2. Create Task
+  // 3. Execute Docker
+  // 4. Update Status
 }
 ```
 
-## 🚀 사용 예시
+## 🚀 Usage Examples
 
-### Step 1 (완전 구현됨)
+### Step 1 (Fully Implemented)
 
 ```typescript
-// executor만 사용
+// Using executor only
 import { runStep1Container } from './docker'
 
 const result = await runStep1Container({
@@ -136,7 +136,7 @@ const result = await runStep1Container({
 ```
 
 ```typescript
-// workflow 사용 (권장)
+// Using workflow (Recommended)
 import { executeStep1Workflow } from './docker'
 
 const result = await executeStep1Workflow(database, {
@@ -146,7 +146,7 @@ const result = await executeStep1Workflow(database, {
 })
 ```
 
-### main.ts에서 사용
+### Usage in main.ts
 
 ```typescript
 import { executeStep1Workflow } from './docker'
@@ -156,19 +156,18 @@ ipcMain.handle('step:runStep1', async (_, params) => {
 })
 ```
 
-## ✨ 장점
+## ✨ Benefits
 
-1. **모듈화**: 각 Step이 독립적인 폴더로 분리
-2. **명확한 책임**: types, executor, workflow로 역할 분리
-3. **확장성**: 새로운 파일 추가가 자유로움
-4. **재사용성**: executor와 workflow를 독립적으로 사용 가능
-5. **유지보수**: 각 Step의 로직이 명확히 분리됨
+1. **Modularity**: Each Step is separated into an independent folder
+2. **Clear Responsibilities**: Roles separated into types, executor, and workflow
+3. **Extensibility**: Easy to add new files
+4. **Reusability**: executor and workflow can be used independently
+5. **Maintainability**: Each Step's logic is clearly separated
 
-## 🔧 공통 함수
+## 🔧 Common Functions
 
-모든 Step은 `../executor.ts`의 `runDockerContainer()` 함수를 사용합니다:
+All Steps use the `runDockerContainer()` function from `../container.ts`:
 
-- **runDockerContainer**: Docker 컨테이너 실행 (공통 로직)
-- **stopContainer**: 실행 중인 컨테이너 중지
-- **getContainerLogs**: 컨테이너 로그 조회
-
+- **runDockerContainer**: Execute Docker container (common logic)
+- **stopContainer**: Stop a running container
+- **getContainerLogs**: Retrieve container logs
