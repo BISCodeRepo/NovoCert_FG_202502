@@ -18,4 +18,4 @@ ENV MEMORY=4 \
     RANDOM_SEED=100
 
 # Run PrecursorSwap.jar
-CMD [ "sh", "run.sh" ]
+CMD java -Xmx${MEMORY}G -jar PrecursorSwap.jar -i ${INPUT_DIR} -o ${OUTPUT_DIR} -d ${PRECURSOR_TOLERANCE} -r ${RANDOM_SEED}
