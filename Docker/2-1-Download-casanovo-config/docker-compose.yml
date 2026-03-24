@@ -9,5 +9,5 @@ services:
     volumes:
       # Output directory
       - type: bind
-        source: ./test_data/output
-        target: /app/output/
+        source: ../app/casanovo_config
+        target: /app/output
