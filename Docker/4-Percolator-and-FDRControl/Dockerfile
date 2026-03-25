@@ -8,6 +8,8 @@ RUN apt-get update && apt-get install -y \
     libgomp1 \
     ./percolator-noxml.deb \
     ./percolator-converters.deb \
+    python3 \
+    python3-pandas \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /app

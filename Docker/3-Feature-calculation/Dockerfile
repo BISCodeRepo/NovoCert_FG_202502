@@ -14,4 +14,4 @@ WORKDIR /app
 RUN mkdir -p target/mgf decoy/mgf output
 COPY ./app/ /app
 
-CMD [ "bash", "run.sh" ]
+CMD [ "/venv/bin/python", "feature_calculation.py", "--target_mgf_dir", "target/mgf/", "--target_result_path", "target/result.mztab", "--decoy_mgf_dir", "decoy/mgf/", "--decoy_result_path", "decoy/result.mztab", "--output_dir", "output" ]
