@@ -161,6 +161,33 @@ interface Step6Params {
   projectName: string
   csvFilePath: string
   previousStepPath: string
+  pinFilePath?: string
+}
+
+interface VennData {
+  title: string
+  leftOnly: number
+  rightOnly: number
+  overlap: number
+  leftLabel: string
+  rightLabel: string
+}
+
+interface HistogramBin {
+  min: number
+  max: number
+  overlapCount: number
+  unoverlapCount: number
+}
+
+interface HistogramData {
+  title: string
+  bins: HistogramBin[]
+}
+
+interface Step6AnalysisData {
+  vennDiagrams: VennData[]
+  histograms: HistogramData[]
 }
 
 interface Step6Result {
@@ -168,6 +195,7 @@ interface Step6Result {
   project?: Project
   task?: Task
   containerId?: string
+  analysisData?: Step6AnalysisData
   error?: string
 }
 

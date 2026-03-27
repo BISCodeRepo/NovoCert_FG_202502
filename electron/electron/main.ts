@@ -264,6 +264,7 @@ function setupIpcHandlers() {
     projectName: string
     csvFilePath: string
     previousStepPath: string
+    pinFilePath?: string
   }) => {
     return await executeStep6Workflow(database, params)
   })

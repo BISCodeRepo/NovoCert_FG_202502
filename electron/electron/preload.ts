@@ -106,5 +106,6 @@ contextBridge.exposeInMainWorld('step', {
     projectName: string
     csvFilePath: string
     previousStepPath: string
+    pinFilePath?: string
   }) => ipcRenderer.invoke('step:runStep6', params),
 })

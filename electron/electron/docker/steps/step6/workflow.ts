@@ -1,5 +1,5 @@
 import type { Database } from '../../../database'
-import type { Step6Params, Step6Result } from './types'
+import type { Step6Params, Step6Result, Step6AnalysisData } from './types'
 import { executeStep6Analysis } from './executor'
 import path from 'node:path'
 import fs from 'node:fs'
@@ -75,13 +75,13 @@ export async function executeStep6Workflow(
       projectName: params.projectName,
       csvFilePath: params.csvFilePath,
       previousStepPath: params.previousStepPath,
+      pinFilePath: params.pinFilePath,
       outputPath: baseProjectPath,
       logPath: baseProjectPath,
       projectUuid: project.uuid
     })
 
     if (!analysisResult.success) {
-      // If the analysis fails, update the Project status to failed
       const failedProject = await database.projects.update(project.uuid, {
         status: 'failed',
         parameters: {
@@ -99,7 +99,6 @@ export async function executeStep6Workflow(
 
     logToFile(`Post Analysis completed successfully`)
 
-    // Update the Project status to success
     const finalProject = await database.projects.update(project.uuid, {
       status: 'success',
       parameters: {
@@ -113,7 +112,8 @@ export async function executeStep6Workflow(
 
     return {
       success: true,
-      project: finalProject || project
+      project: finalProject || project,
+      analysisData: analysisResult.analysisData,
     }
   } catch (error: unknown) {
     const errorMessage = `Error in executeStep6Workflow: ${error instanceof Error ? error.message : 'Unknown error'}`
