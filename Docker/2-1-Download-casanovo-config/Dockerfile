@@ -1,22 +1,8 @@
-FROM python:3.13-slim AS builder
+FROM python:3.12 AS builder
 
-RUN apt update \
-    && apt install -y gcc g++ gdb \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-RUN python -m venv /venv
-RUN /venv/bin/pip install --no-cache-dir casanovo
-
-FROM python:3.13-slim
-
-COPY --from=builder /venv /venv
-
-RUN apt update \
-    && apt install -y --no-install-recommends \
-    libxrender1 libxext6 libexpat1 \
-    && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir casanovo==4.3.0
 
 WORKDIR /app
-COPY ./app /app
 
-CMD [ "bash", "run.sh" ]
+CMD ["casanovo", "configure", "--output", "output/casanovo.yaml"]

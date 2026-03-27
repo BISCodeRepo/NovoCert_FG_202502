@@ -6,13 +6,13 @@ services:
     image: novocert-p1:compose-build
     container_name: novocert-p1
     environment:
-      - MEMORY=${MEMORY}
-      - PRECURSOR_TOLERANCE=${PRECURSOR_TOLERANCE}
-      - RANDOM_SEED=${RANDOM_SEED}
+      - MEMORY=8
+      - PRECURSOR_TOLERANCE=16
+      - RANDOM_SEED=32
     volumes:
       - type: bind
-        source: ${INPUT_SOURCE_DIR}
+        source: ../test_data/1/sample
         target: /app/input
       - type: bind
-        source: ${OUTPUT_SOURCE_DIR}
+        source: ../test_data/1/output
         target: /app/output

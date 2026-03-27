@@ -7,12 +7,13 @@ services:
         - linux/amd64
     image: novocert-p4:compose-build
     container_name: novocert-p4
-    # user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      - FDR_TYPE=peptide
+      - FDR=0.01
     volumes:
       - type: bind
-        source: ./test_data/t_d.pin
+        source: ../test_data/4/t_d.pin
         target: /app/t_d.pin
       - type: bind
-        source: ./test_data/output
+        source: ../test_data/4/output
         target: /app/output
-    

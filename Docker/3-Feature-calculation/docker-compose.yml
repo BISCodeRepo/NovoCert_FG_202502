@@ -9,21 +9,21 @@ services:
     volumes:
       # Target spectra dir
       - type: bind
-        source: ./test_data/target/mgf/
+        source: ../test_data/3/target/mgf/
         target: /app/target/mgf
       # Decoy spectra dir
       - type: bind
-        source: ./test_data/decoy/mgf/
+        source: ../test_data/3/decoy/mgf/
         target: /app/decoy/mgf
       # Target DNPS result
       - type: bind
-        source: ./test_data/target/result.mztab
+        source: ../test_data/3/target/result.mztab
         target: /app/target/result.mztab
       # Decoy DNPS result
       - type: bind
-        source: ./test_data/decoy/result.mztab
+        source: ../test_data/3/decoy/result.mztab
         target: /app/decoy/result.mztab
       #  Output directory
       - type: bind
-        source: ./test_data/output
+        source: ../test_data/3/output
         target: /app/output
