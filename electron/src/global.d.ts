@@ -157,12 +157,27 @@ interface Step5Result {
   error?: string
 }
 
+interface Step6Params {
+  projectName: string
+  csvFilePath: string
+  previousStepPath: string
+}
+
+interface Step6Result {
+  success: boolean
+  project?: Project
+  task?: Task
+  containerId?: string
+  error?: string
+}
+
 interface StepAPI {
   runStep1: (params: Step1Params) => Promise<Step1Result>
   runStep2: (params: Step2Params) => Promise<Step2Result>
   runStep3: (params: Step3Params) => Promise<Step3Result>
   runStep4: (params: Step4Params) => Promise<Step4Result>
   runStep5: (params: Step5Params) => Promise<Step5Result>
+  runStep6: (params: Step6Params) => Promise<Step6Result>
 }
 
 declare global {

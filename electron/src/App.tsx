@@ -8,6 +8,7 @@ import {
   Step3,
   Step4,
   Step5,
+  Step6,
   ProjectDetail,
 } from "./pages";
 
@@ -44,6 +45,8 @@ function App() {
         return <Step4 onNavigate={handleNavigate} />;
       case "step5":
         return <Step5 onNavigate={handleNavigate} />;
+      case "step6":
+        return <Step6 onNavigate={handleNavigate} />;
       case "project-detail":
         if (currentProjectUuid) {
           return (

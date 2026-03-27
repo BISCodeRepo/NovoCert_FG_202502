@@ -15,6 +15,7 @@ import {
   executeStep3Workflow,
   executeStep4Workflow,
   executeStep5Workflow,
+  executeStep6Workflow,
   isContainerRunning,
   getContainerExitCode,
   getProjectUuidFromContainer,
@@ -256,5 +257,14 @@ function setupIpcHandlers() {
     outputPath: string
   }) => {
     return await executeStep5Workflow(database, params)
+  })
+
+  // Step6 handler
+  ipcMain.handle('step:runStep6', async (_, params: {
+    projectName: string
+    csvFilePath: string
+    previousStepPath: string
+  }) => {
+    return await executeStep6Workflow(database, params)
   })
 }

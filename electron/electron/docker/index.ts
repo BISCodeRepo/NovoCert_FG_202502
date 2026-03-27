@@ -35,6 +35,7 @@ export {
   runStep4Container,
   executeStep4Workflow,
   runStep5Container,
-  executeStep5Workflow
+  executeStep5Workflow,
+  executeStep6Workflow
 } from './steps'
 

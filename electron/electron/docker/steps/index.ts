@@ -3,6 +3,7 @@ export { runStep2Container, executeStep2Workflow } from './step2'
 export { runStep3Container, executeStep3Workflow } from './step3'
 export { runStep4Container, executeStep4Workflow } from './step4'
 export { runStep5Container, executeStep5Workflow } from './step5'
+export { executeStep6Workflow } from './step6'
 
 // Export types
 export type { Step1Params, Step1Result } from './step1'

@@ -31,6 +31,7 @@ const menuItems: MenuItem[] = [
       { id: "step3", label: "3. De novo Peptide Sequencing" },
       { id: "step4", label: "4. Feature Calculation" },
       { id: "step5", label: "5. Percolator and FDR Control" },
+      { id: "step6", label: "6. Post Analysis" },
     ],
   },
 ];
