@@ -21,17 +21,17 @@ function VennDiagram({
   leftLabel,
   rightLabel,
 }: VennData) {
-  const w = 320,
-    h = 230;
-  const cx1 = 120,
-    cx2 = 200,
-    cy = 105,
-    r = 80;
+  const w = 360,
+    h = 250;
+  const cx1 = 135,
+    cx2 = 225,
+    cy = 115,
+    r = 90;
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center w-full">
       <h4 className="text-sm font-semibold text-gray-700 mb-1">{title}</h4>
-      <svg width={w} height={h} className="select-none">
+      <svg viewBox={`0 0 ${w} ${h}`} className="select-none w-full" preserveAspectRatio="xMidYMid meet">
         <circle
           cx={cx1}
           cy={cy}
@@ -49,10 +49,10 @@ function VennDiagram({
           strokeWidth={2}
         />
         <text
-          x={cx1 - 30}
+          x={cx1 - 35}
           y={cy + 5}
           textAnchor="middle"
-          fontSize={18}
+          fontSize={20}
           fontWeight="bold"
           fill="#1e40af"
         >
@@ -62,36 +62,36 @@ function VennDiagram({
           x={(cx1 + cx2) / 2}
           y={cy + 5}
           textAnchor="middle"
-          fontSize={18}
+          fontSize={20}
           fontWeight="bold"
           fill="#6b21a8"
         >
           {overlap}
         </text>
         <text
-          x={cx2 + 30}
+          x={cx2 + 35}
           y={cy + 5}
           textAnchor="middle"
-          fontSize={18}
+          fontSize={20}
           fontWeight="bold"
           fill="#991b1b"
         >
           {rightOnly}
         </text>
         <text
-          x={cx1 - 20}
+          x={cx1 - 25}
           y={cy + r + 25}
           textAnchor="middle"
-          fontSize={11}
+          fontSize={12}
           fill="#374151"
         >
           {leftLabel}
         </text>
         <text
-          x={cx2 + 20}
+          x={cx2 + 25}
           y={cy + r + 25}
           textAnchor="middle"
-          fontSize={11}
+          fontSize={12}
           fill="#374151"
         >
           {rightLabel}
@@ -105,17 +105,17 @@ function Histogram({
   title,
   bins,
 }: HistogramData) {
-  const w = 320,
-    h = 240;
-  const m = { top: 35, right: 15, bottom: 35, left: 45 };
+  const w = 400,
+    h = 260;
+  const m = { top: 35, right: 15, bottom: 40, left: 50 };
   const pw = w - m.left - m.right;
   const ph = h - m.top - m.bottom;
 
   if (bins.length === 0) {
     return (
-      <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center w-full">
         <h4 className="text-sm font-semibold text-gray-700 mb-1">{title}</h4>
-        <div className="w-[320px] h-[240px] flex items-center justify-center text-xs text-gray-400 border rounded">
+        <div className="w-full aspect-[5/3] flex items-center justify-center text-xs text-gray-400 border rounded">
           No data available
         </div>
       </div>
@@ -133,16 +133,16 @@ function Histogram({
   const tickStep = Math.ceil(maxCount / yTicks);
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center w-full">
       <h4 className="text-sm font-semibold text-gray-700 mb-1">{title}</h4>
-      <svg width={w} height={h} className="select-none">
+      <svg viewBox={`0 0 ${w} ${h}`} className="select-none w-full" preserveAspectRatio="xMidYMid meet">
         {/* Legend */}
-        <rect x={w - 110} y={6} width={10} height={10} fill="rgba(59,130,246,0.7)" rx={1} />
-        <text x={w - 96} y={15} fontSize={9} fill="#374151">
+        <rect x={w - 120} y={6} width={10} height={10} fill="rgba(59,130,246,0.7)" rx={1} />
+        <text x={w - 106} y={15} fontSize={10} fill="#374151">
           Overlap
         </text>
-        <rect x={w - 110} y={20} width={10} height={10} fill="rgba(239,68,68,0.7)" rx={1} />
-        <text x={w - 96} y={29} fontSize={9} fill="#374151">
+        <rect x={w - 120} y={20} width={10} height={10} fill="rgba(239,68,68,0.7)" rx={1} />
+        <text x={w - 106} y={29} fontSize={10} fill="#374151">
           Unoverlap
         </text>
 
@@ -155,7 +155,7 @@ function Histogram({
             return (
               <g key={i}>
                 <line x1={0} y1={y} x2={pw} y2={y} stroke="#e5e7eb" />
-                <text x={-5} y={y + 3} textAnchor="end" fontSize={9} fill="#6b7280">
+                <text x={-6} y={y + 4} textAnchor="end" fontSize={10} fill="#6b7280">
                   {val}
                 </text>
               </g>
@@ -200,9 +200,9 @@ function Histogram({
               <text
                 key={idx}
                 x={x}
-                y={ph + 14}
+                y={ph + 16}
                 textAnchor="middle"
-                fontSize={8}
+                fontSize={9}
                 fill="#6b7280"
               >
                 {bin.min.toFixed(2)}
@@ -342,171 +342,173 @@ function Step6({ onNavigate }: StepPageProps) {
   };
 
   return (
-    <div className="h-full flex gap-6">
-      {/* Left panel */}
-      <div className="w-1/3">
-        <div className="bg-white rounded-lg shadow-sm p-6 sticky top-0">
-          <div className="mb-6">
-            <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-bold text-gray-900">Step 6</h2>
-              <button
-                onClick={() => setIsDescriptionModalOpen(true)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-                title="Step Description"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </button>
+    <div className="h-full space-y-6">
+      {/* Top section: Left panel + Right panel */}
+      <div className="flex gap-6">
+        {/* Left panel */}
+        <div className="w-1/3">
+          <div className="bg-white rounded-lg shadow-sm p-6 sticky top-0">
+            <div className="mb-6">
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-gray-900">Step 6</h2>
+                <button
+                  onClick={() => setIsDescriptionModalOpen(true)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  title="Step Description"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-sm text-gray-500">Post Analysis</p>
             </div>
-            <p className="text-sm text-gray-500">Post Analysis</p>
-          </div>
-          <div className="border-t pt-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Step 6 Projects</h3>
-            <StepProjectList step={6} refreshTrigger={projectUuid} onNavigate={onNavigate} />
+            <div className="border-t pt-6">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Step 6 Projects</h3>
+              <StepProjectList step={6} refreshTrigger={projectUuid} onNavigate={onNavigate} />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Right panel */}
-      <div className="flex-1 space-y-6">
-        {/* Parameters */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Parameter Settings</h2>
+        {/* Right panel */}
+        <div className="flex-1">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Parameter Settings</h2>
 
-          <div className="space-y-6">
-            <TextInput
-              label="Project Name"
-              value={projectName}
-              onChange={setProjectName}
-              placeholder="Enter the project name"
-              required
-              description="Enter the name of the project to start a new one"
-            />
+            <div className="space-y-6">
+              <TextInput
+                label="Project Name"
+                value={projectName}
+                onChange={setProjectName}
+                placeholder="Enter the project name"
+                required
+                description="Enter the name of the project to start a new one"
+              />
 
-            {/* Input 1: FDR Result CSV (from Step 5) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                FDR Result CSV (from Step 5)
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <div className="flex gap-4 mb-3">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name="fdrSource"
-                    value="step"
-                    checked={fdrSelector.sourceType === "step"}
-                    onChange={() => fdrSelector.setSourceType("step")}
-                    className="mr-2"
-                  />
-                  <span className="text-sm text-gray-700">Step 5 Project</span>
+              {/* Input 1: FDR Result CSV (from Step 5) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  FDR Result CSV (from Step 5)
+                  <span className="text-red-500 ml-1">*</span>
                 </label>
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name="fdrSource"
-                    value="custom"
-                    checked={fdrSelector.sourceType === "custom"}
-                    onChange={() => fdrSelector.setSourceType("custom")}
-                    className="mr-2"
-                  />
-                  <span className="text-sm text-gray-700">Upload CSV File</span>
-                </label>
-              </div>
+                <div className="flex gap-4 mb-3">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="fdrSource"
+                      value="step"
+                      checked={fdrSelector.sourceType === "step"}
+                      onChange={() => fdrSelector.setSourceType("step")}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-700">Step 5 Project</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="fdrSource"
+                      value="custom"
+                      checked={fdrSelector.sourceType === "custom"}
+                      onChange={() => fdrSelector.setSourceType("custom")}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-700">Upload CSV File</span>
+                  </label>
+                </div>
 
-              {fdrSelector.sourceType === "step" ? (
-                <div className="space-y-3">
-                  <select
-                    value={fdrSelector.selectedProjectUuid}
-                    onChange={(e) => fdrSelector.setSelectedProjectUuid(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  >
-                    <option value="">Select Step 5 Project</option>
-                    {fdrSelector.projects.map((p) => (
-                      <option key={p.uuid} value={p.uuid}>{p.name}</option>
-                    ))}
-                  </select>
-                  {fdrSelector.selectedProjectUuid && fdrSelector.foundFilePath && (
-                    <div>
-                      <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700 truncate">
-                        {fdrSelector.foundFilePath}
+                {fdrSelector.sourceType === "step" ? (
+                  <div className="space-y-3">
+                    <select
+                      value={fdrSelector.selectedProjectUuid}
+                      onChange={(e) => fdrSelector.setSelectedProjectUuid(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    >
+                      <option value="">Select Step 5 Project</option>
+                      {fdrSelector.projects.map((p) => (
+                        <option key={p.uuid} value={p.uuid}>{p.name}</option>
+                      ))}
+                    </select>
+                    {fdrSelector.selectedProjectUuid && fdrSelector.foundFilePath && (
+                      <div>
+                        <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700 truncate">
+                          {fdrSelector.foundFilePath}
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500">
+                          Automatically selected the latest .csv from the Step 5 project output.
+                        </p>
                       </div>
-                      <p className="mt-1 text-xs text-gray-500">
-                        Automatically selected the latest .csv from the Step 5 project output.
-                      </p>
-                    </div>
-                  )}
-                  {fdrSelector.error && (
-                    <p className="text-sm text-red-600">{fdrSelector.error}</p>
-                  )}
-                </div>
-              ) : (
-                <FileInput
-                  label="FDR Result CSV File"
-                  value={fdrResultPath}
-                  onChange={setFdrResultPath}
-                  placeholder="/path/to/fdr_result.csv"
-                  required
-                  description="The fdr_result.csv file generated by Step 5"
-                  filters={[{ name: "CSV Files", extensions: ["csv"] }]}
-                />
-              )}
+                    )}
+                    {fdrSelector.error && (
+                      <p className="text-sm text-red-600">{fdrSelector.error}</p>
+                    )}
+                  </div>
+                ) : (
+                  <FileInput
+                    label="FDR Result CSV File"
+                    value={fdrResultPath}
+                    onChange={setFdrResultPath}
+                    placeholder="/path/to/fdr_result.csv"
+                    required
+                    description="The fdr_result.csv file generated by Step 5"
+                    filters={[{ name: "CSV Files", extensions: ["csv"] }]}
+                  />
+                )}
+              </div>
+
+              {/* Input 2: DB Search Result CSV */}
+              <FileInput
+                label="DB Search Result CSV"
+                value={dbResultPath}
+                onChange={setDbResultPath}
+                placeholder="/path/to/db_result.csv"
+                required
+                description="The database search result CSV file"
+                filters={[{ name: "CSV Files", extensions: ["csv"] }]}
+              />
             </div>
 
-            {/* Input 2: DB Search Result CSV */}
-            <FileInput
-              label="DB Search Result CSV"
-              value={dbResultPath}
-              onChange={setDbResultPath}
-              placeholder="/path/to/db_result.csv"
-              required
-              description="The database search result CSV file"
-              filters={[{ name: "CSV Files", extensions: ["csv"] }]}
+            <StepRunButton
+              stepNumber={6}
+              onClick={handleRun}
+              isFormValid={isFormValid()}
+              isRunning={isRunning}
+              message={message}
             />
           </div>
-
-          <StepRunButton
-            stepNumber={6}
-            onClick={handleRun}
-            isFormValid={isFormValid()}
-            isRunning={isRunning}
-            message={message}
-          />
         </div>
-
-        {/* Analysis Results */}
-        {analysisData && (
-          <div className="bg-white rounded-lg shadow-sm p-6 space-y-8">
-            <h2 className="text-xl font-semibold text-gray-900">Analysis Results</h2>
-
-            {/* Venn Diagrams Row */}
-            {analysisData.vennDiagrams.length > 0 && (
-              <div>
-                <h3 className="text-sm font-semibold text-gray-600 mb-3">Venn Diagrams</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {analysisData.vennDiagrams.map((v) => (
-                    <VennDiagram key={v.title} {...v} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Histograms Row */}
-            {analysisData.histograms.length > 0 && (
-              <div>
-                <h3 className="text-sm font-semibold text-gray-600 mb-3">Feature Histograms (by ID Overlap)</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {analysisData.histograms.map((h) => (
-                    <Histogram key={h.title} {...h} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* Analysis Results - Full width below both panels */}
+      {analysisData && (
+        <div className="bg-white rounded-lg shadow-sm p-6 space-y-8">
+          <h2 className="text-xl font-semibold text-gray-900">Analysis Results</h2>
+
+          {/* Venn Diagrams Row */}
+          {analysisData.vennDiagrams.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-600 mb-3">Venn Diagrams</h3>
+              <div className="grid grid-cols-3 gap-4">
+                {analysisData.vennDiagrams.map((v) => (
+                  <VennDiagram key={v.title} {...v} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Histograms Row */}
+          {analysisData.histograms.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-600 mb-3">Feature Histograms (by ID Overlap)</h3>
+              <div className="grid grid-cols-3 gap-4">
+                {analysisData.histograms.map((h) => (
+                  <Histogram key={h.title} {...h} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <StepDescriptionModal
         isOpen={isDescriptionModalOpen}
