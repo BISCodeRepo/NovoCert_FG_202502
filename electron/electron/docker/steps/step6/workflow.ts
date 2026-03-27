@@ -1,5 +1,5 @@
 import type { Database } from '../../../database'
-import type { Step6Params, Step6Result, Step6AnalysisData } from './types'
+import type { Step6Params, Step6Result } from './types'
 import { executeStep6Analysis } from './executor'
 import path from 'node:path'
 import fs from 'node:fs'

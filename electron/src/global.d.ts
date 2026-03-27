@@ -164,32 +164,6 @@ interface Step6Params {
   pinFilePath?: string
 }
 
-interface VennData {
-  title: string
-  leftOnly: number
-  rightOnly: number
-  overlap: number
-  leftLabel: string
-  rightLabel: string
-}
-
-interface HistogramBin {
-  min: number
-  max: number
-  overlapCount: number
-  unoverlapCount: number
-}
-
-interface HistogramData {
-  title: string
-  bins: HistogramBin[]
-}
-
-interface Step6AnalysisData {
-  vennDiagrams: VennData[]
-  histograms: HistogramData[]
-}
-
 interface Step6Result {
   success: boolean
   project?: Project
@@ -209,6 +183,32 @@ interface StepAPI {
 }
 
 declare global {
+  interface VennData {
+    title: string
+    leftOnly: number
+    rightOnly: number
+    overlap: number
+    leftLabel: string
+    rightLabel: string
+  }
+
+  interface HistogramBin {
+    min: number
+    max: number
+    overlapCount: number
+    unoverlapCount: number
+  }
+
+  interface HistogramData {
+    title: string
+    bins: HistogramBin[]
+  }
+
+  interface Step6AnalysisData {
+    vennDiagrams: VennData[]
+    histograms: HistogramData[]
+  }
+
   interface Window {
     db: DatabaseAPI
     docker: DockerAPI
