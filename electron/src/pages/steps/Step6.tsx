@@ -21,12 +21,31 @@ function VennDiagram({
   leftLabel,
   rightLabel,
 }: VennData) {
-  const w = 360,
-    h = 250;
-  const cx1 = 135,
-    cx2 = 225,
-    cy = 115,
-    r = 90;
+  const w = 400,
+    h = 270;
+  const cy = 120;
+  const maxR = 95,
+    minR = 35;
+
+  const leftTotal = leftOnly + overlap;
+  const rightTotal = rightOnly + overlap;
+  const maxTotal = Math.max(leftTotal, rightTotal, 1);
+
+  // Area-proportional radii: r ∝ sqrt(count)
+  const rL = Math.max(minR, maxR * Math.sqrt(leftTotal / maxTotal));
+  const rR = Math.max(minR, maxR * Math.sqrt(rightTotal / maxTotal));
+
+  // Position circles so the overlap zone is visually proportional
+  const overlapRatio = Math.min(overlap / Math.max(leftTotal, rightTotal, 1), 1);
+  const baseDist = rL + rR;
+  const dist = baseDist * (1 - overlapRatio * 0.6);
+
+  const centerX = w / 2;
+  const cx1 = centerX - dist / 2;
+  const cx2 = centerX + dist / 2;
+
+  const bigR = Math.max(rL, rR);
+  const overlapMidX = (cx1 + rL + cx2 - rR) / 2;
 
   return (
     <div className="flex flex-col items-center w-full">
@@ -35,7 +54,7 @@ function VennDiagram({
         <circle
           cx={cx1}
           cy={cy}
-          r={r}
+          r={rL}
           fill="rgba(59,130,246,0.25)"
           stroke="#3b82f6"
           strokeWidth={2}
@@ -43,44 +62,44 @@ function VennDiagram({
         <circle
           cx={cx2}
           cy={cy}
-          r={r}
+          r={rR}
           fill="rgba(239,68,68,0.25)"
           stroke="#ef4444"
           strokeWidth={2}
         />
         <text
-          x={cx1 - 35}
-          y={cy + 5}
+          x={cx1 - rL * 0.35}
+          y={cy + 6}
           textAnchor="middle"
-          fontSize={20}
+          fontSize={13}
           fontWeight="bold"
           fill="#1e40af"
         >
           {leftOnly}
         </text>
         <text
-          x={(cx1 + cx2) / 2}
-          y={cy + 5}
+          x={overlapMidX}
+          y={cy + 6}
           textAnchor="middle"
-          fontSize={20}
+          fontSize={13}
           fontWeight="bold"
           fill="#6b21a8"
         >
           {overlap}
         </text>
         <text
-          x={cx2 + 35}
-          y={cy + 5}
+          x={cx2 + rR * 0.35}
+          y={cy + 6}
           textAnchor="middle"
-          fontSize={20}
+          fontSize={13}
           fontWeight="bold"
           fill="#991b1b"
         >
           {rightOnly}
         </text>
         <text
-          x={cx1 - 25}
-          y={cy + r + 25}
+          x={cx1}
+          y={cy + bigR + 28}
           textAnchor="middle"
           fontSize={12}
           fill="#374151"
@@ -88,8 +107,8 @@ function VennDiagram({
           {leftLabel}
         </text>
         <text
-          x={cx2 + 25}
-          y={cy + r + 25}
+          x={cx2}
+          y={cy + bigR + 28}
           textAnchor="middle"
           fontSize={12}
           fill="#374151"
