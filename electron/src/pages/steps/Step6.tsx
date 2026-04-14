@@ -391,7 +391,7 @@ function Step6({ onNavigate }: StepPageProps) {
         </div>
 
         {/* Right panel */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Parameter Settings</h2>
 
