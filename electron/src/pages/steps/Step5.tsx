@@ -99,6 +99,21 @@ function Step5({ onNavigate }: StepPageProps) {
     if (!isFormValid()) {
       return;
     }
+    const latestStep5Projects = (await window.db.getProjects()).filter(
+      (project) => String(project.step) === "5"
+    );
+    const isDuplicateAtRunTime = latestStep5Projects.some(
+      (project) =>
+        project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
+    );
+    if (isDuplicateAtRunTime) {
+      setStep5Projects(latestStep5Projects);
+      setMessage({
+        type: "error",
+        text: "A Step 5 project with the same name already exists. Please choose a different project name.",
+      });
+      return;
+    }
     if (isDuplicateProjectName) {
       setMessage({
         type: "error",

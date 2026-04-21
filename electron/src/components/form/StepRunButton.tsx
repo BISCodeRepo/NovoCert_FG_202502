@@ -3,6 +3,7 @@ interface StepRunButtonProps {
   onClick: () => void;
   isFormValid: boolean;
   isRunning: boolean;
+  buttonLabel?: string;
   message: {
     type: "success" | "error";
     text: string;
@@ -14,6 +15,7 @@ function StepRunButton({
   onClick,
   isFormValid,
   isRunning,
+  buttonLabel,
   message,
 }: StepRunButtonProps) {
   return (
@@ -72,7 +74,7 @@ function StepRunButton({
                 d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            Run Step {stepNumber}
+            {buttonLabel || `Run Step ${stepNumber}`}
           </>
         )}
       </button>

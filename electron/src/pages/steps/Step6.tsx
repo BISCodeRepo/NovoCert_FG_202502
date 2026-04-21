@@ -350,6 +350,21 @@ function Step6({ onNavigate }: StepPageProps) {
 
   const handleRun = async () => {
     if (!isFormValid()) return;
+    const latestStep6Projects = (await window.db.getProjects()).filter(
+      (project) => String(project.step) === "6"
+    );
+    const isDuplicateAtRunTime = latestStep6Projects.some(
+      (project) =>
+        project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
+    );
+    if (isDuplicateAtRunTime) {
+      setStep6Projects(latestStep6Projects);
+      setMessage({
+        type: "error",
+        text: "A Step 6 project with the same name already exists. Please choose a different project name.",
+      });
+      return;
+    }
     if (isDuplicateProjectName) {
       setMessage({
         type: "error",

@@ -158,6 +158,21 @@ function Step3({ onNavigate }: StepPageProps) {
     if (!isFormValid()) {
       return;
     }
+    const latestStep3Projects = (await window.db.getProjects()).filter(
+      (project) => String(project.step) === "3"
+    );
+    const isDuplicateAtRunTime = latestStep3Projects.some(
+      (project) =>
+        project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
+    );
+    if (isDuplicateAtRunTime) {
+      setStep3Projects(latestStep3Projects);
+      setMessage({
+        type: "error",
+        text: "A Step 3 project with the same name already exists. Please choose a different project name.",
+      });
+      return;
+    }
     if (isDuplicateProjectName) {
       setMessage({
         type: "error",

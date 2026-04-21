@@ -209,6 +209,21 @@ function Step4({ onNavigate }: StepPageProps) {
     if (!isFormValid()) {
       return;
     }
+    const latestStep4Projects = (await window.db.getProjects()).filter(
+      (project) => String(project.step) === "4"
+    );
+    const isDuplicateAtRunTime = latestStep4Projects.some(
+      (project) =>
+        project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
+    );
+    if (isDuplicateAtRunTime) {
+      setStep4Projects(latestStep4Projects);
+      setMessage({
+        type: "error",
+        text: "A Step 4 project with the same name already exists. Please choose a different project name.",
+      });
+      return;
+    }
     if (isDuplicateProjectName) {
       setMessage({
         type: "error",

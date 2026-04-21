@@ -86,6 +86,21 @@ function Step2({ onNavigate }: StepPageProps) {
     if (!isFormValid()) {
       return;
     }
+    const latestStep2Projects = (await window.db.getProjects()).filter(
+      (project) => String(project.step) === "2"
+    );
+    const isDuplicateAtRunTime = latestStep2Projects.some(
+      (project) =>
+        project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
+    );
+    if (isDuplicateAtRunTime) {
+      setStep2Projects(latestStep2Projects);
+      setMessage({
+        type: "error",
+        text: "A Step 2 project with the same name already exists. Please choose a different project name.",
+      });
+      return;
+    }
     if (isDuplicateProjectName) {
       setMessage({
         type: "error",
@@ -261,6 +276,7 @@ function Step2({ onNavigate }: StepPageProps) {
             onClick={handleRunStep2}
             isFormValid={isFormValid()}
             isRunning={isRunning || hasRunningProject}
+            buttonLabel="Download YAML File"
             message={message}
           />
           {/* Project Status Monitor */}

@@ -11,6 +11,7 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
   const [projectStatus, setProjectStatus] = useState<string | null>(null);
   const [isStopping, setIsStopping] = useState(false);
   const [logFilePath, setLogFilePath] = useState<string | null>(null);
+  const [outputFolderPath, setOutputFolderPath] = useState<string | null>(null);
 
   // when the project UUID is changed, initialize and load the status
   useEffect(() => {
@@ -28,8 +29,12 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
           // Find log file path
           if (stepNumber) {
             const stepKey = `step${stepNumber}`;
-            const stepData = project.parameters[stepKey] as { logPath?: string } | undefined;
+            const stepData = project.parameters[stepKey] as { logPath?: string; outputPath?: string } | undefined;
             const logPath = stepData?.logPath;
+            const outputPath = stepData?.outputPath;
+            if (outputPath) {
+              setOutputFolderPath(outputPath);
+            }
             
             if (logPath) {
               // Find the latest .log file in the log directory
@@ -146,6 +151,24 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
     } catch (error) {
       console.error('Error opening log file:', error);
       alert(`Failed to open log file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Handle opening output folder
+  const handleOpenOutputFolder = async () => {
+    if (!outputFolderPath) {
+      alert('Output folder not found');
+      return;
+    }
+
+    try {
+      const result = await window.shell.openPath(outputFolderPath);
+      if (result.error) {
+        await window.shell.showItemInFolder(outputFolderPath);
+      }
+    } catch (error) {
+      console.error('Error opening output folder:', error);
+      alert(`Failed to open output folder: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -298,6 +321,27 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
                       />
                     </svg>
                     View Log
+                  </button>
+                )}
+                {outputFolderPath && (
+                  <button
+                    onClick={handleOpenOutputFolder}
+                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 7a2 2 0 012-2h3l2 2h9a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
+                      />
+                    </svg>
+                    Open Output Folder
                   </button>
                 )}
                 {projectStatus === 'running' && containerId && (

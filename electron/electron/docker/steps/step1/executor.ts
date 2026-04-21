@@ -40,7 +40,11 @@ export async function runStep1Container(params: Step1ContainerParams): Promise<D
     environment,
     platform: step1Image.platform,
     autoRemove: true,
-    command: [],
+    // Override CMD to bypass CRLF-broken run.sh inside the image
+    command: [
+      'sh', '-c',
+      'java -Xmx${MEMORY}G -jar PrecursorSwap.jar -i /app/input -o /app/output -d ${PRECURSOR_TOLERANCE} -r ${RANDOM_SEED}',
+    ],
     logFilePath,  // Save the log to a file
     labels: {
       'project_uuid': projectUuid,
