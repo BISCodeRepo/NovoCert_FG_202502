@@ -11,6 +11,7 @@ import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
 import type { StepPageProps } from "../../types";
+import type { Project } from "../../types/project";
 
 function Step1({ onNavigate }: StepPageProps) {
   const [projectName, setProjectName] = useState("");
@@ -27,6 +28,7 @@ function Step1({ onNavigate }: StepPageProps) {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+  const [step1Projects, setStep1Projects] = useState<Project[]>([]);
 
   // Check for running projects when page loads
   useStepRunningProject({
@@ -69,6 +71,20 @@ function Step1({ onNavigate }: StepPageProps) {
     };
     localStorage.setItem('step1_inputs', JSON.stringify(inputs));
   }, [projectName, inputPath, outputPath, memory, precursorTolerance, randomSeed]);
+
+  useEffect(() => {
+    const loadStep1Projects = async () => {
+      try {
+        const allProjects = await window.db.getProjects();
+        setStep1Projects(
+          allProjects.filter((project) => String(project.step) === "1")
+        );
+      } catch (error) {
+        console.error("Failed to load Step 1 projects for name validation:", error);
+      }
+    };
+    loadStep1Projects();
+  }, []);
 
   // Input folder validation
   const [inputFiles, setInputFiles] = useState<string[]>([]);
@@ -146,6 +162,13 @@ function Step1({ onNavigate }: StepPageProps) {
     return () => clearTimeout(timer);
   }, [inputPath, validateInputFolder]);
 
+  const normalizedProjectName = projectName.trim().toLowerCase();
+  const isDuplicateProjectName =
+    normalizedProjectName !== "" &&
+    step1Projects.some(
+      (project) => project.name.trim().toLowerCase() === normalizedProjectName
+    );
+
   // Check if all required parameters are entered
   const isFormValid = () => {
     return (
@@ -155,13 +178,21 @@ function Step1({ onNavigate }: StepPageProps) {
       memory.trim() !== "" &&
       precursorTolerance.trim() !== "" &&
       randomSeed.trim() !== "" &&
-      (inputValidation.status === "valid" || inputValidation.status === "warning")
+      (inputValidation.status === "valid" || inputValidation.status === "warning") &&
+      !isDuplicateProjectName
     );
   };
 
   // Run Step 1 button click handler
   const handleRunStep1 = async () => {
     if (!isFormValid()) {
+      return;
+    }
+    if (isDuplicateProjectName) {
+      setMessage({
+        type: "error",
+        text: "A Step 1 project with the same name already exists. Please choose a different project name.",
+      });
       return;
     }
 
@@ -251,14 +282,21 @@ function Step1({ onNavigate }: StepPageProps) {
           </h2>
 
           <div className="space-y-6">
-            <TextInput
-              label="Project Name"
-              value={projectName}
-              onChange={setProjectName}
-              placeholder="Enter the project name"
-              required={true}
-              description="Enter the name of the project to start a new one"
-            />
+            <div>
+              <TextInput
+                label="Project Name"
+                value={projectName}
+                onChange={setProjectName}
+                placeholder="Enter the project name"
+                required={true}
+                description="Enter the name of the project to start a new one"
+              />
+              {isDuplicateProjectName && (
+                <p className="mt-1 text-xs text-red-600">
+                  This project name already exists in Step 1. Please enter a different name.
+                </p>
+              )}
+            </div>
 
             <div>
               <PathInput

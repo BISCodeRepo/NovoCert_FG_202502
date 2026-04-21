@@ -49,13 +49,6 @@ export const REQUIRED_IMAGES: DockerImageConfig[] = [
     description: 'Percolator and FDR Control (for Percolator compatibility on amd64)',
     platform: 'linux/amd64',
     step: 'step5'
-  },
-  {
-    name: 'NovoCert P5 - Post Analysis',
-    image: 'huswim/novocert-p5',
-    description: 'Post Analysis',
-    platform: 'linux/arm64',
-    step: 'step6'
   }
 ]
 

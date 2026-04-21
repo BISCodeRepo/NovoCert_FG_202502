@@ -11,6 +11,7 @@ import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
 import type { StepPageProps } from "../../types";
+import type { Project } from "../../types/project";
 
 function Step5({ onNavigate }: StepPageProps) {
   const [projectName, setProjectName] = useState("");
@@ -24,6 +25,7 @@ function Step5({ onNavigate }: StepPageProps) {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+  const [step5Projects, setStep5Projects] = useState<Project[]>([]);
 
   // Check for running projects when page loads
   useStepRunningProject({
@@ -61,18 +63,47 @@ function Step5({ onNavigate }: StepPageProps) {
     localStorage.setItem('step5_inputs', JSON.stringify(inputs));
   }, [projectName, inputPath, outputPath]);
 
+  useEffect(() => {
+    const loadStep5Projects = async () => {
+      try {
+        const allProjects = await window.db.getProjects();
+        setStep5Projects(
+          allProjects.filter((project) => String(project.step) === "5")
+        );
+      } catch (error) {
+        console.error("Failed to load Step 5 projects for name validation:", error);
+      }
+    };
+    loadStep5Projects();
+  }, []);
+
+  const normalizedProjectName = projectName.trim().toLowerCase();
+  const isDuplicateProjectName =
+    normalizedProjectName !== "" &&
+    step5Projects.some(
+      (project) => project.name.trim().toLowerCase() === normalizedProjectName
+    );
+
   // Check if all required parameters are entered
   const isFormValid = () => {
     return (
       projectName.trim() !== "" &&
       inputPath.trim() !== "" &&
-      outputPath.trim() !== ""
+      outputPath.trim() !== "" &&
+      !isDuplicateProjectName
     );
   };
 
   // Run Step 5 button click handler
   const handleRunStep5 = async () => {
     if (!isFormValid()) {
+      return;
+    }
+    if (isDuplicateProjectName) {
+      setMessage({
+        type: "error",
+        text: "A Step 5 project with the same name already exists. Please choose a different project name.",
+      });
       return;
     }
 
@@ -159,14 +190,21 @@ function Step5({ onNavigate }: StepPageProps) {
           </h2>
 
           <div className="space-y-6">
-            <TextInput
-              label="Project Name"
-              value={projectName}
-              onChange={setProjectName}
-              placeholder="Enter the project name"
-              required={true}
-              description="Enter the name of the project to start a new one"
-            />
+            <div>
+              <TextInput
+                label="Project Name"
+                value={projectName}
+                onChange={setProjectName}
+                placeholder="Enter the project name"
+                required={true}
+                description="Enter the name of the project to start a new one"
+              />
+              {isDuplicateProjectName && (
+                <p className="mt-1 text-xs text-red-600">
+                  This project name already exists in Step 5. Please enter a different name.
+                </p>
+              )}
+            </div>
 
             <FileInput
               label="PIN File Path"

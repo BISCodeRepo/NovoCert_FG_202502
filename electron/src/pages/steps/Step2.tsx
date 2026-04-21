@@ -6,6 +6,7 @@ import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
 import type { StepPageProps } from "../../types";
+import type { Project } from "../../types/project";
 
 function Step2({ onNavigate }: StepPageProps) {
   const [projectName, setProjectName] = useState("");
@@ -18,6 +19,7 @@ function Step2({ onNavigate }: StepPageProps) {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+  const [step2Projects, setStep2Projects] = useState<Project[]>([]);
 
   // Check for running projects when page loads
   useStepRunningProject({
@@ -53,14 +55,42 @@ function Step2({ onNavigate }: StepPageProps) {
     localStorage.setItem('step2_inputs', JSON.stringify(inputs));
   }, [projectName, outputPath]);
 
+  useEffect(() => {
+    const loadStep2Projects = async () => {
+      try {
+        const allProjects = await window.db.getProjects();
+        setStep2Projects(
+          allProjects.filter((project) => String(project.step) === "2")
+        );
+      } catch (error) {
+        console.error("Failed to load Step 2 projects for name validation:", error);
+      }
+    };
+    loadStep2Projects();
+  }, []);
+
+  const normalizedProjectName = projectName.trim().toLowerCase();
+  const isDuplicateProjectName =
+    normalizedProjectName !== "" &&
+    step2Projects.some(
+      (project) => project.name.trim().toLowerCase() === normalizedProjectName
+    );
+
   // Check if all required parameters are entered
   const isFormValid = () => {
-    return projectName.trim() !== "" && outputPath.trim() !== "";
+    return projectName.trim() !== "" && outputPath.trim() !== "" && !isDuplicateProjectName;
   };
 
   // Run Step 2 button click handler
   const handleRunStep2 = async () => {
     if (!isFormValid()) {
+      return;
+    }
+    if (isDuplicateProjectName) {
+      setMessage({
+        type: "error",
+        text: "A Step 2 project with the same name already exists. Please choose a different project name.",
+      });
       return;
     }
 
@@ -147,14 +177,21 @@ function Step2({ onNavigate }: StepPageProps) {
           </h2>
 
           <div className="space-y-6">
-            <TextInput
-              label="Project Name"
-              value={projectName}
-              onChange={setProjectName}
-              placeholder="Enter the project name"
-              required={true}
-              description="Enter the name of the project to start a new one"
-            />
+            <div>
+              <TextInput
+                label="Project Name"
+                value={projectName}
+                onChange={setProjectName}
+                placeholder="Enter the project name"
+                required={true}
+                description="Enter the name of the project to start a new one"
+              />
+              {isDuplicateProjectName && (
+                <p className="mt-1 text-xs text-red-600">
+                  This project name already exists in Step 2. Please enter a different name.
+                </p>
+              )}
+            </div>
 
             <PathInput
               label="Output Folder Path"

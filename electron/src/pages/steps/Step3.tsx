@@ -12,6 +12,7 @@ import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
 import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import type { StepPageProps } from "../../types";
+import type { Project } from "../../types/project";
 
 function Step3({ onNavigate }: StepPageProps) {
   const [projectName, setProjectName] = useState("");
@@ -27,6 +28,7 @@ function Step3({ onNavigate }: StepPageProps) {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+  const [step3Projects, setStep3Projects] = useState<Project[]>([]);
 
   // Check for running projects when page loads
   useStepRunningProject({
@@ -68,6 +70,20 @@ function Step3({ onNavigate }: StepPageProps) {
     localStorage.setItem('step3_inputs', JSON.stringify(inputs));
   }, [projectName, spectraPath, casanovoConfigPath, modelPath, outputPath]);
 
+  useEffect(() => {
+    const loadStep3Projects = async () => {
+      try {
+        const allProjects = await window.db.getProjects();
+        setStep3Projects(
+          allProjects.filter((project) => String(project.step) === "3")
+        );
+      } catch (error) {
+        console.error("Failed to load Step 3 projects for name validation:", error);
+      }
+    };
+    loadStep3Projects();
+  }, []);
+
   // Use Step1 project selector for MGF file
   const mgfSelector = useStepProjectSelector({
     step: 1,
@@ -104,6 +120,13 @@ function Step3({ onNavigate }: StepPageProps) {
     // Trigger validation when path changes
   }, [configSelector.sourceType, configSelector.foundFilePath, configSelector.error]);
 
+  const normalizedProjectName = projectName.trim().toLowerCase();
+  const isDuplicateProjectName =
+    normalizedProjectName !== "" &&
+    step3Projects.some(
+      (project) => project.name.trim().toLowerCase() === normalizedProjectName
+    );
+
   // Check if all required parameters are entered
   const isFormValid = () => {
     const spectraPathValid =
@@ -125,13 +148,21 @@ function Step3({ onNavigate }: StepPageProps) {
       spectraPathValid &&
       configPathValid &&
       modelPath.trim() !== "" &&
-      outputPath.trim() !== ""
+      outputPath.trim() !== "" &&
+      !isDuplicateProjectName
     );
   };
 
   // Run Step 3 button click handler
   const handleRunStep3 = async () => {
     if (!isFormValid()) {
+      return;
+    }
+    if (isDuplicateProjectName) {
+      setMessage({
+        type: "error",
+        text: "A Step 3 project with the same name already exists. Please choose a different project name.",
+      });
       return;
     }
 
@@ -222,14 +253,21 @@ function Step3({ onNavigate }: StepPageProps) {
           </h2>
 
           <div className="space-y-6">
-            <TextInput
-              label="Project Name"
-              value={projectName}
-              onChange={setProjectName}
-              placeholder="Enter the project name"
-              required={true}
-              description="Enter the name of the project to start a new one"
-            />
+            <div>
+              <TextInput
+                label="Project Name"
+                value={projectName}
+                onChange={setProjectName}
+                placeholder="Enter the project name"
+                required={true}
+                description="Enter the name of the project to start a new one"
+              />
+              {isDuplicateProjectName && (
+                <p className="mt-1 text-xs text-red-600">
+                  This project name already exists in Step 3. Please enter a different name.
+                </p>
+              )}
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

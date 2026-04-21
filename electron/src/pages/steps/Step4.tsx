@@ -12,6 +12,7 @@ import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
 import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import type { StepPageProps } from "../../types";
+import type { Project } from "../../types/project";
 
 function Step4({ onNavigate }: StepPageProps) {
   const [projectName, setProjectName] = useState("");
@@ -28,6 +29,7 @@ function Step4({ onNavigate }: StepPageProps) {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+  const [step4Projects, setStep4Projects] = useState<Project[]>([]);
 
   // Check for running projects when page loads
   useStepRunningProject({
@@ -70,6 +72,20 @@ function Step4({ onNavigate }: StepPageProps) {
     };
     localStorage.setItem('step4_inputs', JSON.stringify(inputs));
   }, [projectName, targetMgfDir, targetResultPath, decoyMgfDir, decoyResultPath, outputPath]);
+
+  useEffect(() => {
+    const loadStep4Projects = async () => {
+      try {
+        const allProjects = await window.db.getProjects();
+        setStep4Projects(
+          allProjects.filter((project) => String(project.step) === "4")
+        );
+      } catch (error) {
+        console.error("Failed to load Step 4 projects for name validation:", error);
+      }
+    };
+    loadStep4Projects();
+  }, []);
 
   // Use Step1 project selector for Target MGF Directory
   const targetMgfSelector = useStepProjectSelector({
@@ -144,6 +160,13 @@ function Step4({ onNavigate }: StepPageProps) {
     }
   }, [decoyResultSelector.sourceType, decoyResultSelector.foundFilePath]);
 
+  const normalizedProjectName = projectName.trim().toLowerCase();
+  const isDuplicateProjectName =
+    normalizedProjectName !== "" &&
+    step4Projects.some(
+      (project) => project.name.trim().toLowerCase() === normalizedProjectName
+    );
+
   // Check if all required parameters are entered
   const isFormValid = () => {
     const targetMgfDirValid =
@@ -176,13 +199,21 @@ function Step4({ onNavigate }: StepPageProps) {
       targetResultPathValid &&
       decoyMgfDirValid &&
       decoyResultPathValid &&
-      outputPath.trim() !== ""
+      outputPath.trim() !== "" &&
+      !isDuplicateProjectName
     );
   };
 
   // Run Step 4 button click handler
   const handleRunStep4 = async () => {
     if (!isFormValid()) {
+      return;
+    }
+    if (isDuplicateProjectName) {
+      setMessage({
+        type: "error",
+        text: "A Step 4 project with the same name already exists. Please choose a different project name.",
+      });
       return;
     }
 
@@ -269,14 +300,21 @@ function Step4({ onNavigate }: StepPageProps) {
           </h2>
 
           <div className="space-y-6">
-            <TextInput
-              label="Project Name"
-              value={projectName}
-              onChange={setProjectName}
-              placeholder="Enter the project name"
-              required={true}
-              description="Enter the name of the project to start a new one"
-            />
+            <div>
+              <TextInput
+                label="Project Name"
+                value={projectName}
+                onChange={setProjectName}
+                placeholder="Enter the project name"
+                required={true}
+                description="Enter the name of the project to start a new one"
+              />
+              {isDuplicateProjectName && (
+                <p className="mt-1 text-xs text-red-600">
+                  This project name already exists in Step 4. Please enter a different name.
+                </p>
+              )}
+            </div>
 
             {/* Target MGF Directory */}
             <div>
