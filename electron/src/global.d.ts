@@ -128,10 +128,10 @@ interface Step3Result {
 
 interface Step4Params {
   projectName: string
-  targetMgfDir: string
-  targetResultPath: string
-  decoyMgfDir: string
-  decoyResultPath: string
+  targetSpectraMgfPath: string
+  targetDnpsPath: string
+  decoySpectraMgfPath: string
+  decoyDnpsPath: string
   outputPath: string
 }
 

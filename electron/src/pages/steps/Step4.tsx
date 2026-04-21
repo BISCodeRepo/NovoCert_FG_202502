@@ -15,10 +15,10 @@ import type { StepPageProps } from "../../types";
 
 function Step4({ onNavigate }: StepPageProps) {
   const [projectName, setProjectName] = useState("");
-  const [targetMgfDir, setTargetMgfDir] = useState("");
-  const [targetResultPath, setTargetResultPath] = useState("");
-  const [decoyMgfDir, setDecoyMgfDir] = useState("");
-  const [decoyResultPath, setDecoyResultPath] = useState("");
+  const [targetSpectraMgfPath, setTargetSpectraMgfPath] = useState("");
+  const [targetDnpsPath, setTargetDnpsPath] = useState("");
+  const [decoySpectraMgfPath, setDecoySpectraMgfPath] = useState("");
+  const [decoyDnpsPath, setDecoyDnpsPath] = useState("");
   const [outputPath, setOutputPath] = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [message, setMessage] = useState<{
@@ -47,10 +47,10 @@ function Step4({ onNavigate }: StepPageProps) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed.projectName) setProjectName(parsed.projectName);
-        if (parsed.targetMgfDir) setTargetMgfDir(parsed.targetMgfDir);
-        if (parsed.targetResultPath) setTargetResultPath(parsed.targetResultPath);
-        if (parsed.decoyMgfDir) setDecoyMgfDir(parsed.decoyMgfDir);
-        if (parsed.decoyResultPath) setDecoyResultPath(parsed.decoyResultPath);
+        if (parsed.targetSpectraMgfPath) setTargetSpectraMgfPath(parsed.targetSpectraMgfPath);
+        if (parsed.targetDnpsPath) setTargetDnpsPath(parsed.targetDnpsPath);
+        if (parsed.decoySpectraMgfPath) setDecoySpectraMgfPath(parsed.decoySpectraMgfPath);
+        if (parsed.decoyDnpsPath) setDecoyDnpsPath(parsed.decoyDnpsPath);
         if (parsed.outputPath) setOutputPath(parsed.outputPath);
       } catch (error) {
         console.error('Error loading saved Step4 inputs:', error);
@@ -62,31 +62,31 @@ function Step4({ onNavigate }: StepPageProps) {
   useEffect(() => {
     const inputs = {
       projectName,
-      targetMgfDir,
-      targetResultPath,
-      decoyMgfDir,
-      decoyResultPath,
+      targetSpectraMgfPath,
+      targetDnpsPath,
+      decoySpectraMgfPath,
+      decoyDnpsPath,
       outputPath,
     };
     localStorage.setItem('step4_inputs', JSON.stringify(inputs));
-  }, [projectName, targetMgfDir, targetResultPath, decoyMgfDir, decoyResultPath, outputPath]);
+  }, [projectName, targetSpectraMgfPath, targetDnpsPath, decoySpectraMgfPath, decoyDnpsPath, outputPath]);
 
-  // Use Step1 project selector for Target MGF Directory
+  // Use Step1 project selector for Target Spectra MGF File
   const targetMgfSelector = useStepProjectSelector({
     step: 1,
     defaultSourceType: "step",
-    returnDirectory: true,
-    onFileFound: (path) => setTargetMgfDir(path),
+    extensions: ["mgf"],
+    onFileFound: (path) => setTargetSpectraMgfPath(path),
     onError: (error) =>
       setMessage({ type: "error", text: error }),
   });
 
-  // Use Step1 project selector for Decoy MGF Directory
+  // Use Step1 project selector for Decoy Spectra MGF File
   const decoyMgfSelector = useStepProjectSelector({
     step: 1,
     defaultSourceType: "step",
-    returnDirectory: true,
-    onFileFound: (path) => setDecoyMgfDir(path),
+    extensions: ["mgf"],
+    onFileFound: (path) => setDecoySpectraMgfPath(path),
     onError: (error) =>
       setMessage({ type: "error", text: error }),
   });
@@ -96,7 +96,7 @@ function Step4({ onNavigate }: StepPageProps) {
     step: 3,
     defaultSourceType: "step",
     extensions: ["mztab"],
-    onFileFound: (path) => setTargetResultPath(path),
+    onFileFound: (path) => setTargetDnpsPath(path),
     onError: (error) =>
       setMessage({ type: "error", text: error }),
   });
@@ -106,7 +106,7 @@ function Step4({ onNavigate }: StepPageProps) {
     step: 3,
     defaultSourceType: "step",
     extensions: ["mztab"],
-    onFileFound: (path) => setDecoyResultPath(path),
+    onFileFound: (path) => setDecoyDnpsPath(path),
     onError: (error) =>
       setMessage({ type: "error", text: error }),
   });
@@ -114,68 +114,68 @@ function Step4({ onNavigate }: StepPageProps) {
   // Update paths when selectors find paths or switch to custom
   useEffect(() => {
     if (targetMgfSelector.sourceType === "custom") {
-      setTargetMgfDir("");
+      setTargetSpectraMgfPath("");
     } else if (targetMgfSelector.foundFilePath) {
-      setTargetMgfDir(targetMgfSelector.foundFilePath);
+      setTargetSpectraMgfPath(targetMgfSelector.foundFilePath);
     }
   }, [targetMgfSelector.sourceType, targetMgfSelector.foundFilePath]);
 
   useEffect(() => {
     if (decoyMgfSelector.sourceType === "custom") {
-      setDecoyMgfDir("");
+      setDecoySpectraMgfPath("");
     } else if (decoyMgfSelector.foundFilePath) {
-      setDecoyMgfDir(decoyMgfSelector.foundFilePath);
+      setDecoySpectraMgfPath(decoyMgfSelector.foundFilePath);
     }
   }, [decoyMgfSelector.sourceType, decoyMgfSelector.foundFilePath]);
 
   useEffect(() => {
     if (targetResultSelector.sourceType === "custom") {
-      setTargetResultPath("");
+      setTargetDnpsPath("");
     } else if (targetResultSelector.foundFilePath) {
-      setTargetResultPath(targetResultSelector.foundFilePath);
+      setTargetDnpsPath(targetResultSelector.foundFilePath);
     }
   }, [targetResultSelector.sourceType, targetResultSelector.foundFilePath]);
 
   useEffect(() => {
     if (decoyResultSelector.sourceType === "custom") {
-      setDecoyResultPath("");
+      setDecoyDnpsPath("");
     } else if (decoyResultSelector.foundFilePath) {
-      setDecoyResultPath(decoyResultSelector.foundFilePath);
+      setDecoyDnpsPath(decoyResultSelector.foundFilePath);
     }
   }, [decoyResultSelector.sourceType, decoyResultSelector.foundFilePath]);
 
   // Check if all required parameters are entered
   const isFormValid = () => {
-    const targetMgfDirValid =
+    const targetMgfPathValid =
       targetMgfSelector.sourceType === "step"
         ? targetMgfSelector.selectedProjectUuid !== "" &&
-          targetMgfDir.trim() !== ""
-        : targetMgfDir.trim() !== "";
+          targetSpectraMgfPath.trim() !== ""
+        : targetSpectraMgfPath.trim() !== "";
 
-    const decoyMgfDirValid =
+    const decoyMgfPathValid =
       decoyMgfSelector.sourceType === "step"
         ? decoyMgfSelector.selectedProjectUuid !== "" &&
-          decoyMgfDir.trim() !== ""
-        : decoyMgfDir.trim() !== "";
+          decoySpectraMgfPath.trim() !== ""
+        : decoySpectraMgfPath.trim() !== "";
 
-    const targetResultPathValid =
+    const targetDnpsPathValid =
       targetResultSelector.sourceType === "step"
         ? targetResultSelector.selectedProjectUuid !== "" &&
-          targetResultPath.trim() !== ""
-        : targetResultPath.trim() !== "";
+          targetDnpsPath.trim() !== ""
+        : targetDnpsPath.trim() !== "";
 
-    const decoyResultPathValid =
+    const decoyDnpsPathValid =
       decoyResultSelector.sourceType === "step"
         ? decoyResultSelector.selectedProjectUuid !== "" &&
-          decoyResultPath.trim() !== ""
-        : decoyResultPath.trim() !== "";
+          decoyDnpsPath.trim() !== ""
+        : decoyDnpsPath.trim() !== "";
 
     return (
       projectName.trim() !== "" &&
-      targetMgfDirValid &&
-      targetResultPathValid &&
-      decoyMgfDirValid &&
-      decoyResultPathValid &&
+      targetMgfPathValid &&
+      targetDnpsPathValid &&
+      decoyMgfPathValid &&
+      decoyDnpsPathValid &&
       outputPath.trim() !== ""
     );
   };
@@ -192,10 +192,10 @@ function Step4({ onNavigate }: StepPageProps) {
     try {
       const result = await window.step.runStep4({
         projectName,
-        targetMgfDir,
-        targetResultPath,
-        decoyMgfDir,
-        decoyResultPath,
+        targetSpectraMgfPath,
+        targetDnpsPath,
+        decoySpectraMgfPath,
+        decoyDnpsPath,
         outputPath,
       });
 
@@ -278,10 +278,10 @@ function Step4({ onNavigate }: StepPageProps) {
               description="Enter the name of the project to start a new one"
             />
 
-            {/* Target MGF Directory */}
+            {/* Target Spectra MGF File */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Target MGF Directory Source
+                Target Spectra MGF File Source
                 <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="flex gap-4 mb-3">
@@ -335,7 +335,7 @@ function Step4({ onNavigate }: StepPageProps) {
                   {targetMgfSelector.selectedProjectUuid && targetMgfSelector.foundFilePath && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        MGF Directory Path
+                        MGF File Path
                         <span className="text-red-500 ml-1">*</span>
                       </label>
                       <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
@@ -345,13 +345,14 @@ function Step4({ onNavigate }: StepPageProps) {
                   )}
                 </div>
               ) : (
-                <PathInput
-                  label="Target MGF Directory"
-                  value={targetMgfDir}
-                  onChange={setTargetMgfDir}
-                  placeholder="/path/to/target/mgf"
+                <FileInput
+                  label="Target Spectra MGF File"
+                  value={targetSpectraMgfPath}
+                  onChange={setTargetSpectraMgfPath}
+                  placeholder="/path/to/target/target.mgf"
                   required={true}
-                  description="The full path of the directory containing the Target MGF files (mounted inside the container at /app/target/mgf)"
+                  description="The full path of the Target Spectra MGF file (mounted inside the container at /app/target/mgf/target.mgf)"
+                  filters={[{ name: "MGF Files", extensions: ["mgf"] }]}
                 />
               )}
             </div>
@@ -413,7 +414,7 @@ function Step4({ onNavigate }: StepPageProps) {
                   {targetResultSelector.selectedProjectUuid && targetResultSelector.foundFilePath && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Result File Path
+                        DNPS Path
                         <span className="text-red-500 ml-1">*</span>
                       </label>
                       <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
@@ -425,8 +426,8 @@ function Step4({ onNavigate }: StepPageProps) {
               ) : (
                 <FileInput
                   label="Target DNPS Result File"
-                  value={targetResultPath}
-                  onChange={setTargetResultPath}
+                  value={targetDnpsPath}
+                  onChange={setTargetDnpsPath}
                   placeholder="/path/to/target/result.mztab"
                   required={true}
                   description="The full path of the Target DNPS result file (mztab, mounted inside the container at /app/target/result.mztab)"
@@ -435,10 +436,10 @@ function Step4({ onNavigate }: StepPageProps) {
               )}
             </div>
 
-            {/* Decoy MGF Directory */}
+            {/* Decoy Spectra MGF File */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Decoy MGF Directory Source
+                Decoy Spectra MGF File Source
                 <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="flex gap-4 mb-3">
@@ -492,7 +493,7 @@ function Step4({ onNavigate }: StepPageProps) {
                   {decoyMgfSelector.selectedProjectUuid && decoyMgfSelector.foundFilePath && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        MGF Directory Path
+                        MGF File Path
                         <span className="text-red-500 ml-1">*</span>
                       </label>
                       <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
@@ -502,13 +503,14 @@ function Step4({ onNavigate }: StepPageProps) {
                   )}
                 </div>
               ) : (
-                <PathInput
-                  label="Decoy MGF Directory"
-                  value={decoyMgfDir}
-                  onChange={setDecoyMgfDir}
-                  placeholder="/path/to/decoy/mgf"
+                <FileInput
+                  label="Decoy Spectra MGF File"
+                  value={decoySpectraMgfPath}
+                  onChange={setDecoySpectraMgfPath}
+                  placeholder="/path/to/decoy/decoy.mgf"
                   required={true}
-                  description="The full path of the directory containing the Decoy MGF files (mounted inside the container at /app/decoy/mgf)"
+                  description="The full path of the Decoy Spectra MGF file (mounted inside the container at /app/decoy/mgf/target.mgf)"
+                  filters={[{ name: "MGF Files", extensions: ["mgf"] }]}
                 />
               )}
             </div>
@@ -570,7 +572,7 @@ function Step4({ onNavigate }: StepPageProps) {
                   {decoyResultSelector.selectedProjectUuid && decoyResultSelector.foundFilePath && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Result File Path
+                        DNPS Path
                         <span className="text-red-500 ml-1">*</span>
                       </label>
                       <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
@@ -582,8 +584,8 @@ function Step4({ onNavigate }: StepPageProps) {
               ) : (
                 <FileInput
                   label="Decoy DNPS Result File"
-                  value={decoyResultPath}
-                  onChange={setDecoyResultPath}
+                  value={decoyDnpsPath}
+                  onChange={setDecoyDnpsPath}
                   placeholder="/path/to/decoy/result.mztab"
                   required={true}
                   description="The full path of the Decoy DNPS result file (mztab, mounted inside the container at /app/decoy/result.mztab)"
@@ -628,9 +630,9 @@ function Step4({ onNavigate }: StepPageProps) {
         description="In this step, Feature Calculation is performed (using p3 image)."
         requiredInputs={[
           "Project name",
-          "Target MGF directory",
+          "Target Spectra MGF file",
           "Target DNPS result file (mztab)",
-          "Decoy MGF directory",
+          "Decoy Spectra MGF file",
           "Decoy DNPS result file (mztab)",
           "Output folder path",
         ]}
@@ -640,4 +642,3 @@ function Step4({ onNavigate }: StepPageProps) {
 }
 
 export default Step4;
-

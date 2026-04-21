@@ -241,10 +241,10 @@ function setupIpcHandlers() {
   // Step4 handler
   ipcMain.handle('step:runStep4', async (_, params: {
     projectName: string
-    targetMgfDir: string
-    targetResultPath: string
-    decoyMgfDir: string
-    decoyResultPath: string
+    targetSpectraMgfPath: string
+    targetDnpsPath: string
+    decoySpectraMgfPath: string
+    decoyDnpsPath: string
     outputPath: string
   }) => {
     return await executeStep4Workflow(database, params)

@@ -21,16 +21,14 @@ export async function runStep3Container(params: Step3ContainerParams): Promise<D
   const logFilePath = generateLogFilePath(logPath, '3', projectUuid)
 
   // Run a Docker container (bind mount)
-  // Based on docker-compose.yml:
-  // - spectraPath -> /app/data/mgf/spectra.mgf
-  // - casanovoConfigPath -> /app/data/casanovo.yaml
-  // - modelPath -> /app/data/model.ckpt
-  // - outputPath -> /app/output/
+  // We explicitly override the command to use 'target.mgf' as the input.
+  // This ensures the resulting mztab run-name matches what Step 4 expects.
+  // We also specify 'result.mztab' as the output file to avoid 'directory' errors.
   return await runDockerContainer({
     image: step3Image.image,
     containerName,
     volumes: [
-      `${spectraPath}:/app/data/mgf/spectra.mgf`,
+      `${spectraPath}:/app/data/mgf/target.mgf`,
       `${casanovoConfigPath}:/app/data/casanovo.yaml`,
       `${modelPath}:/app/data/model.ckpt`,
       `${outputPath}:/app/output/`
@@ -38,7 +36,14 @@ export async function runStep3Container(params: Step3ContainerParams): Promise<D
     environment: { PROJECT_NAME: projectName },
     platform: step3Image.platform,
     autoRemove: true,
-    command: [],
+    command: [
+      'casanovo',
+      'sequence', 
+      '/app/data/mgf/target.mgf', 
+      '--config', '/app/data/casanovo.yaml', 
+      '--model', '/app/data/model.ckpt', 
+      '--output', '/app/output/result.mztab'
+    ],
     logFilePath,
     labels: {
       'project_uuid': projectUuid,
@@ -46,4 +51,3 @@ export async function runStep3Container(params: Step3ContainerParams): Promise<D
     }
   })
 }
-

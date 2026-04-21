@@ -25,10 +25,10 @@ export async function executeStep4Workflow(
       step: '4',
       status: 'running',
       parameters: {
-        targetMgfDir: params.targetMgfDir,
-        targetResultPath: params.targetResultPath,
-        decoyMgfDir: params.decoyMgfDir,
-        decoyResultPath: params.decoyResultPath,
+        targetSpectraMgfPath: params.targetSpectraMgfPath,
+        targetDnpsPath: params.targetDnpsPath,
+        decoySpectraMgfPath: params.decoySpectraMgfPath,
+        decoyDnpsPath: params.decoyDnpsPath,
         outputPath: params.outputPath
       }
     })
@@ -74,10 +74,10 @@ export async function executeStep4Workflow(
     // 3. Run a Docker container (bind mount)
     const dockerResult = await runStep4Container({
       projectName: params.projectName,
-      targetMgfDir: params.targetMgfDir,
-      targetResultPath: params.targetResultPath,
-      decoyMgfDir: params.decoyMgfDir,
-      decoyResultPath: params.decoyResultPath,
+      targetSpectraMgfPath: params.targetSpectraMgfPath,
+      targetDnpsPath: params.targetDnpsPath,
+      decoySpectraMgfPath: params.decoySpectraMgfPath,
+      decoyDnpsPath: params.decoyDnpsPath,
       outputPath: baseProjectPath, // Container result path
       logPath: baseProjectPath,    // Log file path
       projectUuid: project.uuid
@@ -148,4 +148,3 @@ export async function executeStep4Workflow(
     }
   }
 }
-

@@ -91,10 +91,10 @@ contextBridge.exposeInMainWorld('step', {
   }) => ipcRenderer.invoke('step:runStep3', params),
   runStep4: (params: {
     projectName: string
-    targetMgfDir: string
-    targetResultPath: string
-    decoyMgfDir: string
-    decoyResultPath: string
+    targetSpectraMgfPath: string
+    targetDnpsPath: string
+    decoySpectraMgfPath: string
+    decoyDnpsPath: string
     outputPath: string
   }) => ipcRenderer.invoke('step:runStep4', params),
   runStep5: (params: {
