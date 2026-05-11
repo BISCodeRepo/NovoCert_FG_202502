@@ -81,6 +81,7 @@ contextBridge.exposeInMainWorld('shell', {
 contextBridge.exposeInMainWorld('step', {
   runStep1: (params: {
     experimentUuid?: string
+  branch?: "target" | "decoy"
     projectName: string
     inputPath: string
     outputPath: string
@@ -90,11 +91,13 @@ contextBridge.exposeInMainWorld('step', {
   }) => ipcRenderer.invoke('step:runStep1', params),
   runStep2: (params: {
     experimentUuid?: string
+  branch?: "target" | "decoy"
     projectName: string
     outputPath: string
   }) => ipcRenderer.invoke('step:runStep2', params),
   runStep3: (params: {
     experimentUuid?: string
+  branch?: "target" | "decoy"
     projectName: string
     spectraPath: string
     casanovoConfigPath: string
@@ -103,6 +106,7 @@ contextBridge.exposeInMainWorld('step', {
   }) => ipcRenderer.invoke('step:runStep3', params),
   runStep4: (params: {
     experimentUuid?: string
+  branch?: "target" | "decoy"
     projectName: string
     targetMgfDir: string
     targetResultPath: string
@@ -112,12 +116,14 @@ contextBridge.exposeInMainWorld('step', {
   }) => ipcRenderer.invoke('step:runStep4', params),
   runStep5: (params: {
     experimentUuid?: string
+  branch?: "target" | "decoy"
     projectName: string
     inputPath: string
     outputPath: string
   }) => ipcRenderer.invoke('step:runStep5', params),
   runStep6: (params: {
     experimentUuid?: string
+  branch?: "target" | "decoy"
     projectName: string
     csvFilePath: string
     previousStepPath: string

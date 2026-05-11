@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useExperiment } from "../contexts/ExperimentContext";
 import type { Project } from "../types";
-import { filterTasksByExperiment } from "../utils/experimentTasks";
+import { filterTasksByBranch, filterTasksByExperiment, TaskBranch } from "../utils/experimentTasks";
 
 interface UseStepProjectSelectorOptions {
   step: number;
   defaultSourceType?: "step" | "custom";
   extensions?: string[]; // file extensions (for file finding)
   returnDirectory?: boolean; // true returns directory path, false returns file path
+  branch?: TaskBranch;
   onFileFound?: (path: string) => void;
   onError?: (error: string) => void;
 }
@@ -28,6 +29,7 @@ export function useStepProjectSelector({
   defaultSourceType = "step",
   extensions = [],
   returnDirectory = false,
+  branch,
   onFileFound,
   onError,
 }: UseStepProjectSelectorOptions): UseStepProjectSelectorReturn {
@@ -50,9 +52,10 @@ export function useStepProjectSelector({
       setIsLoading(true);
       try {
         const allTasks = await window.db.getProjects();
-        const stepTasks = filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter(
-          (project) => String(project.step) === String(step)
-        );
+        const stepTasks = filterTasksByBranch(
+          filterTasksByExperiment(allTasks, currentExperiment?.uuid),
+          branch
+        ).filter((project) => String(project.step) === String(step));
         setTasks(stepTasks);
       } catch (error) {
         console.error(`Failed to load Step${step} tasks:`, error);
@@ -65,7 +68,7 @@ export function useStepProjectSelector({
     };
 
     loadTasks();
-  }, [step, sourceType, currentExperiment?.uuid, onError]);
+  }, [step, sourceType, currentExperiment?.uuid, branch, onError]);
 
   // Find file in selected project's outputPath
   useEffect(() => {

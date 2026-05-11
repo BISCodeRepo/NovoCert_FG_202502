@@ -6,18 +6,19 @@ import {
   StepRunButton,
 } from "../../components/form";
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
+import ExperimentDagStatus from "../../components/ExperimentDagStatus";
 import { useStepProjectSelector } from "../../hooks/useStepProjectSelector";
 import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
-import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useExperiment } from "../../contexts/ExperimentContext";
-import { filterTasksByExperiment, getTaskRootOutputPath, latestTaskForStep } from "../../utils/experimentTasks";
+import { filterTasksByExperiment, getNextTaskName, getTaskRootOutputPath, latestTaskForStep, TaskBranch } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
 import type { Project } from "../../types/project";
 
-function Step3({ onNavigate }: StepPageProps) {
+function Step3(_: StepPageProps) {
   const { currentExperiment } = useExperiment();
+  const [branch, setBranch] = useState<TaskBranch>("target");
   const [projectName, setProjectName] = useState("");
   const [spectraPath, setSpectraPath] = useState("");
   const [casanovoConfigPath, setCasanovoConfigPath] = useState("");
@@ -50,7 +51,6 @@ function Step3({ onNavigate }: StepPageProps) {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.projectName) setProjectName(parsed.projectName);
         if (parsed.spectraPath) setSpectraPath(parsed.spectraPath);
         if (parsed.casanovoConfigPath) setCasanovoConfigPath(parsed.casanovoConfigPath);
         if (parsed.modelPath) setModelPath(parsed.modelPath);
@@ -65,13 +65,14 @@ function Step3({ onNavigate }: StepPageProps) {
   useEffect(() => {
     const inputs = {
       projectName,
+      branch,
       spectraPath,
       casanovoConfigPath,
       modelPath,
       outputPath,
     };
     localStorage.setItem('step3_inputs', JSON.stringify(inputs));
-  }, [projectName, spectraPath, casanovoConfigPath, modelPath, outputPath]);
+  }, [projectName, branch, spectraPath, casanovoConfigPath, modelPath, outputPath]);
 
   useEffect(() => {
     const loadStep3Tasks = async () => {
@@ -92,6 +93,7 @@ function Step3({ onNavigate }: StepPageProps) {
     step: 1,
     defaultSourceType: "step",
     extensions: ["mgf"],
+    branch,
     onFileFound: (path) => setSpectraPath(path),
   });
 
@@ -100,31 +102,31 @@ function Step3({ onNavigate }: StepPageProps) {
     step: 2,
     defaultSourceType: "step",
     extensions: ["yaml", "yml"],
+    branch,
     onFileFound: (path) => setCasanovoConfigPath(path),
   });
 
   useEffect(() => {
     const applyPreviousStepDefaults = async () => {
       const allTasks = await window.db.getProjects();
-      const step1Task = latestTaskForStep(allTasks, 1, currentExperiment?.uuid);
-      const previousTask = latestTaskForStep(allTasks, 2, currentExperiment?.uuid);
+      const step1Task = latestTaskForStep(allTasks, 1, currentExperiment?.uuid, branch);
+      const previousTask = latestTaskForStep(allTasks, 2, currentExperiment?.uuid, branch);
 
       mgfSelector.setSelectedProjectUuid(step1Task?.uuid || "");
       configSelector.setSelectedProjectUuid(previousTask?.uuid || "");
+      setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 3, branch));
 
       if (!previousTask) {
-        setProjectName("");
         setOutputPath("");
         return;
       }
 
-      setProjectName(previousTask.name);
       setOutputPath(getTaskRootOutputPath(previousTask));
     };
 
     applyPreviousStepDefaults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentExperiment?.uuid]);
+  }, [currentExperiment?.uuid, currentExperiment?.name, branch]);
 
   // Update spectraPath when selector finds file or switches to custom
   useEffect(() => {
@@ -216,6 +218,7 @@ function Step3({ onNavigate }: StepPageProps) {
 
       const result = await window.step.runStep3({
         experimentUuid: currentExperiment?.uuid,
+        branch,
         projectName,
         spectraPath: finalSpectraPath,
         casanovoConfigPath,
@@ -277,12 +280,7 @@ function Step3({ onNavigate }: StepPageProps) {
             <p className="text-sm text-gray-500">De novo Peptide Sequencing</p>
           </div>
 
-          <div className="border-t pt-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Step 3 Tasks
-            </h3>
-            <StepProjectList step={3} refreshTrigger={projectUuid} onNavigate={onNavigate} />
-          </div>
+<ExperimentDagStatus currentStep={3} refreshTrigger={projectUuid} />
 
 
         </div>
@@ -296,13 +294,35 @@ function Step3({ onNavigate }: StepPageProps) {
 
           <div className="space-y-6">
             <div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Branch <span className="text-red-500 ml-1">*</span>
+                </label>
+                <div className="flex gap-3">
+                  {(["target", "decoy"] as TaskBranch[]).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setBranch(option)}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium capitalize ${
+                        branch === option
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <TextInput
                 label="Task Name"
                 value={projectName}
                 onChange={setProjectName}
                 placeholder="Enter the task name"
                 required={true}
-                description="Enter the name of the task to start a new one"
+                readOnly
+                description="Generated from the experiment, branch, and step."
               />
               {isDuplicateProjectName && (
                 <p className="mt-1 text-xs text-red-600">

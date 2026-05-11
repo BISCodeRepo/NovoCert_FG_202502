@@ -1,5 +1,6 @@
 export interface Step3Params {
   experimentUuid?: string
+  branch?: "target" | "decoy"
   projectName: string
   spectraPath: string        // MGF file path
   casanovoConfigPath: string // Casanovo config file path (Step2 output)

@@ -4,6 +4,7 @@
 
 export interface Step2Params {
   experimentUuid?: string
+  branch?: "target" | "decoy"
   projectName: string
   outputPath: string
 }

@@ -26,6 +26,7 @@ export async function executeStep1Workflow(
       step: '1',
       status: 'running',
       parameters: {
+        branch: params.branch,
         inputPath: params.inputPath,
         outputPath: params.outputPath // Project-level default output path
       }

@@ -26,6 +26,7 @@ export async function executeStep3Workflow(
       step: '3',
       status: 'running',
       parameters: {
+        branch: params.branch,
         spectraPath: params.spectraPath,
         casanovoConfigPath: params.casanovoConfigPath,
         modelPath: params.modelPath,

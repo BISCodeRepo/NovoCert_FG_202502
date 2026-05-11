@@ -5,10 +5,10 @@ import {
   StepRunButton,
 } from "../../components/form";
 import { useStepProjectSelector } from "../../hooks/useStepProjectSelector";
-import StepProjectList from "../../components/StepProjectList";
+import ExperimentDagStatus from "../../components/ExperimentDagStatus";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useExperiment } from "../../contexts/ExperimentContext";
-import { filterTasksByExperiment, latestTaskForStep } from "../../utils/experimentTasks";
+import { filterTasksByExperiment, getNextTaskName, latestTaskForStep } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
 import type { Project } from "../../types/project";
 
@@ -243,7 +243,7 @@ function Histogram({
 /*  Step6 Page                                                         */
 /* ------------------------------------------------------------------ */
 
-function Step6({ onNavigate }: StepPageProps) {
+function Step6(_: StepPageProps) {
   const { currentExperiment } = useExperiment();
   const [projectName, setProjectName] = useState("");
   const [dbResultPath, setDbResultPath] = useState("");
@@ -297,7 +297,6 @@ function Step6({ onNavigate }: StepPageProps) {
     if (saved) {
       try {
         const p = JSON.parse(saved);
-        if (p.projectName) setProjectName(p.projectName);
         if (p.dbResultPath) setDbResultPath(p.dbResultPath);
         if (p.fdrResultPath) setFdrResultPath(p.fdrResultPath);
         if (p.pinFilePath) setPinFilePath(p.pinFilePath);
@@ -327,21 +326,20 @@ function Step6({ onNavigate }: StepPageProps) {
       const previousTask = latestTaskForStep(allTasks, 5, currentExperiment?.uuid);
 
       fdrSelector.setSelectedProjectUuid(previousTask?.uuid || "");
+      setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 6));
 
       if (!previousTask) {
-        setProjectName("");
         setFdrResultPath("");
         setPinFilePath("");
         return;
       }
 
-      setProjectName(previousTask.name);
       setPinFilePath((previousTask.parameters?.inputPath as string | undefined) || "");
     };
 
     applyPreviousStepDefaults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentExperiment?.uuid]);
+  }, [currentExperiment?.uuid, currentExperiment?.name]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -458,10 +456,7 @@ function Step6({ onNavigate }: StepPageProps) {
               </div>
               <p className="text-sm text-gray-500">Post Analysis</p>
             </div>
-            <div className="border-t pt-6">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Step 6 Tasks</h3>
-              <StepProjectList step={6} refreshTrigger={projectUuid} onNavigate={onNavigate} />
-            </div>
+            <ExperimentDagStatus currentStep={6} refreshTrigger={projectUuid} />
           </div>
         </div>
 
@@ -478,7 +473,8 @@ function Step6({ onNavigate }: StepPageProps) {
                   onChange={setProjectName}
                   placeholder="Enter the task name"
                   required
-                  description="Enter the name of the task to start a new one"
+                  readOnly
+                  description="Generated from the experiment and step."
                 />
                 {isDuplicateProjectName && (
                   <p className="mt-1 text-xs text-red-600">

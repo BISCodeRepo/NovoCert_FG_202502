@@ -6,17 +6,17 @@ import {
   StepRunButton,
 } from "../../components/form";
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
+import ExperimentDagStatus from "../../components/ExperimentDagStatus";
 import { useStepProjectSelector } from "../../hooks/useStepProjectSelector";
 import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
-import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useExperiment } from "../../contexts/ExperimentContext";
-import { filterTasksByExperiment, getTaskRootOutputPath, latestTaskForStep } from "../../utils/experimentTasks";
+import { filterTasksByExperiment, getNextTaskName, getTaskRootOutputPath, latestTaskForStep } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
 import type { Project } from "../../types/project";
 
-function Step4({ onNavigate }: StepPageProps) {
+function Step4(_: StepPageProps) {
   const { currentExperiment } = useExperiment();
   const [projectName, setProjectName] = useState("");
   const [targetMgfDir, setTargetMgfDir] = useState("");
@@ -51,7 +51,6 @@ function Step4({ onNavigate }: StepPageProps) {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.projectName) setProjectName(parsed.projectName);
         if (parsed.targetMgfDir) setTargetMgfDir(parsed.targetMgfDir);
         if (parsed.targetResultPath) setTargetResultPath(parsed.targetResultPath);
         if (parsed.decoyMgfDir) setDecoyMgfDir(parsed.decoyMgfDir);
@@ -95,6 +94,7 @@ function Step4({ onNavigate }: StepPageProps) {
     step: 1,
     defaultSourceType: "step",
     returnDirectory: true,
+    branch: "target",
     onFileFound: (path) => setTargetMgfDir(path),
     onError: (error) =>
       setMessage({ type: "error", text: error }),
@@ -105,6 +105,7 @@ function Step4({ onNavigate }: StepPageProps) {
     step: 1,
     defaultSourceType: "step",
     returnDirectory: true,
+    branch: "decoy",
     onFileFound: (path) => setDecoyMgfDir(path),
     onError: (error) =>
       setMessage({ type: "error", text: error }),
@@ -115,6 +116,7 @@ function Step4({ onNavigate }: StepPageProps) {
     step: 3,
     defaultSourceType: "step",
     extensions: ["mztab"],
+    branch: "target",
     onFileFound: (path) => setTargetResultPath(path),
     onError: (error) =>
       setMessage({ type: "error", text: error }),
@@ -125,6 +127,7 @@ function Step4({ onNavigate }: StepPageProps) {
     step: 3,
     defaultSourceType: "step",
     extensions: ["mztab"],
+    branch: "decoy",
     onFileFound: (path) => setDecoyResultPath(path),
     onError: (error) =>
       setMessage({ type: "error", text: error }),
@@ -133,27 +136,28 @@ function Step4({ onNavigate }: StepPageProps) {
   useEffect(() => {
     const applyPreviousStepDefaults = async () => {
       const allTasks = await window.db.getProjects();
-      const step1Task = latestTaskForStep(allTasks, 1, currentExperiment?.uuid);
-      const previousTask = latestTaskForStep(allTasks, 3, currentExperiment?.uuid);
+      const targetStep1Task = latestTaskForStep(allTasks, 1, currentExperiment?.uuid, "target");
+      const decoyStep1Task = latestTaskForStep(allTasks, 1, currentExperiment?.uuid, "decoy");
+      const targetStep3Task = latestTaskForStep(allTasks, 3, currentExperiment?.uuid, "target");
+      const decoyStep3Task = latestTaskForStep(allTasks, 3, currentExperiment?.uuid, "decoy");
 
-      targetMgfSelector.setSelectedProjectUuid(step1Task?.uuid || "");
-      decoyMgfSelector.setSelectedProjectUuid(step1Task?.uuid || "");
-      targetResultSelector.setSelectedProjectUuid(previousTask?.uuid || "");
-      decoyResultSelector.setSelectedProjectUuid(previousTask?.uuid || "");
+      targetMgfSelector.setSelectedProjectUuid(targetStep1Task?.uuid || "");
+      decoyMgfSelector.setSelectedProjectUuid(decoyStep1Task?.uuid || "");
+      targetResultSelector.setSelectedProjectUuid(targetStep3Task?.uuid || "");
+      decoyResultSelector.setSelectedProjectUuid(decoyStep3Task?.uuid || "");
+      setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 4));
 
-      if (!previousTask) {
-        setProjectName("");
+      if (!targetStep3Task) {
         setOutputPath("");
         return;
       }
 
-      setProjectName(previousTask.name);
-      setOutputPath(getTaskRootOutputPath(previousTask));
+      setOutputPath(getTaskRootOutputPath(targetStep3Task));
     };
 
     applyPreviousStepDefaults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentExperiment?.uuid]);
+  }, [currentExperiment?.uuid, currentExperiment?.name]);
 
   // Update paths when selectors find paths or switch to custom
   useEffect(() => {
@@ -328,12 +332,7 @@ function Step4({ onNavigate }: StepPageProps) {
             <p className="text-sm text-gray-500">Feature Calculation</p>
           </div>
 
-          <div className="border-t pt-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Step 4 Tasks
-            </h3>
-            <StepProjectList step={4} refreshTrigger={projectUuid} onNavigate={onNavigate} />
-          </div>
+<ExperimentDagStatus currentStep={4} refreshTrigger={projectUuid} />
         </div>
       </div>
 
@@ -351,7 +350,8 @@ function Step4({ onNavigate }: StepPageProps) {
                 onChange={setProjectName}
                 placeholder="Enter the task name"
                 required={true}
-                description="Enter the name of the task to start a new one"
+                readOnly
+                description="Generated from the experiment and step."
               />
               {isDuplicateProjectName && (
                 <p className="mt-1 text-xs text-red-600">

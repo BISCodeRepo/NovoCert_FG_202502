@@ -6,16 +6,16 @@ import {
   StepRunButton,
 } from "../../components/form";
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
-import StepProjectList from "../../components/StepProjectList";
+import ExperimentDagStatus from "../../components/ExperimentDagStatus";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
 import { useExperiment } from "../../contexts/ExperimentContext";
-import { filterTasksByExperiment, getTaskRootOutputPath, latestTaskForStep } from "../../utils/experimentTasks";
+import { filterTasksByExperiment, getNextTaskName, getTaskRootOutputPath, latestTaskForStep } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
 import type { Project } from "../../types/project";
 
-function Step5({ onNavigate }: StepPageProps) {
+function Step5(_: StepPageProps) {
   const { currentExperiment } = useExperiment();
   const [projectName, setProjectName] = useState("");
   const [inputPath, setInputPath] = useState("");
@@ -47,7 +47,6 @@ function Step5({ onNavigate }: StepPageProps) {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.projectName) setProjectName(parsed.projectName);
         if (parsed.inputPath) setInputPath(parsed.inputPath);
         if (parsed.outputPath) setOutputPath(parsed.outputPath);
       } catch (error) {
@@ -84,15 +83,14 @@ function Step5({ onNavigate }: StepPageProps) {
     const applyPreviousStepDefaults = async () => {
       const allTasks = await window.db.getProjects();
       const previousTask = latestTaskForStep(allTasks, 4, currentExperiment?.uuid);
+      setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 5));
       if (!previousTask) {
-        setProjectName("");
         setInputPath("");
         setOutputPath("");
         return;
       }
 
       const previousOutputPath = getTaskRootOutputPath(previousTask);
-      setProjectName(previousTask.name);
       setOutputPath(previousOutputPath);
 
       const stepOutputPath = (previousTask.parameters?.step4 as { outputPath?: string } | undefined)?.outputPath;
@@ -103,7 +101,7 @@ function Step5({ onNavigate }: StepPageProps) {
     };
 
     applyPreviousStepDefaults();
-  }, [currentExperiment?.uuid]);
+  }, [currentExperiment?.uuid, currentExperiment?.name]);
 
   const normalizedProjectName = projectName.trim().toLowerCase();
   const isDuplicateProjectName =
@@ -216,12 +214,7 @@ function Step5({ onNavigate }: StepPageProps) {
             <p className="text-sm text-gray-500">Percolator and FDR Control</p>
           </div>
 
-          <div className="border-t pt-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Step 5 Tasks
-            </h3>
-            <StepProjectList step={5} refreshTrigger={projectUuid} onNavigate={onNavigate} />
-          </div>
+<ExperimentDagStatus currentStep={5} refreshTrigger={projectUuid} />
 
       
         </div>
@@ -241,7 +234,8 @@ function Step5({ onNavigate }: StepPageProps) {
                 onChange={setProjectName}
                 placeholder="Enter the task name"
                 required={true}
-                description="Enter the name of the task to start a new one"
+                readOnly
+                description="Generated from the experiment and step."
               />
               {isDuplicateProjectName && (
                 <p className="mt-1 text-xs text-red-600">

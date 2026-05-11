@@ -6,17 +6,18 @@ import {
   StepRunButton,
 } from "../../components/form";
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
-import StepProjectList from "../../components/StepProjectList";
+import ExperimentDagStatus from "../../components/ExperimentDagStatus";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
 import { useExperiment } from "../../contexts/ExperimentContext";
-import { filterTasksByExperiment } from "../../utils/experimentTasks";
+import { filterTasksByExperiment, getNextTaskName, TaskBranch } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
 import type { Project } from "../../types/project";
 
-function Step1({ onNavigate }: StepPageProps) {
+function Step1(_: StepPageProps) {
   const { currentExperiment } = useExperiment();
+  const [branch, setBranch] = useState<TaskBranch>("target");
   const [projectName, setProjectName] = useState("");
   const [inputPath, setInputPath] = useState("");
   const [outputPath, setOutputPath] = useState("");
@@ -50,7 +51,6 @@ function Step1({ onNavigate }: StepPageProps) {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.projectName) setProjectName(parsed.projectName);
         if (parsed.inputPath) setInputPath(parsed.inputPath);
         if (parsed.outputPath) setOutputPath(parsed.outputPath);
         if (parsed.memory) setMemory(parsed.memory);
@@ -66,6 +66,7 @@ function Step1({ onNavigate }: StepPageProps) {
   useEffect(() => {
     const inputs = {
       projectName,
+      branch,
       inputPath,
       outputPath,
       memory,
@@ -73,7 +74,15 @@ function Step1({ onNavigate }: StepPageProps) {
       randomSeed,
     };
     localStorage.setItem('step1_inputs', JSON.stringify(inputs));
-  }, [projectName, inputPath, outputPath, memory, precursorTolerance, randomSeed]);
+  }, [projectName, branch, inputPath, outputPath, memory, precursorTolerance, randomSeed]);
+
+  useEffect(() => {
+    const applyTaskName = async () => {
+      const allTasks = await window.db.getProjects();
+      setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 1, branch));
+    };
+    applyTaskName();
+  }, [currentExperiment?.uuid, currentExperiment?.name, branch]);
 
   useEffect(() => {
     const loadStep1Tasks = async () => {
@@ -220,6 +229,7 @@ function Step1({ onNavigate }: StepPageProps) {
     try {
       const result = await window.step.runStep1({
         experimentUuid: currentExperiment?.uuid,
+        branch,
         projectName,
         inputPath,
         outputPath,
@@ -283,12 +293,7 @@ function Step1({ onNavigate }: StepPageProps) {
             <p className="text-sm text-gray-500">Decoy Spectra Generation</p>
           </div>
 
-          <div className="border-t pt-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Step 1 Tasks
-            </h3>
-            <StepProjectList step={1} refreshTrigger={projectUuid} onNavigate={onNavigate} />
-          </div>
+<ExperimentDagStatus currentStep={1} refreshTrigger={projectUuid} />
 
 
         </div>
@@ -302,13 +307,35 @@ function Step1({ onNavigate }: StepPageProps) {
 
           <div className="space-y-6">
             <div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Branch <span className="text-red-500 ml-1">*</span>
+                </label>
+                <div className="flex gap-3">
+                  {(["target", "decoy"] as TaskBranch[]).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setBranch(option)}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium capitalize ${
+                        branch === option
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <TextInput
                 label="Task Name"
                 value={projectName}
                 onChange={setProjectName}
                 placeholder="Enter the task name"
                 required={true}
-                description="Enter the name of the task to start a new one"
+                readOnly
+                description="Generated from the experiment, branch, and step."
               />
               {isDuplicateProjectName && (
                 <p className="mt-1 text-xs text-red-600">

@@ -89,6 +89,7 @@ interface ShellAPI {
 
 interface Step1Params {
   experimentUuid?: string
+  branch?: "target" | "decoy"
   projectName: string
   inputPath: string
   outputPath: string
@@ -107,6 +108,7 @@ interface Step1Result {
 
 interface Step2Params {
   experimentUuid?: string
+  branch?: "target" | "decoy"
   projectName: string
   outputPath: string
 }
@@ -121,6 +123,7 @@ interface Step2Result {
 
 interface Step3Params {
   experimentUuid?: string
+  branch?: "target" | "decoy"
   projectName: string
   spectraPath: string
   casanovoConfigPath: string
@@ -138,6 +141,7 @@ interface Step3Result {
 
 interface Step4Params {
   experimentUuid?: string
+  branch?: "target" | "decoy"
   projectName: string
   targetMgfDir: string
   targetResultPath: string
@@ -156,6 +160,7 @@ interface Step4Result {
 
 interface Step5Params {
   experimentUuid?: string
+  branch?: "target" | "decoy"
   projectName: string
   inputPath: string
   outputPath: string
@@ -171,6 +176,7 @@ interface Step5Result {
 
 interface Step6Params {
   experimentUuid?: string
+  branch?: "target" | "decoy"
   projectName: string
   csvFilePath: string
   previousStepPath: string
