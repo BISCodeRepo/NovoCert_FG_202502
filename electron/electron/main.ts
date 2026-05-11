@@ -140,6 +140,26 @@ function setupIpcHandlers() {
   })
 
   // Project handlers
+  ipcMain.handle('db:getExperiments', async () => {
+    return await database.experiments.getAll()
+  })
+
+  ipcMain.handle('db:getExperiment', async (_, uuid) => {
+    return await database.experiments.getOne(uuid)
+  })
+
+  ipcMain.handle('db:addExperiment', async (_, experiment) => {
+    return await database.experiments.create(experiment)
+  })
+
+  ipcMain.handle('db:updateExperiment', async (_, uuid, updates) => {
+    return await database.experiments.update(uuid, updates)
+  })
+
+  ipcMain.handle('db:deleteExperiment', async (_, uuid) => {
+    return await database.experiments.delete(uuid)
+  })
+
   ipcMain.handle('db:getProjects', async () => {
     return await database.projects.getAll()
   })

@@ -5,10 +5,13 @@ import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
+import { useExperiment } from "../../contexts/ExperimentContext";
+import { filterTasksByExperiment, getTaskRootOutputPath, latestTaskForStep } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
 import type { Project } from "../../types/project";
 
 function Step2({ onNavigate }: StepPageProps) {
+  const { currentExperiment } = useExperiment();
   const [projectName, setProjectName] = useState("");
   const [outputPath, setOutputPath] = useState("");
   const [isRunning, setIsRunning] = useState(false);
@@ -60,14 +63,31 @@ function Step2({ onNavigate }: StepPageProps) {
       try {
         const allTasks = await window.db.getProjects();
         setStep2Tasks(
-          allTasks.filter((project) => String(project.step) === "2")
+          filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter((project) => String(project.step) === "2")
         );
       } catch (error) {
         console.error("Failed to load Step 2 tasks for name validation:", error);
       }
     };
     loadStep2Tasks();
-  }, []);
+  }, [currentExperiment?.uuid]);
+
+  useEffect(() => {
+    const applyPreviousStepDefaults = async () => {
+      const allTasks = await window.db.getProjects();
+      const previousTask = latestTaskForStep(allTasks, 1, currentExperiment?.uuid);
+      if (!previousTask) {
+        setProjectName("");
+        setOutputPath("");
+        return;
+      }
+
+      setProjectName(previousTask.name);
+      setOutputPath(getTaskRootOutputPath(previousTask));
+    };
+
+    applyPreviousStepDefaults();
+  }, [currentExperiment?.uuid]);
 
   const normalizedProjectName = projectName.trim().toLowerCase();
   const isDuplicateProjectName =
@@ -86,7 +106,7 @@ function Step2({ onNavigate }: StepPageProps) {
     if (!isFormValid()) {
       return;
     }
-    const latestStep2Tasks = (await window.db.getProjects()).filter(
+    const latestStep2Tasks = filterTasksByExperiment(await window.db.getProjects(), currentExperiment?.uuid).filter(
       (project) => String(project.step) === "2"
     );
     const isDuplicateAtRunTime = latestStep2Tasks.some(
@@ -114,6 +134,7 @@ function Step2({ onNavigate }: StepPageProps) {
 
     try {
       const result = await window.step.runStep2({
+        experimentUuid: currentExperiment?.uuid,
         projectName,
         outputPath,
       });

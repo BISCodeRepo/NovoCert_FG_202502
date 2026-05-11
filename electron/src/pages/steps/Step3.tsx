@@ -11,10 +11,13 @@ import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
 import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
+import { useExperiment } from "../../contexts/ExperimentContext";
+import { filterTasksByExperiment, getTaskRootOutputPath, latestTaskForStep } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
 import type { Project } from "../../types/project";
 
 function Step3({ onNavigate }: StepPageProps) {
+  const { currentExperiment } = useExperiment();
   const [projectName, setProjectName] = useState("");
   const [spectraPath, setSpectraPath] = useState("");
   const [casanovoConfigPath, setCasanovoConfigPath] = useState("");
@@ -75,14 +78,14 @@ function Step3({ onNavigate }: StepPageProps) {
       try {
         const allTasks = await window.db.getProjects();
         setStep3Tasks(
-          allTasks.filter((project) => String(project.step) === "3")
+          filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter((project) => String(project.step) === "3")
         );
       } catch (error) {
         console.error("Failed to load Step 3 tasks for name validation:", error);
       }
     };
     loadStep3Tasks();
-  }, []);
+  }, [currentExperiment?.uuid]);
 
   // Use Step1 task selector for MGF file
   const mgfSelector = useStepProjectSelector({
@@ -99,6 +102,29 @@ function Step3({ onNavigate }: StepPageProps) {
     extensions: ["yaml", "yml"],
     onFileFound: (path) => setCasanovoConfigPath(path),
   });
+
+  useEffect(() => {
+    const applyPreviousStepDefaults = async () => {
+      const allTasks = await window.db.getProjects();
+      const step1Task = latestTaskForStep(allTasks, 1, currentExperiment?.uuid);
+      const previousTask = latestTaskForStep(allTasks, 2, currentExperiment?.uuid);
+
+      mgfSelector.setSelectedProjectUuid(step1Task?.uuid || "");
+      configSelector.setSelectedProjectUuid(previousTask?.uuid || "");
+
+      if (!previousTask) {
+        setProjectName("");
+        setOutputPath("");
+        return;
+      }
+
+      setProjectName(previousTask.name);
+      setOutputPath(getTaskRootOutputPath(previousTask));
+    };
+
+    applyPreviousStepDefaults();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentExperiment?.uuid]);
 
   // Update spectraPath when selector finds file or switches to custom
   useEffect(() => {
@@ -158,7 +184,7 @@ function Step3({ onNavigate }: StepPageProps) {
     if (!isFormValid()) {
       return;
     }
-    const latestStep3Tasks = (await window.db.getProjects()).filter(
+    const latestStep3Tasks = filterTasksByExperiment(await window.db.getProjects(), currentExperiment?.uuid).filter(
       (project) => String(project.step) === "3"
     );
     const isDuplicateAtRunTime = latestStep3Tasks.some(
@@ -189,6 +215,7 @@ function Step3({ onNavigate }: StepPageProps) {
       const finalSpectraPath = spectraPath;
 
       const result = await window.step.runStep3({
+        experimentUuid: currentExperiment?.uuid,
         projectName,
         spectraPath: finalSpectraPath,
         casanovoConfigPath,

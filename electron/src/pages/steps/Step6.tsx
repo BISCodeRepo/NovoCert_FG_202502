@@ -7,6 +7,8 @@ import {
 import { useStepProjectSelector } from "../../hooks/useStepProjectSelector";
 import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
+import { useExperiment } from "../../contexts/ExperimentContext";
+import { filterTasksByExperiment, latestTaskForStep } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
 import type { Project } from "../../types/project";
 
@@ -242,6 +244,7 @@ function Histogram({
 /* ------------------------------------------------------------------ */
 
 function Step6({ onNavigate }: StepPageProps) {
+  const { currentExperiment } = useExperiment();
   const [projectName, setProjectName] = useState("");
   const [dbResultPath, setDbResultPath] = useState("");
   const [fdrResultPath, setFdrResultPath] = useState("");
@@ -307,7 +310,7 @@ function Step6({ onNavigate }: StepPageProps) {
     const loadStep6Tasks = async () => {
       try {
         const allTasks = await window.db.getProjects();
-        const filtered = allTasks.filter(
+        const filtered = filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter(
           (project) => String(project.step) === "6"
         );
         setStep6Tasks(filtered);
@@ -316,7 +319,29 @@ function Step6({ onNavigate }: StepPageProps) {
       }
     };
     loadStep6Tasks();
-  }, []);
+  }, [currentExperiment?.uuid]);
+
+  useEffect(() => {
+    const applyPreviousStepDefaults = async () => {
+      const allTasks = await window.db.getProjects();
+      const previousTask = latestTaskForStep(allTasks, 5, currentExperiment?.uuid);
+
+      fdrSelector.setSelectedProjectUuid(previousTask?.uuid || "");
+
+      if (!previousTask) {
+        setProjectName("");
+        setFdrResultPath("");
+        setPinFilePath("");
+        return;
+      }
+
+      setProjectName(previousTask.name);
+      setPinFilePath((previousTask.parameters?.inputPath as string | undefined) || "");
+    };
+
+    applyPreviousStepDefaults();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentExperiment?.uuid]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -350,7 +375,7 @@ function Step6({ onNavigate }: StepPageProps) {
 
   const handleRun = async () => {
     if (!isFormValid()) return;
-    const latestStep6Tasks = (await window.db.getProjects()).filter(
+    const latestStep6Tasks = filterTasksByExperiment(await window.db.getProjects(), currentExperiment?.uuid).filter(
       (project) => String(project.step) === "6"
     );
     const isDuplicateAtRunTime = latestStep6Tasks.some(
@@ -379,6 +404,7 @@ function Step6({ onNavigate }: StepPageProps) {
 
     try {
       const result = await window.step.runStep6({
+        experimentUuid: currentExperiment?.uuid,
         projectName,
         csvFilePath: dbResultPath,
         previousStepPath: fdrResultPath,

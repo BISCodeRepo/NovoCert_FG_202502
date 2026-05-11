@@ -22,12 +22,21 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 
 // Expose Database API
 contextBridge.exposeInMainWorld('db', {
+  // Experiments
+  getExperiments: () => ipcRenderer.invoke('db:getExperiments'),
+  getExperiment: (uuid: string) => ipcRenderer.invoke('db:getExperiment', uuid),
+  addExperiment: (experiment: { name: string; description?: string }) =>
+    ipcRenderer.invoke('db:addExperiment', experiment),
+  updateExperiment: (uuid: string, updates: { name?: string; description?: string }) =>
+    ipcRenderer.invoke('db:updateExperiment', uuid, updates),
+  deleteExperiment: (uuid: string) => ipcRenderer.invoke('db:deleteExperiment', uuid),
+
   // Projects
   getProjects: () => ipcRenderer.invoke('db:getProjects'),
   getProject: (uuid: string) => ipcRenderer.invoke('db:getProject', uuid),
-  addProject: (project: { name: string; status: string; parameters: Record<string, unknown> }) => 
+  addProject: (project: { name: string; status: string; parameters: Record<string, unknown>; experiment_uuid?: string }) => 
     ipcRenderer.invoke('db:addProject', project),
-  updateProject: (uuid: string, updates: { name?: string; status?: string; parameters?: Record<string, unknown> }) => 
+  updateProject: (uuid: string, updates: { name?: string; status?: string; parameters?: Record<string, unknown>; experiment_uuid?: string }) => 
     ipcRenderer.invoke('db:updateProject', uuid, updates),
   deleteProject: (uuid: string) => ipcRenderer.invoke('db:deleteProject', uuid),
   getDbPath: () => ipcRenderer.invoke('db:getDbPath'),
@@ -71,6 +80,7 @@ contextBridge.exposeInMainWorld('shell', {
 // Expose Step API
 contextBridge.exposeInMainWorld('step', {
   runStep1: (params: {
+    experimentUuid?: string
     projectName: string
     inputPath: string
     outputPath: string
@@ -79,10 +89,12 @@ contextBridge.exposeInMainWorld('step', {
     randomSeed: string
   }) => ipcRenderer.invoke('step:runStep1', params),
   runStep2: (params: {
+    experimentUuid?: string
     projectName: string
     outputPath: string
   }) => ipcRenderer.invoke('step:runStep2', params),
   runStep3: (params: {
+    experimentUuid?: string
     projectName: string
     spectraPath: string
     casanovoConfigPath: string
@@ -90,6 +102,7 @@ contextBridge.exposeInMainWorld('step', {
     outputPath: string
   }) => ipcRenderer.invoke('step:runStep3', params),
   runStep4: (params: {
+    experimentUuid?: string
     projectName: string
     targetMgfDir: string
     targetResultPath: string
@@ -98,11 +111,13 @@ contextBridge.exposeInMainWorld('step', {
     outputPath: string
   }) => ipcRenderer.invoke('step:runStep4', params),
   runStep5: (params: {
+    experimentUuid?: string
     projectName: string
     inputPath: string
     outputPath: string
   }) => ipcRenderer.invoke('step:runStep5', params),
   runStep6: (params: {
+    experimentUuid?: string
     projectName: string
     csvFilePath: string
     previousStepPath: string

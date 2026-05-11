@@ -1,11 +1,18 @@
-import { Project, ProjectStatus, Task, TaskStatus } from './types'
+import { Experiment, Project, ProjectStatus, Task, TaskStatus } from './types'
 
 interface DatabaseAPI {
+  // Experiments
+  getExperiments: () => Promise<Experiment[]>
+  getExperiment: (uuid: string) => Promise<Experiment | null>
+  addExperiment: (experiment: { name: string; description?: string }) => Promise<Experiment>
+  updateExperiment: (uuid: string, updates: { name?: string; description?: string }) => Promise<Experiment | null>
+  deleteExperiment: (uuid: string) => Promise<boolean>
+
   // Projects
   getProjects: () => Promise<Project[]>
   getProject: (uuid: string) => Promise<Project | null>
-  addProject: (project: { name: string; status: ProjectStatus; parameters: Record<string, unknown> }) => Promise<Project>
-  updateProject: (uuid: string, updates: { name?: string; status?: ProjectStatus; parameters?: Record<string, unknown> }) => Promise<Project | null>
+  addProject: (project: { name: string; status: ProjectStatus; parameters: Record<string, unknown>; experiment_uuid?: string }) => Promise<Project>
+  updateProject: (uuid: string, updates: { name?: string; status?: ProjectStatus; parameters?: Record<string, unknown>; experiment_uuid?: string }) => Promise<Project | null>
   deleteProject: (uuid: string) => Promise<boolean>
   getDbPath: () => Promise<string>
   
@@ -81,6 +88,7 @@ interface ShellAPI {
 }
 
 interface Step1Params {
+  experimentUuid?: string
   projectName: string
   inputPath: string
   outputPath: string
@@ -98,6 +106,7 @@ interface Step1Result {
 }
 
 interface Step2Params {
+  experimentUuid?: string
   projectName: string
   outputPath: string
 }
@@ -111,6 +120,7 @@ interface Step2Result {
 }
 
 interface Step3Params {
+  experimentUuid?: string
   projectName: string
   spectraPath: string
   casanovoConfigPath: string
@@ -127,6 +137,7 @@ interface Step3Result {
 }
 
 interface Step4Params {
+  experimentUuid?: string
   projectName: string
   targetMgfDir: string
   targetResultPath: string
@@ -144,6 +155,7 @@ interface Step4Result {
 }
 
 interface Step5Params {
+  experimentUuid?: string
   projectName: string
   inputPath: string
   outputPath: string
@@ -158,6 +170,7 @@ interface Step5Result {
 }
 
 interface Step6Params {
+  experimentUuid?: string
   projectName: string
   csvFilePath: string
   previousStepPath: string
@@ -226,4 +239,3 @@ declare global {
 }
 
 export {}
-

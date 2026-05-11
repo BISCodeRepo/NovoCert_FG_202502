@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Layout } from "./components/layout";
+import { ExperimentProvider } from "./contexts/ExperimentContext";
 import {
   Dashboard,
   Prepare,
+  Experiments,
+  ExperimentSetup,
   Step1,
   Step2,
   Step3,
@@ -33,8 +36,11 @@ function App() {
         return <Dashboard onNavigate={handleNavigate} />;
       case "prepare":
         return <Prepare />;
+      case "experiments":
+        return <Experiments onNavigate={handleNavigate} />;
+      case "experiment":
       case "pipeline":
-        return <Step1 onNavigate={handleNavigate} />;
+        return <ExperimentSetup onNavigate={handleNavigate} />;
       case "step1":
         return <Step1 onNavigate={handleNavigate} />;
       case "step2":
@@ -63,9 +69,11 @@ function App() {
   };
 
   return (
-    <Layout currentPage={currentPage} onNavigate={handleNavigate}>
-      {renderPage()}
-    </Layout>
+    <ExperimentProvider>
+      <Layout currentPage={currentPage} onNavigate={handleNavigate}>
+        {renderPage()}
+      </Layout>
+    </ExperimentProvider>
   );
 }
 

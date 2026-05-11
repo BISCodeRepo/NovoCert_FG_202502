@@ -11,10 +11,13 @@ import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
 import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
+import { useExperiment } from "../../contexts/ExperimentContext";
+import { filterTasksByExperiment, getTaskRootOutputPath, latestTaskForStep } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
 import type { Project } from "../../types/project";
 
 function Step4({ onNavigate }: StepPageProps) {
+  const { currentExperiment } = useExperiment();
   const [projectName, setProjectName] = useState("");
   const [targetMgfDir, setTargetMgfDir] = useState("");
   const [targetResultPath, setTargetResultPath] = useState("");
@@ -78,14 +81,14 @@ function Step4({ onNavigate }: StepPageProps) {
       try {
         const allTasks = await window.db.getProjects();
         setStep4Tasks(
-          allTasks.filter((project) => String(project.step) === "4")
+          filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter((project) => String(project.step) === "4")
         );
       } catch (error) {
         console.error("Failed to load Step 4 tasks for name validation:", error);
       }
     };
     loadStep4Tasks();
-  }, []);
+  }, [currentExperiment?.uuid]);
 
   // Use Step1 task selector for Target MGF Directory
   const targetMgfSelector = useStepProjectSelector({
@@ -126,6 +129,31 @@ function Step4({ onNavigate }: StepPageProps) {
     onError: (error) =>
       setMessage({ type: "error", text: error }),
   });
+
+  useEffect(() => {
+    const applyPreviousStepDefaults = async () => {
+      const allTasks = await window.db.getProjects();
+      const step1Task = latestTaskForStep(allTasks, 1, currentExperiment?.uuid);
+      const previousTask = latestTaskForStep(allTasks, 3, currentExperiment?.uuid);
+
+      targetMgfSelector.setSelectedProjectUuid(step1Task?.uuid || "");
+      decoyMgfSelector.setSelectedProjectUuid(step1Task?.uuid || "");
+      targetResultSelector.setSelectedProjectUuid(previousTask?.uuid || "");
+      decoyResultSelector.setSelectedProjectUuid(previousTask?.uuid || "");
+
+      if (!previousTask) {
+        setProjectName("");
+        setOutputPath("");
+        return;
+      }
+
+      setProjectName(previousTask.name);
+      setOutputPath(getTaskRootOutputPath(previousTask));
+    };
+
+    applyPreviousStepDefaults();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentExperiment?.uuid]);
 
   // Update paths when selectors find paths or switch to custom
   useEffect(() => {
@@ -209,7 +237,7 @@ function Step4({ onNavigate }: StepPageProps) {
     if (!isFormValid()) {
       return;
     }
-    const latestStep4Tasks = (await window.db.getProjects()).filter(
+    const latestStep4Tasks = filterTasksByExperiment(await window.db.getProjects(), currentExperiment?.uuid).filter(
       (project) => String(project.step) === "4"
     );
     const isDuplicateAtRunTime = latestStep4Tasks.some(
@@ -237,6 +265,7 @@ function Step4({ onNavigate }: StepPageProps) {
 
     try {
       const result = await window.step.runStep4({
+        experimentUuid: currentExperiment?.uuid,
         projectName,
         targetMgfDir,
         targetResultPath,
@@ -693,4 +722,3 @@ function Step4({ onNavigate }: StepPageProps) {
 }
 
 export default Step4;
-

@@ -3,6 +3,7 @@
  */
 
 export interface Step1Params {
+  experimentUuid?: string
   projectName: string
   inputPath: string
   outputPath: string

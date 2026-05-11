@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { useExperiment } from "../contexts/ExperimentContext";
 import type { Project } from "../types";
+import { filterTasksByExperiment } from "../utils/experimentTasks";
 
 interface StepProjectListProps {
   step: number;
@@ -8,13 +10,14 @@ interface StepProjectListProps {
 }
 
 function StepProjectList({ step, refreshTrigger, onNavigate }: StepProjectListProps) {
+  const { currentExperiment } = useExperiment();
   const [tasks, setTasks] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadTasks = async () => {
     try {
       const allTasks = await window.db.getProjects();
-      const stepTasks = allTasks
+      const stepTasks = filterTasksByExperiment(allTasks, currentExperiment?.uuid)
         .filter((project) => String(project.step) === String(step))
         .sort(
           (a, b) =>
@@ -31,7 +34,7 @@ function StepProjectList({ step, refreshTrigger, onNavigate }: StepProjectListPr
   useEffect(() => {
     loadTasks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
+  }, [step, currentExperiment?.uuid]);
 
   // Refresh when refreshTrigger changes (new task created)
   useEffect(() => {
@@ -46,7 +49,7 @@ function StepProjectList({ step, refreshTrigger, onNavigate }: StepProjectListPr
     const checkRunningTasks = async () => {
       // Always fetch latest tasks from DB to get current status
       const allTasks = await window.db.getProjects();
-      const stepTasks = allTasks
+      const stepTasks = filterTasksByExperiment(allTasks, currentExperiment?.uuid)
         .filter((project) => String(project.step) === String(step))
         .sort(
           (a, b) =>
@@ -132,7 +135,7 @@ function StepProjectList({ step, refreshTrigger, onNavigate }: StepProjectListPr
       clearInterval(intervalId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
+  }, [step, currentExperiment?.uuid]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -221,4 +224,3 @@ function StepProjectList({ step, refreshTrigger, onNavigate }: StepProjectListPr
 }
 
 export default StepProjectList;
-

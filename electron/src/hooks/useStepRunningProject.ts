@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import { useExperiment } from "../contexts/ExperimentContext";
+import { filterTasksByExperiment } from "../utils/experimentTasks";
 
 interface UseStepRunningProjectOptions {
   step: number;
@@ -18,11 +20,13 @@ export function useStepRunningProject({
   setContainerId,
   setProjectName,
 }: UseStepRunningProjectOptions) {
+  const { currentExperiment } = useExperiment();
+
   useEffect(() => {
     const checkRunningProject = async () => {
       try {
         const allTasks = await window.db.getProjects();
-        const stepRunningTasks = allTasks
+        const stepRunningTasks = filterTasksByExperiment(allTasks, currentExperiment?.uuid)
           .filter(
             (project) =>
               String(project.step) === String(step) &&
@@ -124,5 +128,5 @@ export function useStepRunningProject({
     return () => {
       clearInterval(intervalId);
     };
-  }, [step, setProjectUuid, setContainerId, setProjectName]);
+  }, [step, currentExperiment?.uuid, setProjectUuid, setContainerId, setProjectName]);
 }

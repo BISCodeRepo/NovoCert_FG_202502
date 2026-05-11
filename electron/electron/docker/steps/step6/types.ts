@@ -1,4 +1,5 @@
 export interface Step6Params {
+  experimentUuid?: string
   projectName: string
   csvFilePath: string        // DB search result CSV file path
   previousStepPath: string   // FDR result CSV file path (from Step 5)

@@ -1,4 +1,5 @@
 export interface Step4Params {
+  experimentUuid?: string
   projectName: string
   targetMgfDir: string        // Target MGF directory path
   targetResultPath: string    // Target DNPS result file path (mztab)

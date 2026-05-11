@@ -10,10 +10,13 @@ import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
+import { useExperiment } from "../../contexts/ExperimentContext";
+import { filterTasksByExperiment, getTaskRootOutputPath, latestTaskForStep } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
 import type { Project } from "../../types/project";
 
 function Step5({ onNavigate }: StepPageProps) {
+  const { currentExperiment } = useExperiment();
   const [projectName, setProjectName] = useState("");
   const [inputPath, setInputPath] = useState("");
   const [outputPath, setOutputPath] = useState("");
@@ -68,14 +71,39 @@ function Step5({ onNavigate }: StepPageProps) {
       try {
         const allTasks = await window.db.getProjects();
         setStep5Tasks(
-          allTasks.filter((project) => String(project.step) === "5")
+          filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter((project) => String(project.step) === "5")
         );
       } catch (error) {
         console.error("Failed to load Step 5 tasks for name validation:", error);
       }
     };
     loadStep5Tasks();
-  }, []);
+  }, [currentExperiment?.uuid]);
+
+  useEffect(() => {
+    const applyPreviousStepDefaults = async () => {
+      const allTasks = await window.db.getProjects();
+      const previousTask = latestTaskForStep(allTasks, 4, currentExperiment?.uuid);
+      if (!previousTask) {
+        setProjectName("");
+        setInputPath("");
+        setOutputPath("");
+        return;
+      }
+
+      const previousOutputPath = getTaskRootOutputPath(previousTask);
+      setProjectName(previousTask.name);
+      setOutputPath(previousOutputPath);
+
+      const stepOutputPath = (previousTask.parameters?.step4 as { outputPath?: string } | undefined)?.outputPath;
+      if (stepOutputPath) {
+        const pinResult = await window.fs.findLatestFile(stepOutputPath, "pin");
+        setInputPath(pinResult.path || "");
+      }
+    };
+
+    applyPreviousStepDefaults();
+  }, [currentExperiment?.uuid]);
 
   const normalizedProjectName = projectName.trim().toLowerCase();
   const isDuplicateProjectName =
@@ -99,7 +127,7 @@ function Step5({ onNavigate }: StepPageProps) {
     if (!isFormValid()) {
       return;
     }
-    const latestStep5Tasks = (await window.db.getProjects()).filter(
+    const latestStep5Tasks = filterTasksByExperiment(await window.db.getProjects(), currentExperiment?.uuid).filter(
       (project) => String(project.step) === "5"
     );
     const isDuplicateAtRunTime = latestStep5Tasks.some(
@@ -127,6 +155,7 @@ function Step5({ onNavigate }: StepPageProps) {
 
     try {
       const result = await window.step.runStep5({
+        experimentUuid: currentExperiment?.uuid,
         projectName,
         inputPath,
         outputPath,

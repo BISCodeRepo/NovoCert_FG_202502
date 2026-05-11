@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { useExperiment } from "../contexts/ExperimentContext";
 import type { Project } from "../types";
+import { filterTasksByExperiment } from "../utils/experimentTasks";
 
 interface UseStepProjectSelectorOptions {
   step: number;
@@ -29,6 +31,7 @@ export function useStepProjectSelector({
   onFileFound,
   onError,
 }: UseStepProjectSelectorOptions): UseStepProjectSelectorReturn {
+  const { currentExperiment } = useExperiment();
   const [sourceType, setSourceType] = useState<"step" | "custom">(defaultSourceType);
   const [tasks, setTasks] = useState<Project[]>([]);
   const [selectedProjectUuid, setSelectedProjectUuid] = useState<string>("");
@@ -47,7 +50,7 @@ export function useStepProjectSelector({
       setIsLoading(true);
       try {
         const allTasks = await window.db.getProjects();
-        const stepTasks = allTasks.filter(
+        const stepTasks = filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter(
           (project) => String(project.step) === String(step)
         );
         setTasks(stepTasks);
@@ -62,7 +65,7 @@ export function useStepProjectSelector({
     };
 
     loadTasks();
-  }, [step, sourceType, onError]);
+  }, [step, sourceType, currentExperiment?.uuid, onError]);
 
   // Find file in selected project's outputPath
   useEffect(() => {
@@ -161,4 +164,3 @@ export function useStepProjectSelector({
     error,
   };
 }
-

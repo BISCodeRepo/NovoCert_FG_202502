@@ -1,4 +1,5 @@
 export interface Step3Params {
+  experimentUuid?: string
   projectName: string
   spectraPath: string        // MGF file path
   casanovoConfigPath: string // Casanovo config file path (Step2 output)

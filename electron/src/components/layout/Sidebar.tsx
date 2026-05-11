@@ -22,6 +22,11 @@ const menuItems: MenuItem[] = [
     icon: "",
   },
   {
+    id: "experiments",
+    label: "Experiments",
+    icon: "",
+  },
+  {
     id: "pipeline",
     label: "Pipeline",
     icon: "",
@@ -38,9 +43,9 @@ const menuItems: MenuItem[] = [
 
 function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   const handleMenuClick = (sectionId: string) => {
-    // when pipeline is clicked, navigate to step1
+    // when pipeline is clicked, navigate to experiment setup first
     if (sectionId === "pipeline") {
-      onNavigate("step1", "");
+      onNavigate("experiment", "");
     } else {
       // if there is no submenu, navigate to the section
       const item = menuItems.find((i) => i.id === sectionId);
@@ -59,7 +64,7 @@ function Sidebar({ currentPage, onNavigate }: SidebarProps) {
               <button
                 onClick={() => handleMenuClick(item.id)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
-                  currentPage === item.id || (item.id === "pipeline" && currentPage.startsWith("step"))
+                  currentPage === item.id || (item.id === "pipeline" && (currentPage.startsWith("step") || currentPage === "experiment"))
                     ? "bg-blue-600 text-white"
                     : "text-gray-300 hover:bg-gray-800"
                 }`}
@@ -90,6 +95,7 @@ function Sidebar({ currentPage, onNavigate }: SidebarProps) {
             </li>
           ))}
         </ul>
+
       </nav>
     </aside>
   );

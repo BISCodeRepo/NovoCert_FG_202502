@@ -11,7 +11,7 @@ interface LayoutProps {
 function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   return (
     <div className="h-screen overflow-hidden bg-gray-50">
-      <Header />
+      <Header onNavigate={onNavigate} />
       <Sidebar currentPage={currentPage} onNavigate={onNavigate} />
       <main className="ml-64 mt-16 h-[calc(100vh-4rem)] overflow-y-auto p-8">
         {children}

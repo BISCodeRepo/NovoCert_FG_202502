@@ -4,12 +4,15 @@ import {
   PROJECT_STATUS_LABELS,
   PROJECT_STATUS_COLORS,
 } from "../types";
+import { useExperiment } from "../contexts/ExperimentContext";
+import { filterTasksByExperiment } from "../utils/experimentTasks";
 
 interface DashboardProps {
   onNavigate: (page: string, uuid: string) => void;
 }
 
 function Dashboard({ onNavigate }: DashboardProps) {
+  const { currentExperiment } = useExperiment();
   const [allTasks, setAllTasks] = useState<Project[]>([]);
   const [dbPath, setDbPath] = useState("");
   const [selectedStep, setSelectedStep] = useState<string>("all");
@@ -22,7 +25,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
 
   // filtered project list
   const filteredTasks = useMemo(() => {
-    let filtered = allTasks;
+    let filtered = filterTasksByExperiment(allTasks, currentExperiment?.uuid);
 
     // Step filtering (step is stored as int)
     if (selectedStep !== "all") {
@@ -43,13 +46,13 @@ function Dashboard({ onNavigate }: DashboardProps) {
     }
 
     return filtered;
-  }, [allTasks, selectedStep, selectedStatus]);
+  }, [allTasks, currentExperiment?.uuid, selectedStep, selectedStatus]);
 
   // polling: running status tasks' container status check
   useEffect(() => {
     const checkRunningTasks = async () => {
       // filter running status tasks
-      const runningTasks = allTasks.filter(p => p.status === 'running');
+      const runningTasks = filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter(p => p.status === 'running');
       
       if (runningTasks.length === 0) {
         return;
@@ -119,7 +122,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
     return () => {
       clearInterval(intervalId);
     };
-  }, [allTasks]);
+  }, [allTasks, currentExperiment?.uuid]);
 
   const loadTasks = async () => {
     const data = (await window.db.getProjects()) as Project[];
@@ -141,6 +144,9 @@ function Dashboard({ onNavigate }: DashboardProps) {
   return (
     <div className="max-w-7xl mx-auto">
       <h1 className="text-4xl font-bold text-gray-900 mb-4">Tasks</h1>
+      <p className="text-sm text-gray-500 mb-4">
+        {currentExperiment ? `Experiment: ${currentExperiment.name}` : "Select an experiment to view tasks."}
+      </p>
 
       {/* DB path */}
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
@@ -303,4 +309,3 @@ function Dashboard({ onNavigate }: DashboardProps) {
 }
 
 export default Dashboard;
-

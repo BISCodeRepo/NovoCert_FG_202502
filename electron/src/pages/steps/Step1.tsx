@@ -10,10 +10,13 @@ import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
+import { useExperiment } from "../../contexts/ExperimentContext";
+import { filterTasksByExperiment } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
 import type { Project } from "../../types/project";
 
 function Step1({ onNavigate }: StepPageProps) {
+  const { currentExperiment } = useExperiment();
   const [projectName, setProjectName] = useState("");
   const [inputPath, setInputPath] = useState("");
   const [outputPath, setOutputPath] = useState("");
@@ -57,7 +60,7 @@ function Step1({ onNavigate }: StepPageProps) {
         console.error('Error loading saved Step1 inputs:', error);
       }
     }
-  }, []);
+  }, [currentExperiment?.uuid]);
 
   // Save input values when they change
   useEffect(() => {
@@ -77,7 +80,7 @@ function Step1({ onNavigate }: StepPageProps) {
       try {
         const allTasks = await window.db.getProjects();
         setStep1Tasks(
-          allTasks.filter((project) => String(project.step) === "1")
+          filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter((project) => String(project.step) === "1")
         );
       } catch (error) {
         console.error("Failed to load Step 1 tasks for name validation:", error);
@@ -188,7 +191,7 @@ function Step1({ onNavigate }: StepPageProps) {
     if (!isFormValid()) {
       return;
     }
-    const latestStep1Tasks = (await window.db.getProjects()).filter(
+    const latestStep1Tasks = filterTasksByExperiment(await window.db.getProjects(), currentExperiment?.uuid).filter(
       (project) => String(project.step) === "1"
     );
     const isDuplicateAtRunTime = latestStep1Tasks.some(
@@ -216,6 +219,7 @@ function Step1({ onNavigate }: StepPageProps) {
 
     try {
       const result = await window.step.runStep1({
+        experimentUuid: currentExperiment?.uuid,
         projectName,
         inputPath,
         outputPath,
