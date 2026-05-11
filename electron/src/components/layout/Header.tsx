@@ -11,7 +11,7 @@ function Header({ onNavigate }: HeaderProps) {
     <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 fixed top-0 left-0 right-0 z-10">
       <div className="flex flex-col">
         <h1 className="text-xl font-bold text-gray-900">NovoCert</h1>
-        <span className="text-[10px] text-gray-400 leading-none">v1.2.0</span>
+        <span className="text-[10px] text-gray-400 leading-none">v1.2.1</span>
       </div>
       <div className="flex items-center gap-3">
         <label htmlFor="experiment-select" className="text-sm font-medium text-gray-700">
