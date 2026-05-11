@@ -256,7 +256,7 @@ function Step6({ onNavigate }: StepPageProps) {
   const [analysisData, setAnalysisData] = useState<Step6AnalysisData | null>(
     null
   );
-  const [step6Projects, setStep6Projects] = useState<Project[]>([]);
+  const [step6Tasks, setStep6Tasks] = useState<Project[]>([]);
 
   // Step 5 project selector for FDR result CSV
   const fdrSelector = useStepProjectSelector({
@@ -275,10 +275,10 @@ function Step6({ onNavigate }: StepPageProps) {
     }
   }, [fdrSelector.sourceType, fdrSelector.foundFilePath]);
 
-  // Extract PIN file path (t_d.pin) from the selected Step 5 project's inputPath
+  // Extract PIN file path (t_d.pin) from the selected Step 5 task's inputPath
   useEffect(() => {
     if (fdrSelector.sourceType === "step" && fdrSelector.selectedProjectUuid) {
-      const project = fdrSelector.projects.find(
+      const project = fdrSelector.tasks.find(
         (p) => p.uuid === fdrSelector.selectedProjectUuid
       );
       const inputPath = project?.parameters?.inputPath as string | undefined;
@@ -286,7 +286,7 @@ function Step6({ onNavigate }: StepPageProps) {
     } else {
       setPinFilePath("");
     }
-  }, [fdrSelector.sourceType, fdrSelector.selectedProjectUuid, fdrSelector.projects]);
+  }, [fdrSelector.sourceType, fdrSelector.selectedProjectUuid, fdrSelector.tasks]);
 
   // Persist inputs
   useEffect(() => {
@@ -302,20 +302,20 @@ function Step6({ onNavigate }: StepPageProps) {
     }
   }, []);
 
-  // Load existing Step 6 projects for duplicate name validation (frontend only)
+  // Load existing Step 6 tasks for duplicate name validation (frontend only)
   useEffect(() => {
-    const loadStep6Projects = async () => {
+    const loadStep6Tasks = async () => {
       try {
-        const allProjects = await window.db.getProjects();
-        const filtered = allProjects.filter(
+        const allTasks = await window.db.getProjects();
+        const filtered = allTasks.filter(
           (project) => String(project.step) === "6"
         );
-        setStep6Projects(filtered);
+        setStep6Tasks(filtered);
       } catch (error) {
-        console.error("Failed to load Step 6 projects for name validation:", error);
+        console.error("Failed to load Step 6 tasks for name validation:", error);
       }
     };
-    loadStep6Projects();
+    loadStep6Tasks();
   }, []);
 
   useEffect(() => {
@@ -328,7 +328,7 @@ function Step6({ onNavigate }: StepPageProps) {
   const normalizedProjectName = projectName.trim().toLowerCase();
   const isDuplicateProjectName =
     normalizedProjectName !== "" &&
-    step6Projects.some(
+    step6Tasks.some(
       (project) => project.name.trim().toLowerCase() === normalizedProjectName
     );
 
@@ -350,25 +350,25 @@ function Step6({ onNavigate }: StepPageProps) {
 
   const handleRun = async () => {
     if (!isFormValid()) return;
-    const latestStep6Projects = (await window.db.getProjects()).filter(
+    const latestStep6Tasks = (await window.db.getProjects()).filter(
       (project) => String(project.step) === "6"
     );
-    const isDuplicateAtRunTime = latestStep6Projects.some(
+    const isDuplicateAtRunTime = latestStep6Tasks.some(
       (project) =>
         project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
     );
     if (isDuplicateAtRunTime) {
-      setStep6Projects(latestStep6Projects);
+      setStep6Tasks(latestStep6Tasks);
       setMessage({
         type: "error",
-        text: "A Step 6 project with the same name already exists. Please choose a different project name.",
+        text: "A Step 6 task with the same name already exists. Please choose a different task name.",
       });
       return;
     }
     if (isDuplicateProjectName) {
       setMessage({
         type: "error",
-        text: "A Step 6 project with the same name already exists. Please choose a different project name.",
+        text: "A Step 6 task with the same name already exists. Please choose a different task name.",
       });
       return;
     }
@@ -433,7 +433,7 @@ function Step6({ onNavigate }: StepPageProps) {
               <p className="text-sm text-gray-500">Post Analysis</p>
             </div>
             <div className="border-t pt-6">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Step 6 Projects</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Step 6 Tasks</h3>
               <StepProjectList step={6} refreshTrigger={projectUuid} onNavigate={onNavigate} />
             </div>
           </div>
@@ -447,16 +447,16 @@ function Step6({ onNavigate }: StepPageProps) {
             <div className="space-y-6">
               <div>
                 <TextInput
-                  label="Project Name"
+                  label="Task Name"
                   value={projectName}
                   onChange={setProjectName}
-                  placeholder="Enter the project name"
+                  placeholder="Enter the task name"
                   required
-                  description="Enter the name of the project to start a new one"
+                  description="Enter the name of the task to start a new one"
                 />
                 {isDuplicateProjectName && (
                   <p className="mt-1 text-xs text-red-600">
-                    This project name already exists in Step 6. Please enter a different name.
+                    This task name already exists in Step 6. Please enter a different name.
                   </p>
                 )}
               </div>
@@ -477,7 +477,7 @@ function Step6({ onNavigate }: StepPageProps) {
                       onChange={() => fdrSelector.setSourceType("step")}
                       className="mr-2"
                     />
-                    <span className="text-sm text-gray-700">Step 5 Project</span>
+                    <span className="text-sm text-gray-700">Step 5 Task</span>
                   </label>
                   <label className="flex items-center cursor-pointer">
                     <input
@@ -499,8 +499,8 @@ function Step6({ onNavigate }: StepPageProps) {
                       onChange={(e) => fdrSelector.setSelectedProjectUuid(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     >
-                      <option value="">Select Step 5 Project</option>
-                      {fdrSelector.projects.map((p) => (
+                      <option value="">Select Step 5 Task</option>
+                      {fdrSelector.tasks.map((p) => (
                         <option key={p.uuid} value={p.uuid}>{p.name}</option>
                       ))}
                     </select>
@@ -510,7 +510,7 @@ function Step6({ onNavigate }: StepPageProps) {
                           {fdrSelector.foundFilePath}
                         </div>
                         <p className="mt-1 text-xs text-gray-500">
-                          Automatically selected the latest .csv from the Step 5 project output.
+                          Automatically selected the latest .csv from the Step 5 task output.
                         </p>
                       </div>
                     )}
@@ -603,7 +603,7 @@ function Step6({ onNavigate }: StepPageProps) {
         stepTitle="Post Analysis"
         description="Compare FDR-controlled results with database search results using Venn diagrams and feature distribution histograms."
         requiredInputs={[
-          "Project Name",
+          "Task Name",
           "FDR Result CSV (from Step 5)",
           "DB Search Result CSV",
         ]}

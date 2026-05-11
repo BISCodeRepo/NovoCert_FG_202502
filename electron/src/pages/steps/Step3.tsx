@@ -28,9 +28,9 @@ function Step3({ onNavigate }: StepPageProps) {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
-  const [step3Projects, setStep3Projects] = useState<Project[]>([]);
+  const [step3Tasks, setStep3Tasks] = useState<Project[]>([]);
 
-  // Check for running projects when page loads
+  // Check for running tasks when page loads
   useStepRunningProject({
     step: 3,
     setProjectUuid,
@@ -71,20 +71,20 @@ function Step3({ onNavigate }: StepPageProps) {
   }, [projectName, spectraPath, casanovoConfigPath, modelPath, outputPath]);
 
   useEffect(() => {
-    const loadStep3Projects = async () => {
+    const loadStep3Tasks = async () => {
       try {
-        const allProjects = await window.db.getProjects();
-        setStep3Projects(
-          allProjects.filter((project) => String(project.step) === "3")
+        const allTasks = await window.db.getProjects();
+        setStep3Tasks(
+          allTasks.filter((project) => String(project.step) === "3")
         );
       } catch (error) {
-        console.error("Failed to load Step 3 projects for name validation:", error);
+        console.error("Failed to load Step 3 tasks for name validation:", error);
       }
     };
-    loadStep3Projects();
+    loadStep3Tasks();
   }, []);
 
-  // Use Step1 project selector for MGF file
+  // Use Step1 task selector for MGF file
   const mgfSelector = useStepProjectSelector({
     step: 1,
     defaultSourceType: "step",
@@ -92,7 +92,7 @@ function Step3({ onNavigate }: StepPageProps) {
     onFileFound: (path) => setSpectraPath(path),
   });
 
-  // Use Step2 project selector for Config file
+  // Use Step2 task selector for Config file
   const configSelector = useStepProjectSelector({
     step: 2,
     defaultSourceType: "step",
@@ -123,7 +123,7 @@ function Step3({ onNavigate }: StepPageProps) {
   const normalizedProjectName = projectName.trim().toLowerCase();
   const isDuplicateProjectName =
     normalizedProjectName !== "" &&
-    step3Projects.some(
+    step3Tasks.some(
       (project) => project.name.trim().toLowerCase() === normalizedProjectName
     );
 
@@ -158,25 +158,25 @@ function Step3({ onNavigate }: StepPageProps) {
     if (!isFormValid()) {
       return;
     }
-    const latestStep3Projects = (await window.db.getProjects()).filter(
+    const latestStep3Tasks = (await window.db.getProjects()).filter(
       (project) => String(project.step) === "3"
     );
-    const isDuplicateAtRunTime = latestStep3Projects.some(
+    const isDuplicateAtRunTime = latestStep3Tasks.some(
       (project) =>
         project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
     );
     if (isDuplicateAtRunTime) {
-      setStep3Projects(latestStep3Projects);
+      setStep3Tasks(latestStep3Tasks);
       setMessage({
         type: "error",
-        text: "A Step 3 project with the same name already exists. Please choose a different project name.",
+        text: "A Step 3 task with the same name already exists. Please choose a different task name.",
       });
       return;
     }
     if (isDuplicateProjectName) {
       setMessage({
         type: "error",
-        text: "A Step 3 project with the same name already exists. Please choose a different project name.",
+        text: "A Step 3 task with the same name already exists. Please choose a different task name.",
       });
       return;
     }
@@ -252,7 +252,7 @@ function Step3({ onNavigate }: StepPageProps) {
 
           <div className="border-t pt-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Step 3 Projects
+              Step 3 Tasks
             </h3>
             <StepProjectList step={3} refreshTrigger={projectUuid} onNavigate={onNavigate} />
           </div>
@@ -270,16 +270,16 @@ function Step3({ onNavigate }: StepPageProps) {
           <div className="space-y-6">
             <div>
               <TextInput
-                label="Project Name"
+                label="Task Name"
                 value={projectName}
                 onChange={setProjectName}
-                placeholder="Enter the project name"
+                placeholder="Enter the task name"
                 required={true}
-                description="Enter the name of the project to start a new one"
+                description="Enter the name of the task to start a new one"
               />
               {isDuplicateProjectName && (
                 <p className="mt-1 text-xs text-red-600">
-                  This project name already exists in Step 3. Please enter a different name.
+                  This task name already exists in Step 3. Please enter a different name.
                 </p>
               )}
             </div>
@@ -299,7 +299,7 @@ function Step3({ onNavigate }: StepPageProps) {
                     onChange={() => mgfSelector.setSourceType("step")}
                     className="mr-2"
                   />
-                  <span className="text-sm text-gray-700">Step1 Project</span>
+                  <span className="text-sm text-gray-700">Step1 Task</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -318,7 +318,7 @@ function Step3({ onNavigate }: StepPageProps) {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Step1 Project
+                      Select Step1 Task
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <select
@@ -328,8 +328,8 @@ function Step3({ onNavigate }: StepPageProps) {
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     >
-                      <option value="">Select Step1 Project</option>
-                      {mgfSelector.projects.map((project) => (
+                      <option value="">Select Step1 Task</option>
+                      {mgfSelector.tasks.map((project) => (
                         <option key={project.uuid} value={project.uuid}>
                           {project.name}
                         </option>
@@ -349,7 +349,7 @@ function Step3({ onNavigate }: StepPageProps) {
                             {mgfSelector.foundFilePath}
                           </div>
                           <p className="mt-1 text-xs text-gray-500">
-                            The most recently created .mgf file in the output directory of the selected Step1 project has been automatically selected.
+                            The most recently created .mgf file in the output directory of the selected Step1 task has been automatically selected.
                           </p>
                         </>
                       ) : null}
@@ -389,7 +389,7 @@ function Step3({ onNavigate }: StepPageProps) {
                     onChange={() => configSelector.setSourceType("step")}
                     className="mr-2"
                   />
-                  <span className="text-sm text-gray-700">Step2 Project</span>
+                  <span className="text-sm text-gray-700">Step2 Task</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -408,7 +408,7 @@ function Step3({ onNavigate }: StepPageProps) {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Step2 Project
+                      Select Step2 Task
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <select
@@ -418,8 +418,8 @@ function Step3({ onNavigate }: StepPageProps) {
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     >
-                      <option value="">Select Step2 Project</option>
-                      {configSelector.projects.map((project) => (
+                      <option value="">Select Step2 Task</option>
+                      {configSelector.tasks.map((project) => (
                         <option key={project.uuid} value={project.uuid}>
                           {project.name}
                         </option>
@@ -439,7 +439,7 @@ function Step3({ onNavigate }: StepPageProps) {
                             {configSelector.foundFilePath}
                           </div>
                           <p className="mt-1 text-xs text-gray-500">
-                            The most recently created .yaml or .yml file in the output directory of the selected Step2 project has been automatically selected.
+                            The most recently created .yaml or .yml file in the output directory of the selected Step2 task has been automatically selected.
                           </p>
                         </>
                       ) : null}
@@ -492,7 +492,7 @@ function Step3({ onNavigate }: StepPageProps) {
             isRunning={isRunning || hasRunningProject}
             message={message}
           />
-          {/* Project Status Monitor */}
+          {/* Task Status Monitor */}
           <ProjectStatusMonitor 
             projectUuid={projectUuid}
             projectName={projectName}
@@ -509,7 +509,7 @@ function Step3({ onNavigate }: StepPageProps) {
         stepTitle="De novo Peptide Sequencing"
         description="In this step, Casanovo is used to perform de novo peptide sequencing."
         requiredInputs={[
-          "Project name",
+          "Task name",
           "Spectra MGF file path",
           "Casanovo configuration file path (Step2 output)",
           "Model file path (.ckpt)",

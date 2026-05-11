@@ -178,7 +178,7 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
       return;
     }
 
-    if (!confirm(`Are you sure you want to stop and clean up the container for project "${projectName}"? This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to stop and clean up the container for task "${projectName}"? This action cannot be undone.`)) {
       return;
     }
 
@@ -261,29 +261,29 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-800 mb-1">
                 {projectStatus === 'running' 
-                  ? 'Project Created Successfully' 
+                  ? 'Task Created Successfully' 
                   : projectStatus === 'success'
-                  ? 'Project Completed Successfully'
+                  ? 'Task Completed Successfully'
                   : projectStatus === 'failed'
-                  ? 'Project Failed'
-                  : 'Project Status'}
+                  ? 'Task Failed'
+                  : 'Task Status'}
               </p>
               <p className="text-sm text-gray-600 mb-2">
                 {projectStatus === 'running' ? (
                   <>
-                    Project <span className="font-medium text-gray-800">"{projectName}"</span> has been created and Step {stepNumber} is running.
+                    Task <span className="font-medium text-gray-800">"{projectName}"</span> has been created and Step {stepNumber} is running.
                   </>
                 ) : projectStatus === 'success' ? (
                   <>
-                    Project <span className="font-medium text-gray-800">"{projectName}"</span> has been completed successfully.
+                    Task <span className="font-medium text-gray-800">"{projectName}"</span> has been completed successfully.
                   </>
                 ) : projectStatus === 'failed' ? (
                   <>
-                    Project <span className="font-medium text-gray-800">"{projectName}"</span> has been stopped or failed.
+                    Task <span className="font-medium text-gray-800">"{projectName}"</span> has been stopped or failed.
                   </>
                 ) : (
                   <>
-                    Project <span className="font-medium text-gray-800">"{projectName}"</span> status: {projectStatus}
+                    Task <span className="font-medium text-gray-800">"{projectName}"</span> status: {projectStatus}
                   </>
                 )}
               </p>

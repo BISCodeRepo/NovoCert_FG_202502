@@ -28,9 +28,9 @@ function Step1({ onNavigate }: StepPageProps) {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
-  const [step1Projects, setStep1Projects] = useState<Project[]>([]);
+  const [step1Tasks, setStep1Tasks] = useState<Project[]>([]);
 
-  // Check for running projects when page loads
+  // Check for running tasks when page loads
   useStepRunningProject({
     step: 1,
     setProjectUuid,
@@ -73,17 +73,17 @@ function Step1({ onNavigate }: StepPageProps) {
   }, [projectName, inputPath, outputPath, memory, precursorTolerance, randomSeed]);
 
   useEffect(() => {
-    const loadStep1Projects = async () => {
+    const loadStep1Tasks = async () => {
       try {
-        const allProjects = await window.db.getProjects();
-        setStep1Projects(
-          allProjects.filter((project) => String(project.step) === "1")
+        const allTasks = await window.db.getProjects();
+        setStep1Tasks(
+          allTasks.filter((project) => String(project.step) === "1")
         );
       } catch (error) {
-        console.error("Failed to load Step 1 projects for name validation:", error);
+        console.error("Failed to load Step 1 tasks for name validation:", error);
       }
     };
-    loadStep1Projects();
+    loadStep1Tasks();
   }, []);
 
   // Input folder validation
@@ -165,7 +165,7 @@ function Step1({ onNavigate }: StepPageProps) {
   const normalizedProjectName = projectName.trim().toLowerCase();
   const isDuplicateProjectName =
     normalizedProjectName !== "" &&
-    step1Projects.some(
+    step1Tasks.some(
       (project) => project.name.trim().toLowerCase() === normalizedProjectName
     );
 
@@ -188,25 +188,25 @@ function Step1({ onNavigate }: StepPageProps) {
     if (!isFormValid()) {
       return;
     }
-    const latestStep1Projects = (await window.db.getProjects()).filter(
+    const latestStep1Tasks = (await window.db.getProjects()).filter(
       (project) => String(project.step) === "1"
     );
-    const isDuplicateAtRunTime = latestStep1Projects.some(
+    const isDuplicateAtRunTime = latestStep1Tasks.some(
       (project) =>
         project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
     );
     if (isDuplicateAtRunTime) {
-      setStep1Projects(latestStep1Projects);
+      setStep1Tasks(latestStep1Tasks);
       setMessage({
         type: "error",
-        text: "A Step 1 project with the same name already exists. Please choose a different project name.",
+        text: "A Step 1 task with the same name already exists. Please choose a different task name.",
       });
       return;
     }
     if (isDuplicateProjectName) {
       setMessage({
         type: "error",
-        text: "A Step 1 project with the same name already exists. Please choose a different project name.",
+        text: "A Step 1 task with the same name already exists. Please choose a different task name.",
       });
       return;
     }
@@ -281,7 +281,7 @@ function Step1({ onNavigate }: StepPageProps) {
 
           <div className="border-t pt-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Step 1 Projects
+              Step 1 Tasks
             </h3>
             <StepProjectList step={1} refreshTrigger={projectUuid} onNavigate={onNavigate} />
           </div>
@@ -299,16 +299,16 @@ function Step1({ onNavigate }: StepPageProps) {
           <div className="space-y-6">
             <div>
               <TextInput
-                label="Project Name"
+                label="Task Name"
                 value={projectName}
                 onChange={setProjectName}
-                placeholder="Enter the project name"
+                placeholder="Enter the task name"
                 required={true}
-                description="Enter the name of the project to start a new one"
+                description="Enter the name of the task to start a new one"
               />
               {isDuplicateProjectName && (
                 <p className="mt-1 text-xs text-red-600">
-                  This project name already exists in Step 1. Please enter a different name.
+                  This task name already exists in Step 1. Please enter a different name.
                 </p>
               )}
             </div>
@@ -473,7 +473,7 @@ function Step1({ onNavigate }: StepPageProps) {
             isRunning={isRunning || hasRunningProject}
             message={message}
           />
-          {/* Project Status Monitor */}
+          {/* Task Status Monitor */}
           <ProjectStatusMonitor 
             projectUuid={projectUuid}
             projectName={projectName}
@@ -490,7 +490,7 @@ function Step1({ onNavigate }: StepPageProps) {
         stepTitle="Decoy Spectra Generation"
         description="In this step, Decoy Spectra are generated from the input data."
         requiredInputs={[
-          "Project Name",
+          "Task Name",
           "Input Folder Path (bind mount to /app/input)",
           "Output Folder Path (bind mount to /app/output)",
           "Memory",

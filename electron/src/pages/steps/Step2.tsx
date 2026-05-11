@@ -19,9 +19,9 @@ function Step2({ onNavigate }: StepPageProps) {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
-  const [step2Projects, setStep2Projects] = useState<Project[]>([]);
+  const [step2Tasks, setStep2Tasks] = useState<Project[]>([]);
 
-  // Check for running projects when page loads
+  // Check for running tasks when page loads
   useStepRunningProject({
     step: 2,
     setProjectUuid,
@@ -56,23 +56,23 @@ function Step2({ onNavigate }: StepPageProps) {
   }, [projectName, outputPath]);
 
   useEffect(() => {
-    const loadStep2Projects = async () => {
+    const loadStep2Tasks = async () => {
       try {
-        const allProjects = await window.db.getProjects();
-        setStep2Projects(
-          allProjects.filter((project) => String(project.step) === "2")
+        const allTasks = await window.db.getProjects();
+        setStep2Tasks(
+          allTasks.filter((project) => String(project.step) === "2")
         );
       } catch (error) {
-        console.error("Failed to load Step 2 projects for name validation:", error);
+        console.error("Failed to load Step 2 tasks for name validation:", error);
       }
     };
-    loadStep2Projects();
+    loadStep2Tasks();
   }, []);
 
   const normalizedProjectName = projectName.trim().toLowerCase();
   const isDuplicateProjectName =
     normalizedProjectName !== "" &&
-    step2Projects.some(
+    step2Tasks.some(
       (project) => project.name.trim().toLowerCase() === normalizedProjectName
     );
 
@@ -86,25 +86,25 @@ function Step2({ onNavigate }: StepPageProps) {
     if (!isFormValid()) {
       return;
     }
-    const latestStep2Projects = (await window.db.getProjects()).filter(
+    const latestStep2Tasks = (await window.db.getProjects()).filter(
       (project) => String(project.step) === "2"
     );
-    const isDuplicateAtRunTime = latestStep2Projects.some(
+    const isDuplicateAtRunTime = latestStep2Tasks.some(
       (project) =>
         project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
     );
     if (isDuplicateAtRunTime) {
-      setStep2Projects(latestStep2Projects);
+      setStep2Tasks(latestStep2Tasks);
       setMessage({
         type: "error",
-        text: "A Step 2 project with the same name already exists. Please choose a different project name.",
+        text: "A Step 2 task with the same name already exists. Please choose a different task name.",
       });
       return;
     }
     if (isDuplicateProjectName) {
       setMessage({
         type: "error",
-        text: "A Step 2 project with the same name already exists. Please choose a different project name.",
+        text: "A Step 2 task with the same name already exists. Please choose a different task name.",
       });
       return;
     }
@@ -175,7 +175,7 @@ function Step2({ onNavigate }: StepPageProps) {
 
           <div className="border-t pt-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Step 2 Projects
+              Step 2 Tasks
             </h3>
             <StepProjectList step={2} refreshTrigger={projectUuid} onNavigate={onNavigate} />
           </div>
@@ -194,16 +194,16 @@ function Step2({ onNavigate }: StepPageProps) {
           <div className="space-y-6">
             <div>
               <TextInput
-                label="Project Name"
+                label="Task Name"
                 value={projectName}
                 onChange={setProjectName}
-                placeholder="Enter the project name"
+                placeholder="Enter the task name"
                 required={true}
-                description="Enter the name of the project to start a new one"
+                description="Enter the name of the task to start a new one"
               />
               {isDuplicateProjectName && (
                 <p className="mt-1 text-xs text-red-600">
-                  This project name already exists in Step 2. Please enter a different name.
+                  This task name already exists in Step 2. Please enter a different name.
                 </p>
               )}
             </div>
@@ -279,7 +279,7 @@ function Step2({ onNavigate }: StepPageProps) {
             buttonLabel="Download YAML File"
             message={message}
           />
-          {/* Project Status Monitor */}
+          {/* Task Status Monitor */}
           <ProjectStatusMonitor 
             projectUuid={projectUuid}
             projectName={projectName}
@@ -296,7 +296,7 @@ function Step2({ onNavigate }: StepPageProps) {
         stepTitle="Download Casanovo Config"
         description="In this step, the Casanovo configuration file is downloaded. Note: Step 3 requires a Casanovo model file (.ckpt) which can be downloaded from the GitHub releases page."
         requiredInputs={[
-          "Project name",
+          "Task name",
           "Output folder path (bind mount to /app/output/)",
         ]}
       />

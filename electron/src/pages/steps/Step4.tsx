@@ -29,9 +29,9 @@ function Step4({ onNavigate }: StepPageProps) {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
-  const [step4Projects, setStep4Projects] = useState<Project[]>([]);
+  const [step4Tasks, setStep4Tasks] = useState<Project[]>([]);
 
-  // Check for running projects when page loads
+  // Check for running tasks when page loads
   useStepRunningProject({
     step: 4,
     setProjectUuid,
@@ -74,20 +74,20 @@ function Step4({ onNavigate }: StepPageProps) {
   }, [projectName, targetMgfDir, targetResultPath, decoyMgfDir, decoyResultPath, outputPath]);
 
   useEffect(() => {
-    const loadStep4Projects = async () => {
+    const loadStep4Tasks = async () => {
       try {
-        const allProjects = await window.db.getProjects();
-        setStep4Projects(
-          allProjects.filter((project) => String(project.step) === "4")
+        const allTasks = await window.db.getProjects();
+        setStep4Tasks(
+          allTasks.filter((project) => String(project.step) === "4")
         );
       } catch (error) {
-        console.error("Failed to load Step 4 projects for name validation:", error);
+        console.error("Failed to load Step 4 tasks for name validation:", error);
       }
     };
-    loadStep4Projects();
+    loadStep4Tasks();
   }, []);
 
-  // Use Step1 project selector for Target MGF Directory
+  // Use Step1 task selector for Target MGF Directory
   const targetMgfSelector = useStepProjectSelector({
     step: 1,
     defaultSourceType: "step",
@@ -97,7 +97,7 @@ function Step4({ onNavigate }: StepPageProps) {
       setMessage({ type: "error", text: error }),
   });
 
-  // Use Step1 project selector for Decoy MGF Directory
+  // Use Step1 task selector for Decoy MGF Directory
   const decoyMgfSelector = useStepProjectSelector({
     step: 1,
     defaultSourceType: "step",
@@ -107,7 +107,7 @@ function Step4({ onNavigate }: StepPageProps) {
       setMessage({ type: "error", text: error }),
   });
 
-  // Use Step3 project selector for Target DNPS Result File
+  // Use Step3 task selector for Target DNPS Result File
   const targetResultSelector = useStepProjectSelector({
     step: 3,
     defaultSourceType: "step",
@@ -117,7 +117,7 @@ function Step4({ onNavigate }: StepPageProps) {
       setMessage({ type: "error", text: error }),
   });
 
-  // Use Step3 project selector for Decoy DNPS Result File
+  // Use Step3 task selector for Decoy DNPS Result File
   const decoyResultSelector = useStepProjectSelector({
     step: 3,
     defaultSourceType: "step",
@@ -163,7 +163,7 @@ function Step4({ onNavigate }: StepPageProps) {
   const normalizedProjectName = projectName.trim().toLowerCase();
   const isDuplicateProjectName =
     normalizedProjectName !== "" &&
-    step4Projects.some(
+    step4Tasks.some(
       (project) => project.name.trim().toLowerCase() === normalizedProjectName
     );
 
@@ -209,25 +209,25 @@ function Step4({ onNavigate }: StepPageProps) {
     if (!isFormValid()) {
       return;
     }
-    const latestStep4Projects = (await window.db.getProjects()).filter(
+    const latestStep4Tasks = (await window.db.getProjects()).filter(
       (project) => String(project.step) === "4"
     );
-    const isDuplicateAtRunTime = latestStep4Projects.some(
+    const isDuplicateAtRunTime = latestStep4Tasks.some(
       (project) =>
         project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
     );
     if (isDuplicateAtRunTime) {
-      setStep4Projects(latestStep4Projects);
+      setStep4Tasks(latestStep4Tasks);
       setMessage({
         type: "error",
-        text: "A Step 4 project with the same name already exists. Please choose a different project name.",
+        text: "A Step 4 task with the same name already exists. Please choose a different task name.",
       });
       return;
     }
     if (isDuplicateProjectName) {
       setMessage({
         type: "error",
-        text: "A Step 4 project with the same name already exists. Please choose a different project name.",
+        text: "A Step 4 task with the same name already exists. Please choose a different task name.",
       });
       return;
     }
@@ -301,7 +301,7 @@ function Step4({ onNavigate }: StepPageProps) {
 
           <div className="border-t pt-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Step 4 Projects
+              Step 4 Tasks
             </h3>
             <StepProjectList step={4} refreshTrigger={projectUuid} onNavigate={onNavigate} />
           </div>
@@ -317,16 +317,16 @@ function Step4({ onNavigate }: StepPageProps) {
           <div className="space-y-6">
             <div>
               <TextInput
-                label="Project Name"
+                label="Task Name"
                 value={projectName}
                 onChange={setProjectName}
-                placeholder="Enter the project name"
+                placeholder="Enter the task name"
                 required={true}
-                description="Enter the name of the project to start a new one"
+                description="Enter the name of the task to start a new one"
               />
               {isDuplicateProjectName && (
                 <p className="mt-1 text-xs text-red-600">
-                  This project name already exists in Step 4. Please enter a different name.
+                  This task name already exists in Step 4. Please enter a different name.
                 </p>
               )}
             </div>
@@ -347,7 +347,7 @@ function Step4({ onNavigate }: StepPageProps) {
                     onChange={() => targetMgfSelector.setSourceType("step")}
                     className="mr-2"
                   />
-                  <span className="text-sm text-gray-700">Step1 Project</span>
+                  <span className="text-sm text-gray-700">Step1 Task</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -366,7 +366,7 @@ function Step4({ onNavigate }: StepPageProps) {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Step1 Project
+                      Select Step1 Task
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <select
@@ -376,8 +376,8 @@ function Step4({ onNavigate }: StepPageProps) {
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     >
-                      <option value="">Select Step1 Project</option>
-                      {targetMgfSelector.projects.map((project) => (
+                      <option value="">Select Step1 Task</option>
+                      {targetMgfSelector.tasks.map((project) => (
                         <option key={project.uuid} value={project.uuid}>
                           {project.name}
                         </option>
@@ -425,7 +425,7 @@ function Step4({ onNavigate }: StepPageProps) {
                     onChange={() => targetResultSelector.setSourceType("step")}
                     className="mr-2"
                   />
-                  <span className="text-sm text-gray-700">Step3 Project</span>
+                  <span className="text-sm text-gray-700">Step3 Task</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -444,7 +444,7 @@ function Step4({ onNavigate }: StepPageProps) {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Step3 Project
+                      Select Step3 Task
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <select
@@ -454,8 +454,8 @@ function Step4({ onNavigate }: StepPageProps) {
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     >
-                      <option value="">Select Step3 Project</option>
-                      {targetResultSelector.projects.map((project) => (
+                      <option value="">Select Step3 Task</option>
+                      {targetResultSelector.tasks.map((project) => (
                         <option key={project.uuid} value={project.uuid}>
                           {project.name}
                         </option>
@@ -504,7 +504,7 @@ function Step4({ onNavigate }: StepPageProps) {
                     onChange={() => decoyMgfSelector.setSourceType("step")}
                     className="mr-2"
                   />
-                  <span className="text-sm text-gray-700">Step1 Project</span>
+                  <span className="text-sm text-gray-700">Step1 Task</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -523,7 +523,7 @@ function Step4({ onNavigate }: StepPageProps) {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Step1 Project
+                      Select Step1 Task
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <select
@@ -533,8 +533,8 @@ function Step4({ onNavigate }: StepPageProps) {
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     >
-                      <option value="">Select Step1 Project</option>
-                      {decoyMgfSelector.projects.map((project) => (
+                      <option value="">Select Step1 Task</option>
+                      {decoyMgfSelector.tasks.map((project) => (
                         <option key={project.uuid} value={project.uuid}>
                           {project.name}
                         </option>
@@ -582,7 +582,7 @@ function Step4({ onNavigate }: StepPageProps) {
                     onChange={() => decoyResultSelector.setSourceType("step")}
                     className="mr-2"
                   />
-                  <span className="text-sm text-gray-700">Step3 Project</span>
+                  <span className="text-sm text-gray-700">Step3 Task</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -601,7 +601,7 @@ function Step4({ onNavigate }: StepPageProps) {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Step3 Project
+                      Select Step3 Task
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <select
@@ -611,8 +611,8 @@ function Step4({ onNavigate }: StepPageProps) {
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     >
-                      <option value="">Select Step3 Project</option>
-                      {decoyResultSelector.projects.map((project) => (
+                      <option value="">Select Step3 Task</option>
+                      {decoyResultSelector.tasks.map((project) => (
                         <option key={project.uuid} value={project.uuid}>
                           {project.name}
                         </option>
@@ -663,7 +663,7 @@ function Step4({ onNavigate }: StepPageProps) {
             isRunning={isRunning || hasRunningProject}
             message={message}
           />
-          {/* Project Status Monitor */}
+          {/* Task Status Monitor */}
           <ProjectStatusMonitor 
             projectUuid={projectUuid}
             projectName={projectName}
@@ -680,7 +680,7 @@ function Step4({ onNavigate }: StepPageProps) {
         stepTitle="Percolator and FDR Control"
         description="In this step, Feature Calculation is performed (using p3 image)."
         requiredInputs={[
-          "Project name",
+          "Task name",
           "Target MGF directory",
           "Target DNPS result file (mztab)",
           "Decoy MGF directory",

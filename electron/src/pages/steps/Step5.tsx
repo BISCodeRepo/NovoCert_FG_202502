@@ -25,9 +25,9 @@ function Step5({ onNavigate }: StepPageProps) {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
-  const [step5Projects, setStep5Projects] = useState<Project[]>([]);
+  const [step5Tasks, setStep5Tasks] = useState<Project[]>([]);
 
-  // Check for running projects when page loads
+  // Check for running tasks when page loads
   useStepRunningProject({
     step: 5,
     setProjectUuid,
@@ -64,23 +64,23 @@ function Step5({ onNavigate }: StepPageProps) {
   }, [projectName, inputPath, outputPath]);
 
   useEffect(() => {
-    const loadStep5Projects = async () => {
+    const loadStep5Tasks = async () => {
       try {
-        const allProjects = await window.db.getProjects();
-        setStep5Projects(
-          allProjects.filter((project) => String(project.step) === "5")
+        const allTasks = await window.db.getProjects();
+        setStep5Tasks(
+          allTasks.filter((project) => String(project.step) === "5")
         );
       } catch (error) {
-        console.error("Failed to load Step 5 projects for name validation:", error);
+        console.error("Failed to load Step 5 tasks for name validation:", error);
       }
     };
-    loadStep5Projects();
+    loadStep5Tasks();
   }, []);
 
   const normalizedProjectName = projectName.trim().toLowerCase();
   const isDuplicateProjectName =
     normalizedProjectName !== "" &&
-    step5Projects.some(
+    step5Tasks.some(
       (project) => project.name.trim().toLowerCase() === normalizedProjectName
     );
 
@@ -99,25 +99,25 @@ function Step5({ onNavigate }: StepPageProps) {
     if (!isFormValid()) {
       return;
     }
-    const latestStep5Projects = (await window.db.getProjects()).filter(
+    const latestStep5Tasks = (await window.db.getProjects()).filter(
       (project) => String(project.step) === "5"
     );
-    const isDuplicateAtRunTime = latestStep5Projects.some(
+    const isDuplicateAtRunTime = latestStep5Tasks.some(
       (project) =>
         project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
     );
     if (isDuplicateAtRunTime) {
-      setStep5Projects(latestStep5Projects);
+      setStep5Tasks(latestStep5Tasks);
       setMessage({
         type: "error",
-        text: "A Step 5 project with the same name already exists. Please choose a different project name.",
+        text: "A Step 5 task with the same name already exists. Please choose a different task name.",
       });
       return;
     }
     if (isDuplicateProjectName) {
       setMessage({
         type: "error",
-        text: "A Step 5 project with the same name already exists. Please choose a different project name.",
+        text: "A Step 5 task with the same name already exists. Please choose a different task name.",
       });
       return;
     }
@@ -189,7 +189,7 @@ function Step5({ onNavigate }: StepPageProps) {
 
           <div className="border-t pt-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Step 5 Projects
+              Step 5 Tasks
             </h3>
             <StepProjectList step={5} refreshTrigger={projectUuid} onNavigate={onNavigate} />
           </div>
@@ -207,16 +207,16 @@ function Step5({ onNavigate }: StepPageProps) {
           <div className="space-y-6">
             <div>
               <TextInput
-                label="Project Name"
+                label="Task Name"
                 value={projectName}
                 onChange={setProjectName}
-                placeholder="Enter the project name"
+                placeholder="Enter the task name"
                 required={true}
-                description="Enter the name of the project to start a new one"
+                description="Enter the name of the task to start a new one"
               />
               {isDuplicateProjectName && (
                 <p className="mt-1 text-xs text-red-600">
-                  This project name already exists in Step 5. Please enter a different name.
+                  This task name already exists in Step 5. Please enter a different name.
                 </p>
               )}
             </div>
@@ -249,7 +249,7 @@ function Step5({ onNavigate }: StepPageProps) {
             isRunning={isRunning || hasRunningProject}
             message={message}
           />
-          {/* Project Status Monitor */}
+          {/* Task Status Monitor */}
           <ProjectStatusMonitor 
             projectUuid={projectUuid}
             projectName={projectName}
@@ -266,7 +266,7 @@ function Step5({ onNavigate }: StepPageProps) {
         stepTitle="Percolator and FDR Control"
         description="In this step, Percolator is used to control FDR(False Discovery Rate)"
         requiredInputs={[
-          "Project Name",
+          "Task Name",
           "PIN File Path",
           "Output Folder Path",
         ]}

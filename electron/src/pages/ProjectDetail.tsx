@@ -116,7 +116,7 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
         if (projectData) {
           setProject(projectData as Project);
         } else {
-          setError("Project not found.");
+          setError("Task not found.");
         }
       } catch (err) {
         setError("Error loading data.");
@@ -289,7 +289,7 @@ function ProjectDetail({ uuid, onNavigate }: ProjectDetailProps) {
         {/* Parameters Section */}
         <div className="px-6 pb-6">
           <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm mb-4">
-            <h3 className="text-sm font-semibold text-gray-700">Project Parameters</h3>
+            <h3 className="text-sm font-semibold text-gray-700">Task Parameters</h3>
           </div>
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
             <ParameterViewer data={project.parameters} />
