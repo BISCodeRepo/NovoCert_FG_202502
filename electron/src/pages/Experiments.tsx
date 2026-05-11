@@ -114,7 +114,7 @@ function Experiments({ onNavigate }: ExperimentsProps) {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {experimentSummaries.map(
-              ({ experiment, stepCounts, totalCount, runningCount, successCount, failedCount }) => (
+              ({ experiment, stepCounts, runningCount, successCount, failedCount }) => (
                 <tr
                   key={experiment.uuid}
                   className={experiment.uuid === currentExperiment?.uuid ? "bg-blue-50" : "hover:bg-gray-50"}
