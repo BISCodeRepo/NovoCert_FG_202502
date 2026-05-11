@@ -61,6 +61,7 @@ interface DockerAPI {
   checkRunning: () => Promise<DockerCheckResult>
   checkRequiredImages: () => Promise<DockerImagesResult>
   downloadMissingImages: () => Promise<DockerDownloadResult>
+  downloadAllImages: () => Promise<DockerDownloadResult>
   pullImage: (imageName: string) => Promise<{ success: boolean; output?: string; error?: string }>
   isContainerRunning: (containerId: string) => Promise<{ success: boolean; running: boolean; error?: string }>
   getContainerExitCode: (containerId: string) => Promise<{ success: boolean; exitCode: number | null; error?: string }>

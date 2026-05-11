@@ -9,6 +9,7 @@ import {
   checkDockerRunning, 
   checkRequiredImages,
   downloadMissingImages,
+  downloadAllImages,
   pullImage,
   executeStep1Workflow,
   executeStep2Workflow,
@@ -111,6 +112,12 @@ function setupIpcHandlers() {
 
   ipcMain.handle('docker:downloadMissingImages', async (event) => {
     return await downloadMissingImages((progress) => {
+      event.sender.send('docker:download-progress', progress)
+    })
+  })
+
+  ipcMain.handle('docker:downloadAllImages', async (event) => {
+    return await downloadAllImages((progress) => {
       event.sender.send('docker:download-progress', progress)
     })
   })

@@ -6,7 +6,8 @@ export {
   checkImageExists, 
   checkRequiredImages, 
   getRequiredImages,
-  downloadMissingImages 
+  downloadMissingImages,
+  downloadAllImages
 } from './images'
 export type { ImageStatus } from './images'
 export { getExtendedPath } from './utils'

@@ -127,7 +127,7 @@ function Prepare() {
   const handleDownloadImages = async () => {
     setImagesStatus({ status: "checking", downloadProgress: [] });
     try {
-      const result = await window.docker.downloadMissingImages();
+      const result = await window.docker.downloadAllImages();
       if (result.success) {
         const checkResult = await window.docker.checkRequiredImages();
         if (checkResult.success && checkResult.images) {

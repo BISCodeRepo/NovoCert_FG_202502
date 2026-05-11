@@ -48,6 +48,7 @@ contextBridge.exposeInMainWorld('docker', {
   checkRunning: () => ipcRenderer.invoke('docker:checkRunning'),
   checkRequiredImages: () => ipcRenderer.invoke('docker:checkRequiredImages'),
   downloadMissingImages: () => ipcRenderer.invoke('docker:downloadMissingImages'),
+  downloadAllImages: () => ipcRenderer.invoke('docker:downloadAllImages'),
   pullImage: (imageName: string) => ipcRenderer.invoke('docker:pullImage', imageName),
   isContainerRunning: (containerId: string) => ipcRenderer.invoke('docker:isContainerRunning', containerId),
   getContainerExitCode: (containerId: string) => ipcRenderer.invoke('docker:getContainerExitCode', containerId),
