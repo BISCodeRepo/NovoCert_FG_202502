@@ -47,13 +47,12 @@ export async function runStep3Container(params: Step3ContainerParams): Promise<D
     ? 'sequence data/mgf/spectra.mgf --model data/model.ckpt --config data/casanovo.yaml --output output/result.mztab'
     : 'sequence data/mgf/spectra.mgf --model data/model.ckpt --output output/result.mztab'
 
-  // Always ensure depthcharge-ms is up-to-date so the model ckpt can load
-  // (checkpoint references depthcharge.tokenizers which only exists in newer versions).
+  // Casanovo 4.x requires depthcharge-ms<0.3.0 (AnnotatedSpectrumIndex API).
+  // Versions 0.3+ renamed it to AnnotatedSpectrumDataset, breaking the import.
   const casanovoCommand = [
     'set -e; ',
-    'echo "[Step3] Ensuring depthcharge-ms is up-to-date..."; ',
-    '(pip install --no-cache-dir --upgrade depthcharge-ms ',
-    '|| pip install --no-cache-dir --upgrade depthcharge) ',
+    'echo "[Step3] Pinning depthcharge-ms to 0.2.3 for Casanovo 4.x compatibility..."; ',
+    'pip install --no-cache-dir "depthcharge-ms==0.2.3" ',
     `&& casanovo ${casanovoArgs}`,
   ].join('')
 
@@ -74,7 +73,7 @@ export async function runStep3Container(params: Step3ContainerParams): Promise<D
     ],
     environment: { PROJECT_NAME: projectName },
     platform: step3Image.platform,
-    autoRemove: true,
+    autoRemove: false,
     // Override CMD to bypass CRLF-broken run.sh inside the image
     command: [
       'bash', '-c',
@@ -87,4 +86,3 @@ export async function runStep3Container(params: Step3ContainerParams): Promise<D
     }
   })
 }
-
