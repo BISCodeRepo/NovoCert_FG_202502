@@ -47,7 +47,7 @@ export const REQUIRED_IMAGES: DockerImageConfig[] = [
   },
   {
     name: 'NovoCert P3 - Feature Calculation',
-    image: 'huswim/novocert-p3:fix',
+    image: 'huswim/novocert-p3:latest',
     description: 'Feature Calculation',
     platform: getNativePlatform(),
     step: 'step4'
