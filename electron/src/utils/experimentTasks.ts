@@ -60,6 +60,27 @@ export function latestTaskForStep(tasks: Project[], step: number, experimentUuid
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0] || null;
 }
 
+/**
+ * Open experiment at the earliest step that does not yet have a successful run.
+ * Step 2 is optional and does not block resume. Step 3 requires both target and decoy successes.
+ */
+export function getResumeStepPage(experimentTasks: Project[]): string {
+  const hasSuccess = (step: number, branch?: TaskBranch) => {
+    let scoped = experimentTasks.filter((t) => String(t.step) === String(step));
+    if (branch !== undefined) {
+      scoped = filterTasksByBranch(scoped, branch);
+    }
+    return scoped.some((t) => t.status === "success");
+  };
+
+  if (!hasSuccess(1)) return "step1";
+  if (!hasSuccess(3, "target") || !hasSuccess(3, "decoy")) return "step3";
+  if (!hasSuccess(4)) return "step4";
+  if (!hasSuccess(5)) return "step5";
+  if (!hasSuccess(6)) return "step6";
+  return "step6";
+}
+
 export function getTaskRootOutputPath(task: Project | null) {
   return typeof task?.parameters?.outputPath === "string" ? task.parameters.outputPath : "";
 }

@@ -12,23 +12,18 @@ interface SidebarProps {
 
 const menuItems: MenuItem[] = [
   {
-    id: "dashboard",
-    label: "Dashboard",
-    icon: "",
-  },
-  {
     id: "prepare",
     label: "Prepare",
     icon: "",
   },
   {
     id: "experiments",
-    label: "Experiments",
+    label: "Dashboard",
     icon: "",
   },
   {
     id: "pipeline",
-    label: "Pipeline",
+    label: "Experiment",
     icon: "",
     subItems: [
       { id: "step1", label: "1. Decoy Spectra Generation" },
@@ -64,7 +59,12 @@ function Sidebar({ currentPage, onNavigate }: SidebarProps) {
               <button
                 onClick={() => handleMenuClick(item.id)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
-                  currentPage === item.id || (item.id === "pipeline" && (currentPage.startsWith("step") || currentPage === "experiment"))
+                  currentPage === item.id ||
+                  (item.id === "pipeline" &&
+                    (currentPage.startsWith("step") ||
+                      currentPage === "experiment" ||
+                      currentPage === "pipeline")) ||
+                  (item.id === "experiments" && currentPage === "experiment-detail")
                     ? "bg-blue-600 text-white"
                     : "text-gray-300 hover:bg-gray-800"
                 }`}

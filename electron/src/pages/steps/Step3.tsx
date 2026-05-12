@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   PathInput,
   TextInput,
@@ -15,6 +15,54 @@ import { useExperiment } from "../../contexts/ExperimentContext";
 import { filterTasksByExperiment, getNextTaskName, getTaskRootOutputPath, latestTaskForStep, TaskBranch } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
 import type { Project } from "../../types/project";
+
+/** Resolve absolute MGF path for Step 3 from the selected Step 1 task. Target uses Step 1 `inputPath` (folder or .mgf file); decoy uses Step 1 output folder. */
+async function resolveStep3SpectraPathFromStep1Task(
+  task: Project | undefined,
+  branch: TaskBranch
+): Promise<{ path: string | null; error: string | null }> {
+  if (!task) {
+    return { path: null, error: "No Step 1 task selected." };
+  }
+
+  if (branch === "target") {
+    const inputPath = String(
+      task.parameters?.inputPath ??
+        (task.parameters?.step1 as { inputPath?: string } | undefined)?.inputPath ??
+        ""
+    ).trim();
+    if (!inputPath) {
+      return { path: null, error: "Step 1 task has no input path (parameters.inputPath)." };
+    }
+    if (inputPath.toLowerCase().endsWith(".mgf")) {
+      return { path: inputPath, error: null };
+    }
+    const result = await window.fs.findLatestFile(inputPath, "mgf");
+    if (result.success && result.path) {
+      return { path: result.path, error: null };
+    }
+    return {
+      path: null,
+      error:
+        result.error ||
+        `Cannot find an MGF file under the Step 1 input path: ${inputPath}`,
+    };
+  }
+
+  const step1Params = task.parameters?.step1 as { outputPath?: string } | undefined;
+  const out = String(step1Params?.outputPath ?? "").trim();
+  if (!out) {
+    return { path: null, error: "Step 1 task has no output path (step1.outputPath)." };
+  }
+  const result = await window.fs.findLatestFile(out, "mgf");
+  if (result.success && result.path) {
+    return { path: result.path, error: null };
+  }
+  return {
+    path: null,
+    error: result.error || `Cannot find an MGF file in Step 1 output: ${out}`,
+  };
+}
 
 function Step3(_: StepPageProps) {
   const { currentExperiment } = useExperiment();
@@ -88,55 +136,88 @@ function Step3(_: StepPageProps) {
     loadStep3Tasks();
   }, [currentExperiment?.uuid]);
 
-  // Use Step1 task selector for MGF file
-  const mgfSelector = useStepProjectSelector({
-    step: 1,
-    defaultSourceType: "step",
-    extensions: ["mgf"],
-    branch,
-    onFileFound: (path) => setSpectraPath(path),
-  });
+  // MGF source state (replaces mgfSelector hook)
+  const [mgfSourceType, setMgfSourceType] = useState<"step" | "custom">("step");
+  const [step1Tasks, setStep1Tasks] = useState<Project[]>([]);
+  const [selectedStep1TaskUuid, setSelectedStep1TaskUuid] = useState("");
+  const [mgfFoundPath, setMgfFoundPath] = useState("");
+  const [mgfError, setMgfError] = useState<string | null>(null);
 
-  // Use Step2 task selector for Config file
+  // Use Step2 task selector for Config file (no branch filter)
   const configSelector = useStepProjectSelector({
     step: 2,
     defaultSourceType: "step",
     extensions: ["yaml", "yml"],
-    branch,
     onFileFound: (path) => setCasanovoConfigPath(path),
   });
 
+  // Load Step 1 tasks (no branch filter – step 1 runs only once)
+  const loadStep1Tasks = useCallback(async () => {
+    const allTasks = await window.db.getProjects();
+    return filterTasksByExperiment(allTasks, currentExperiment?.uuid)
+      .filter((t) => String(t.step) === "1");
+  }, [currentExperiment?.uuid]);
+
   useEffect(() => {
-    const applyPreviousStepDefaults = async () => {
-      const allTasks = await window.db.getProjects();
-      const step1Task = latestTaskForStep(allTasks, 1, currentExperiment?.uuid, branch);
-      const previousTask = latestTaskForStep(allTasks, 2, currentExperiment?.uuid, branch);
+    loadStep1Tasks().then(setStep1Tasks);
+  }, [loadStep1Tasks]);
 
-      mgfSelector.setSelectedProjectUuid(step1Task?.uuid || "");
-      configSelector.setSelectedProjectUuid(previousTask?.uuid || "");
-      setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 3, branch));
+  const [step1InputPathPreview, setStep1InputPathPreview] = useState("");
 
-      if (!previousTask) {
-        setOutputPath("");
+  // Find MGF file from Step 1: target → inputPath (folder or .mgf file); decoy → step1 output folder
+  useEffect(() => {
+    const findMgf = async () => {
+      if (mgfSourceType !== "step" || !selectedStep1TaskUuid) {
+        setMgfFoundPath("");
+        setSpectraPath("");
+        setMgfError(null);
+        setStep1InputPathPreview("");
+        return;
+      }
+      const task = step1Tasks.find((t) => t.uuid === selectedStep1TaskUuid);
+      if (!task) {
+        setMgfFoundPath("");
+        setSpectraPath("");
+        setStep1InputPathPreview("");
         return;
       }
 
-      setOutputPath(getTaskRootOutputPath(previousTask));
+      if (branch === "target") {
+        const raw = String(
+          task.parameters?.inputPath ??
+            (task.parameters?.step1 as { inputPath?: string } | undefined)?.inputPath ??
+            ""
+        ).trim();
+        setStep1InputPathPreview(raw);
+      } else {
+        setStep1InputPathPreview("");
+      }
+
+      const resolved = await resolveStep3SpectraPathFromStep1Task(task, branch);
+      if (resolved.path) {
+        setMgfFoundPath(resolved.path);
+        setSpectraPath(resolved.path);
+        setMgfError(null);
+      } else {
+        setMgfFoundPath("");
+        setSpectraPath("");
+        setMgfError(resolved.error || "Could not resolve MGF path.");
+      }
     };
 
-    applyPreviousStepDefaults();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentExperiment?.uuid, currentExperiment?.name, branch]);
+    findMgf();
+  }, [selectedStep1TaskUuid, branch, step1Tasks, mgfSourceType]);
 
-  // Update spectraPath when selector finds file or switches to custom
+  // Clear spectraPath when switching to custom MGF source
   useEffect(() => {
-    if (mgfSelector.sourceType === "custom") {
+    if (mgfSourceType === "custom") {
+      setMgfFoundPath("");
+      setSelectedStep1TaskUuid("");
+      setMgfError(null);
       setSpectraPath("");
-    } else if (mgfSelector.foundFilePath) {
-      setSpectraPath(mgfSelector.foundFilePath);
+      setStep1InputPathPreview("");
     }
-    // Trigger validation when path changes
-  }, [mgfSelector.sourceType, mgfSelector.foundFilePath, mgfSelector.error]);
+  }, [mgfSourceType]);
 
   // Update casanovoConfigPath when selector finds file or switches to custom
   useEffect(() => {
@@ -145,8 +226,32 @@ function Step3(_: StepPageProps) {
     } else if (configSelector.foundFilePath) {
       setCasanovoConfigPath(configSelector.foundFilePath);
     }
-    // Trigger validation when path changes
-  }, [configSelector.sourceType, configSelector.foundFilePath, configSelector.error]);
+  }, [configSelector.sourceType, configSelector.foundFilePath]);
+
+  useEffect(() => {
+    const applyPreviousStepDefaults = async () => {
+      const allTasks = await window.db.getProjects();
+      const tasks1 = await loadStep1Tasks();
+      setStep1Tasks(tasks1);
+
+      const step1Task = latestTaskForStep(allTasks, 1, currentExperiment?.uuid);
+      const step2Task = latestTaskForStep(allTasks, 2, currentExperiment?.uuid);
+
+      setSelectedStep1TaskUuid(step1Task?.uuid || "");
+      configSelector.setSelectedProjectUuid(step2Task?.uuid || "");
+      setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 3, branch));
+
+      if (!step2Task) {
+        setOutputPath("");
+        return;
+      }
+
+      setOutputPath(getTaskRootOutputPath(step2Task));
+    };
+
+    applyPreviousStepDefaults();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentExperiment?.uuid, currentExperiment?.name, branch]);
 
   const normalizedProjectName = projectName.trim().toLowerCase();
   const isDuplicateProjectName =
@@ -158,10 +263,8 @@ function Step3(_: StepPageProps) {
   // Check if all required parameters are entered
   const isFormValid = () => {
     const spectraPathValid =
-      mgfSelector.sourceType === "step"
-        ? mgfSelector.selectedProjectUuid !== "" &&
-          mgfSelector.foundFilePath !== "" &&
-          spectraPath.trim() !== ""
+      mgfSourceType === "step"
+        ? selectedStep1TaskUuid !== "" && mgfFoundPath !== "" && spectraPath.trim() !== ""
         : spectraPath.trim() !== "";
 
     const configPathValid =
@@ -213,8 +316,21 @@ function Step3(_: StepPageProps) {
     setMessage(null);
 
     try {
-      // If the Step1 task is selected, use the actual spectraPath which is already selected
-      const finalSpectraPath = spectraPath;
+      let finalSpectraPath = spectraPath.trim();
+      if (mgfSourceType === "step") {
+        const all = await window.db.getProjects();
+        const step1Task = all.find((p) => p.uuid === selectedStep1TaskUuid);
+        const resolved = await resolveStep3SpectraPathFromStep1Task(step1Task, branch);
+        if (!resolved.path) {
+          setMessage({
+            type: "error",
+            text: resolved.error || "Could not resolve MGF path from Step 1.",
+          });
+          setIsRunning(false);
+          return;
+        }
+        finalSpectraPath = resolved.path;
+      }
 
       const result = await window.step.runStep3({
         experimentUuid: currentExperiment?.uuid,
@@ -342,8 +458,8 @@ function Step3(_: StepPageProps) {
                     type="radio"
                     name="mgfSource"
                     value="step"
-                    checked={mgfSelector.sourceType === "step"}
-                    onChange={() => mgfSelector.setSourceType("step")}
+                    checked={mgfSourceType === "step"}
+                    onChange={() => setMgfSourceType("step")}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">Step1 Task</span>
@@ -353,15 +469,15 @@ function Step3(_: StepPageProps) {
                     type="radio"
                     name="mgfSource"
                     value="custom"
-                    checked={mgfSelector.sourceType === "custom"}
-                    onChange={() => mgfSelector.setSourceType("custom")}
+                    checked={mgfSourceType === "custom"}
+                    onChange={() => setMgfSourceType("custom")}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">Custom Path</span>
                 </label>
               </div>
 
-              {mgfSelector.sourceType === "step" ? (
+              {mgfSourceType === "step" ? (
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -369,14 +485,12 @@ function Step3(_: StepPageProps) {
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <select
-                      value={mgfSelector.selectedProjectUuid}
-                      onChange={(e) => {
-                        mgfSelector.setSelectedProjectUuid(e.target.value);
-                      }}
+                      value={selectedStep1TaskUuid}
+                      onChange={(e) => setSelectedStep1TaskUuid(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     >
                       <option value="">Select Step1 Task</option>
-                      {mgfSelector.tasks.map((project) => (
+                      {step1Tasks.map((project) => (
                         <option key={project.uuid} value={project.uuid}>
                           {project.name}
                         </option>
@@ -384,26 +498,32 @@ function Step3(_: StepPageProps) {
                     </select>
                   </div>
 
-                  {mgfSelector.selectedProjectUuid && (
+                  {selectedStep1TaskUuid && (
                     <div>
-                      {mgfSelector.foundFilePath ? (
+                      {mgfFoundPath ? (
                         <>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             MGF File Path
                             <span className="text-red-500 ml-1">*</span>
                           </label>
                           <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
-                            {mgfSelector.foundFilePath}
+                            {mgfFoundPath}
                           </div>
                           <p className="mt-1 text-xs text-gray-500">
-                            The most recently created .mgf file in the output directory of the selected Step1 task has been automatically selected.
+                            {branch === "target"
+                              ? "MGF file resolved from Step 1 input path (parameters.inputPath): a folder is scanned for .mgf files; a path ending in .mgf is used as-is."
+                              : "The MGF file from Step 1 output folder (generated decoy spectra)."}
                           </p>
+                          {branch === "target" && step1InputPathPreview ? (
+                            <p className="mt-2 text-xs text-gray-600">
+                              <span className="font-medium text-gray-700">Step 1 input path:</span>{" "}
+                              <span className="font-mono break-all">{step1InputPathPreview}</span>
+                            </p>
+                          ) : null}
                         </>
                       ) : null}
-                      {mgfSelector.error && (
-                        <p className="mt-2 text-sm text-red-600">
-                          {mgfSelector.error}
-                        </p>
+                      {mgfError && (
+                        <p className="mt-2 text-sm text-red-600">{mgfError}</p>
                       )}
                     </div>
                   )}

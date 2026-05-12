@@ -11,13 +11,12 @@ import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
 import { useExperiment } from "../../contexts/ExperimentContext";
-import { filterTasksByExperiment, getNextTaskName, TaskBranch } from "../../utils/experimentTasks";
+import { filterTasksByExperiment, getNextTaskName } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
 import type { Project } from "../../types/project";
 
 function Step1(_: StepPageProps) {
   const { currentExperiment } = useExperiment();
-  const [branch, setBranch] = useState<TaskBranch>("target");
   const [projectName, setProjectName] = useState("");
   const [inputPath, setInputPath] = useState("");
   const [outputPath, setOutputPath] = useState("");
@@ -66,7 +65,6 @@ function Step1(_: StepPageProps) {
   useEffect(() => {
     const inputs = {
       projectName,
-      branch,
       inputPath,
       outputPath,
       memory,
@@ -74,15 +72,15 @@ function Step1(_: StepPageProps) {
       randomSeed,
     };
     localStorage.setItem('step1_inputs', JSON.stringify(inputs));
-  }, [projectName, branch, inputPath, outputPath, memory, precursorTolerance, randomSeed]);
+  }, [projectName, inputPath, outputPath, memory, precursorTolerance, randomSeed]);
 
   useEffect(() => {
     const applyTaskName = async () => {
       const allTasks = await window.db.getProjects();
-      setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 1, branch));
+      setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 1));
     };
     applyTaskName();
-  }, [currentExperiment?.uuid, currentExperiment?.name, branch]);
+  }, [currentExperiment?.uuid, currentExperiment?.name]);
 
   useEffect(() => {
     const loadStep1Tasks = async () => {
@@ -229,7 +227,6 @@ function Step1(_: StepPageProps) {
     try {
       const result = await window.step.runStep1({
         experimentUuid: currentExperiment?.uuid,
-        branch,
         projectName,
         inputPath,
         outputPath,
@@ -307,27 +304,6 @@ function Step1(_: StepPageProps) {
 
           <div className="space-y-6">
             <div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Branch <span className="text-red-500 ml-1">*</span>
-                </label>
-                <div className="flex gap-3">
-                  {(["target", "decoy"] as TaskBranch[]).map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => setBranch(option)}
-                      className={`px-4 py-2 rounded-lg border text-sm font-medium capitalize ${
-                        branch === option
-                          ? "border-blue-500 bg-blue-50 text-blue-700"
-                          : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </div>
               <TextInput
                 label="Task Name"
                 value={projectName}
@@ -335,7 +311,7 @@ function Step1(_: StepPageProps) {
                 placeholder="Enter the task name"
                 required={true}
                 readOnly
-                description="Generated from the experiment, branch, and step."
+                description="Generated from the experiment and step."
               />
               {isDuplicateProjectName && (
                 <p className="mt-1 text-xs text-red-600">

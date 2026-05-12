@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Layout } from "./components/layout";
 import { ExperimentProvider } from "./contexts/ExperimentContext";
 import {
-  Dashboard,
   Prepare,
   Experiments,
+  ExperimentDetail,
   ExperimentSetup,
   Step1,
   Step2,
@@ -16,27 +16,41 @@ import {
 } from "./pages";
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<string>("dashboard");
+  const [currentPage, setCurrentPage] = useState<string>("experiments");
   const [currentProjectUuid, setCurrentProjectUuid] = useState<string | null>(
     null
   );
+  const [currentExperimentDetailUuid, setCurrentExperimentDetailUuid] =
+    useState<string | null>(null);
 
   const handleNavigate = (page: string, uuid: string) => {
     setCurrentPage(page);
     if (page === "project-detail") {
       setCurrentProjectUuid(uuid);
+    } else if (page === "experiment-detail") {
+      setCurrentExperimentDetailUuid(uuid);
+      setCurrentProjectUuid(null);
     } else {
       setCurrentProjectUuid(null);
+      setCurrentExperimentDetailUuid(null);
     }
   };
 
   const renderPage = () => {
     switch (currentPage) {
-      case "dashboard":
-        return <Dashboard onNavigate={handleNavigate} />;
       case "prepare":
         return <Prepare />;
       case "experiments":
+        return <Experiments onNavigate={handleNavigate} />;
+      case "experiment-detail":
+        if (currentExperimentDetailUuid) {
+          return (
+            <ExperimentDetail
+              uuid={currentExperimentDetailUuid}
+              onNavigate={handleNavigate}
+            />
+          );
+        }
         return <Experiments onNavigate={handleNavigate} />;
       case "experiment":
       case "pipeline":
@@ -62,9 +76,9 @@ function App() {
             />
           );
         }
-        return <Dashboard onNavigate={handleNavigate} />;
+        return <Experiments onNavigate={handleNavigate} />;
       default:
-        return <Dashboard onNavigate={handleNavigate} />;
+        return <Experiments onNavigate={handleNavigate} />;
     }
   };
 

@@ -13,19 +13,26 @@ interface DagNode {
   label: string;
   step: number;
   branch?: TaskBranch;
+  /** Shown in UI; step 2 is a single optional download */
+  optional?: boolean;
 }
 
+/** Step 1 once, Step 2 optional once, Step 3 twice (target + decoy), then merge. */
 const dagNodes: DagNode[] = [
-  { id: "target-1", label: "Target Step 1", step: 1, branch: "target" },
-  { id: "target-2", label: "Target Step 2", step: 2, branch: "target" },
-  { id: "target-3", label: "Target Step 3", step: 3, branch: "target" },
-  { id: "decoy-1", label: "Decoy Step 1", step: 1, branch: "decoy" },
-  { id: "decoy-2", label: "Decoy Step 2", step: 2, branch: "decoy" },
-  { id: "decoy-3", label: "Decoy Step 3", step: 3, branch: "decoy" },
+  { id: "step-1", label: "Step 1 · Decoy spectra", step: 1 },
+  { id: "step-2", label: "Step 2 · Casanovo config", step: 2, optional: true },
+  { id: "target-3", label: "Step 3 · Target (MGF)", step: 3, branch: "target" },
+  { id: "decoy-3", label: "Step 3 · Decoy (MGF)", step: 3, branch: "decoy" },
   { id: "step-4", label: "Step 4", step: 4 },
   { id: "step-5", label: "Step 5", step: 5 },
   { id: "step-6", label: "Step 6", step: 6 },
 ];
+
+const DAG_SECTIONS = [
+  { title: "Setup", start: 0, end: 2 },
+  { title: "De novo (run twice)", start: 2, end: 4 },
+  { title: "Merge and analysis", start: 4, end: dagNodes.length },
+] as const;
 
 function statusClass(status?: string) {
   switch (status) {
@@ -125,56 +132,24 @@ function ExperimentDagStatus({ currentStep, refreshTrigger }: ExperimentDagStatu
       </div>
 
       <div className="space-y-4">
-        <div>
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-            Target branch
+        {DAG_SECTIONS.map(({ title, start, end }) => (
+          <div key={title}>
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              {title}
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {nodeData.slice(start, end).map(({ node, task, count }) => (
+                <DagNodeCard
+                  key={node.id}
+                  node={node}
+                  task={task}
+                  count={count}
+                  active={currentStep === node.step}
+                />
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-1 gap-2">
-            {nodeData.slice(0, 3).map(({ node, task, count }) => (
-              <DagNodeCard
-                key={node.id}
-                node={node}
-                task={task}
-                count={count}
-                active={currentStep === node.step}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-            Decoy branch
-          </div>
-          <div className="grid grid-cols-1 gap-2">
-            {nodeData.slice(3, 6).map(({ node, task, count }) => (
-              <DagNodeCard
-                key={node.id}
-                node={node}
-                task={task}
-                count={count}
-                active={currentStep === node.step}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-            Merge and analysis
-          </div>
-          <div className="grid grid-cols-1 gap-2">
-            {nodeData.slice(6).map(({ node, task, count }) => (
-              <DagNodeCard
-                key={node.id}
-                node={node}
-                task={task}
-                count={count}
-                active={currentStep === node.step}
-              />
-            ))}
-          </div>
-        </div>
+        ))}
       </div>
 
       <div className="mt-4 border-t border-gray-100 pt-4">
@@ -221,7 +196,12 @@ function DagNodeCard({
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold">{node.label}</span>
+        <span className="text-xs font-semibold">
+          {node.label}
+          {node.optional ? (
+            <span className="ml-1.5 font-normal normal-case text-[10px] text-gray-500">(optional)</span>
+          ) : null}
+        </span>
         <span className="text-[10px] font-semibold uppercase">
           {status || "not run"}
         </span>

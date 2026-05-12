@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import PipelineFlow from "../components/PipelineFlow";
 import { useExperiment } from "../contexts/ExperimentContext";
 
 interface ExperimentSetupProps {
@@ -64,14 +63,10 @@ function ExperimentSetup({ onNavigate }: ExperimentSetupProps) {
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-3">Pipeline</h1>
+        <h1 className="text-4xl font-bold text-gray-900 mb-3">Experiment</h1>
         <p className="text-sm text-gray-500">
           Start with a new experiment or continue an existing one. Every task in the steps will be tied to the selected experiment.
         </p>
-      </div>
-
-      <div className="mb-6">
-        <PipelineFlow />
       </div>
 
       <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
