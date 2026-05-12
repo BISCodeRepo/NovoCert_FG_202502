@@ -23,7 +23,7 @@ export async function runStep3Container(params: Step3ContainerParams): Promise<D
 
   // Run a Docker container (bind mount)
   // Based on docker-compose.yml:
-  // - spectraPath -> /app/data/mgf/spectra.mgf
+  // - spectraPath -> /app/data/mgf/target.mgf
   // - casanovoConfigPath -> /app/data/casanovo.yaml
   // - modelPath -> /app/data/model.ckpt
   // - outputPath -> /app/output/
@@ -44,8 +44,8 @@ export async function runStep3Container(params: Step3ContainerParams): Promise<D
   })()
 
   const casanovoArgs = canUseConfig
-    ? 'sequence data/mgf/spectra.mgf --model data/model.ckpt --config data/casanovo.yaml --output output/result.mztab'
-    : 'sequence data/mgf/spectra.mgf --model data/model.ckpt --output output/result.mztab'
+    ? 'sequence data/mgf/target.mgf --model data/model.ckpt --config data/casanovo.yaml --output output/result.mztab'
+    : 'sequence data/mgf/target.mgf --model data/model.ckpt --output output/result.mztab'
 
   // Casanovo 4.x requires depthcharge-ms<0.3.0 (AnnotatedSpectrumIndex API).
   // Versions 0.3+ renamed it to AnnotatedSpectrumDataset, breaking the import.
@@ -66,7 +66,7 @@ export async function runStep3Container(params: Step3ContainerParams): Promise<D
     image: step3Image.image,
     containerName,
     volumes: [
-      `${spectraPath}:/app/data/mgf/spectra.mgf`,
+      `${spectraPath}:/app/data/mgf/target.mgf`,
       `${casanovoConfigPath}:/app/data/casanovo.yaml`,
       `${modelPath}:/app/data/model.ckpt`,
       `${outputPath}:/app/output/`

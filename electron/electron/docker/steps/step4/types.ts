@@ -1,11 +1,11 @@
 export interface Step4Params {
   experimentUuid?: string
   projectName: string
-  targetMgfDir: string        // Target MGF directory path
-  targetResultPath: string    // Target DNPS result file path (mztab)
-  decoyMgfDir: string         // Decoy MGF directory path
-  decoyResultPath: string     // Decoy DNPS result file path (mztab)
-  outputPath: string          // Output directory path
+  targetSpectraMgfPath: string // Target Spectra MGF file path
+  targetDnpsPath: string       // Target DNPS result file path (mztab)
+  decoySpectraMgfPath: string  // Decoy Spectra MGF file path
+  decoyDnpsPath: string        // Decoy DNPS result file path (mztab)
+  outputPath: string           // Output directory path
 }
 
 export interface Step4ContainerParams extends Step4Params {
@@ -33,4 +33,3 @@ export interface Step4Result {
   containerId?: string
   error?: string
 }
-

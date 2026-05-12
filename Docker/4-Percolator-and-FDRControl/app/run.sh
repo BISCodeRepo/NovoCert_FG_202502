@@ -3,8 +3,7 @@ percolator t_d.pin \
     -m output/out.target \
     -M output/out.decoy \
     -w output/out.weight \
-    -Y -U -V SA \
-    --trainFDR 0.001
+    -Y -U
 
 python3 fdr_control.py \
     --fdr_type ${FDR_TYPE} \

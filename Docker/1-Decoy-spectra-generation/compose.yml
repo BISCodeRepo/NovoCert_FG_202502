@@ -11,8 +11,8 @@ services:
       - RANDOM_SEED=32
     volumes:
       - type: bind
-        source: ../test_data/1/sample
+        source: ../app/1.Decoy_spectra_generation/sample
         target: /app/input
       - type: bind
-        source: ../test_data/1/output
+        source: ../app/1.Decoy_spectra_generation/output
         target: /app/output

@@ -7,5 +7,5 @@ services:
     container_name: novocert-p2-1
     volumes:
       - type: bind
-        source: ../test_data/2-1/output
+        source: ../app/casanovo_config
         target: /app/output
