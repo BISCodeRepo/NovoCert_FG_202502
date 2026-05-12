@@ -12,15 +12,6 @@ export interface DockerImageConfig {
 }
 
 /**
- * Returns the native Docker platform string based on the host CPU architecture.
- * Apple Silicon / ARM Windows → linux/arm64
- * Intel Mac / x86 Windows   → linux/amd64
- */
-function getNativePlatform(): string {
-  return process.arch === 'arm64' ? 'linux/arm64' : 'linux/amd64'
-}
-
-/**
  * List of required Docker images
  */
 export const REQUIRED_IMAGES: DockerImageConfig[] = [
