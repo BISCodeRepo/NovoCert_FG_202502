@@ -4,25 +4,28 @@ import {
   PROJECT_STATUS_LABELS,
   PROJECT_STATUS_COLORS,
 } from "../types";
+import { useExperiment } from "../contexts/ExperimentContext";
+import { filterTasksByExperiment } from "../utils/experimentTasks";
 
 interface DashboardProps {
   onNavigate: (page: string, uuid: string) => void;
 }
 
 function Dashboard({ onNavigate }: DashboardProps) {
-  const [allProjects, setAllProjects] = useState<Project[]>([]);
+  const { currentExperiment } = useExperiment();
+  const [allTasks, setAllTasks] = useState<Project[]>([]);
   const [dbPath, setDbPath] = useState("");
   const [selectedStep, setSelectedStep] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
   useEffect(() => {
-    loadProjects();
+    loadTasks();
     loadDbPath();
   }, []);
 
   // filtered project list
-  const filteredProjects = useMemo(() => {
-    let filtered = allProjects;
+  const filteredTasks = useMemo(() => {
+    let filtered = filterTasksByExperiment(allTasks, currentExperiment?.uuid);
 
     // Step filtering (step is stored as int)
     if (selectedStep !== "all") {
@@ -43,20 +46,20 @@ function Dashboard({ onNavigate }: DashboardProps) {
     }
 
     return filtered;
-  }, [allProjects, selectedStep, selectedStatus]);
+  }, [allTasks, currentExperiment?.uuid, selectedStep, selectedStatus]);
 
-  // polling: running status projects' container status check
+  // polling: running status tasks' container status check
   useEffect(() => {
-    const checkRunningProjects = async () => {
-      // filter running status projects
-      const runningProjects = allProjects.filter(p => p.status === 'running');
+    const checkRunningTasks = async () => {
+      // filter running status tasks
+      const runningTasks = filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter(p => p.status === 'running');
       
-      if (runningProjects.length === 0) {
+      if (runningTasks.length === 0) {
         return;
       }
 
       // check container status for each running project
-      for (const project of runningProjects) {
+      for (const project of runningTasks) {
         try {
           const stepNumber = project.step;
           if (!stepNumber) {
@@ -89,7 +92,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
                 console.log(`[Dashboard] Exit Code = ${exitCodeResult.exitCode}, Status = ${newStatus}`);
                 await window.db.updateProject(project.uuid, { status: newStatus });
                 // refresh project list
-                loadProjects();
+                loadTasks();
               } else {
                 // Container not found - likely removed by --rm after successful completion
                 // If container is not running and we can't get exit code, assume success
@@ -97,35 +100,35 @@ function Dashboard({ onNavigate }: DashboardProps) {
                 console.log(`[Dashboard] success: ${exitCodeResult.success}, exitCode: ${exitCodeResult.exitCode}`);
                 await window.db.updateProject(project.uuid, { status: 'success' });
                 // refresh project list
-                loadProjects();
+                loadTasks();
               }
             } else if (currentProject && currentProject.status === 'failed') {
               // already failed, only update the list
-              loadProjects();
+              loadTasks();
             }
           }
         } catch (err) {
-          console.error(`Error checking container for project ${project.uuid}:`, err);
+          console.error(`Error checking container for task ${project.uuid}:`, err);
         }
       }
     };
 
     // immediately check
-    checkRunningProjects();
+    checkRunningTasks();
 
     // check every 2 seconds
-    const intervalId = setInterval(checkRunningProjects, 2000);
+    const intervalId = setInterval(checkRunningTasks, 2000);
 
     return () => {
       clearInterval(intervalId);
     };
-  }, [allProjects]);
+  }, [allTasks, currentExperiment?.uuid]);
 
-  const loadProjects = async () => {
+  const loadTasks = async () => {
     const data = (await window.db.getProjects()) as Project[];
     // sort by created_at in descending order
     data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    setAllProjects(data);
+    setAllTasks(data);
   };
 
   const loadDbPath = async () => {
@@ -135,12 +138,15 @@ function Dashboard({ onNavigate }: DashboardProps) {
 
   const deleteProject = async (uuid: string) => {
     await window.db.deleteProject(uuid);
-    loadProjects();
+    loadTasks();
   };
 
   return (
     <div className="max-w-7xl mx-auto">
-      <h1 className="text-4xl font-bold text-gray-900 mb-4">Projects</h1>
+      <h1 className="text-4xl font-bold text-gray-900 mb-4">Tasks</h1>
+      <p className="text-sm text-gray-500 mb-4">
+        {currentExperiment ? `Experiment: ${currentExperiment.name}` : "Select an experiment to view tasks."}
+      </p>
 
       {/* DB path */}
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
@@ -153,8 +159,8 @@ function Dashboard({ onNavigate }: DashboardProps) {
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-              Project List{" "}
-              <span className="text-gray-500 ml-1">({filteredProjects.length})</span>
+              Task List{" "}
+              <span className="text-gray-500 ml-1">({filteredTasks.length})</span>
             </h2>
             <div className="flex items-center gap-4">
               {/* Step filter */}
@@ -198,7 +204,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
           </div>
         </div>
 
-        {filteredProjects.length === 0 ? (
+        {filteredTasks.length === 0 ? (
           <div className="p-12 text-center">
             <svg
               className="mx-auto h-12 w-12 text-gray-400"
@@ -213,9 +219,9 @@ function Dashboard({ onNavigate }: DashboardProps) {
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            <p className="mt-4 text-gray-500">No projects found</p>
+            <p className="mt-4 text-gray-500">No tasks found</p>
             <p className="text-sm text-gray-400">
-              Start by creating a new project
+              Start by creating a new task
             </p>
           </div>
         ) : (
@@ -227,7 +233,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
                     UUID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Project Name
+                    Task Name
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
@@ -247,7 +253,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredProjects.map((project) => (
+                {filteredTasks.map((project) => (
                   <tr key={project.uuid} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">
                       <button
@@ -303,4 +309,3 @@ function Dashboard({ onNavigate }: DashboardProps) {
 }
 
 export default Dashboard;
-

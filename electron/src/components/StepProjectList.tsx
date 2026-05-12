@@ -1,69 +1,72 @@
 import { useState, useEffect } from "react";
+import { useExperiment } from "../contexts/ExperimentContext";
 import type { Project } from "../types";
+import { filterTasksByExperiment } from "../utils/experimentTasks";
 
 interface StepProjectListProps {
   step: number;
-  refreshTrigger?: string | null; // refresh trigger (new project created)
+  refreshTrigger?: string | null; // refresh trigger (new task created)
   onNavigate?: (page: string, uuid: string) => void; // navigation handler
 }
 
 function StepProjectList({ step, refreshTrigger, onNavigate }: StepProjectListProps) {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const { currentExperiment } = useExperiment();
+  const [tasks, setTasks] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadProjects = async () => {
+  const loadTasks = async () => {
     try {
-      const allProjects = await window.db.getProjects();
-      const stepProjects = allProjects
+      const allTasks = await window.db.getProjects();
+      const stepTasks = filterTasksByExperiment(allTasks, currentExperiment?.uuid)
         .filter((project) => String(project.step) === String(step))
         .sort(
           (a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
-      setProjects(stepProjects);
+      setTasks(stepTasks);
     } catch (error) {
-      console.error(`Failed to load Step${step} projects:`, error);
+      console.error(`Failed to load Step${step} tasks:`, error);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadProjects();
+    loadTasks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
+  }, [step, currentExperiment?.uuid]);
 
-  // Refresh when refreshTrigger changes (new project created)
+  // Refresh when refreshTrigger changes (new task created)
   useEffect(() => {
     if (refreshTrigger) {
-      loadProjects();
+      loadTasks();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshTrigger]);
 
-  // Polling for running projects
+  // Polling for running tasks
   useEffect(() => {
-    const checkRunningProjects = async () => {
-      // Always fetch latest projects from DB to get current status
-      const allProjects = await window.db.getProjects();
-      const stepProjects = allProjects
+    const checkRunningTasks = async () => {
+      // Always fetch latest tasks from DB to get current status
+      const allTasks = await window.db.getProjects();
+      const stepTasks = filterTasksByExperiment(allTasks, currentExperiment?.uuid)
         .filter((project) => String(project.step) === String(step))
         .sort(
           (a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
       
-      const runningProjects = stepProjects.filter((p) => p.status === "running");
+      const runningTasks = stepTasks.filter((p) => p.status === "running");
 
-      if (runningProjects.length === 0) {
-        // No running projects, but refresh the list in case status changed
-        setProjects(stepProjects);
+      if (runningTasks.length === 0) {
+        // No running tasks, but refresh the list in case status changed
+        setTasks(stepTasks);
         return;
       }
 
       let hasUpdates = false;
 
-      for (const project of runningProjects) {
+      for (const project of runningTasks) {
         try {
           const stepNumber = project.step;
           if (!stepNumber) {
@@ -109,30 +112,30 @@ function StepProjectList({ step, refreshTrigger, onNavigate }: StepProjectListPr
           }
         } catch (err) {
           console.error(
-            `Error checking container for project ${project.uuid}:`,
+            `Error checking container for task ${project.uuid}:`,
             err
           );
         }
       }
 
-      // Reload projects if there were any updates
+      // Reload tasks if there were any updates
       if (hasUpdates) {
-        await loadProjects();
+        await loadTasks();
       } else {
         // Even if no updates, refresh the list to show any status changes from other sources
-        setProjects(stepProjects);
+        setTasks(stepTasks);
       }
     };
 
-    checkRunningProjects();
+    checkRunningTasks();
 
-    const intervalId = setInterval(checkRunningProjects, 2000);
+    const intervalId = setInterval(checkRunningTasks, 2000);
 
     return () => {
       clearInterval(intervalId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
+  }, [step, currentExperiment?.uuid]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -157,17 +160,17 @@ function StepProjectList({ step, refreshTrigger, onNavigate }: StepProjectListPr
     );
   }
 
-  if (projects.length === 0) {
+  if (tasks.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-sm text-gray-500">No projects found.</p>
+        <p className="text-sm text-gray-500">No tasks found.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-2">
-      {projects.map((project) => (
+      {tasks.map((project) => (
         <div
           key={project.uuid}
           className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
@@ -221,4 +224,3 @@ function StepProjectList({ step, refreshTrigger, onNavigate }: StepProjectListPr
 }
 
 export default StepProjectList;
-

@@ -6,7 +6,8 @@ export {
   checkImageExists, 
   checkRequiredImages, 
   getRequiredImages,
-  downloadMissingImages 
+  downloadMissingImages,
+  downloadAllImages
 } from './images'
 export type { ImageStatus } from './images'
 export { getExtendedPath } from './utils'
@@ -35,6 +36,7 @@ export {
   runStep4Container,
   executeStep4Workflow,
   runStep5Container,
-  executeStep5Workflow
+  executeStep5Workflow,
+  executeStep6Workflow
 } from './steps'
 

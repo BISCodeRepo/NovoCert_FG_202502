@@ -9,12 +9,14 @@ import {
   checkDockerRunning, 
   checkRequiredImages,
   downloadMissingImages,
+  downloadAllImages,
   pullImage,
   executeStep1Workflow,
   executeStep2Workflow,
   executeStep3Workflow,
   executeStep4Workflow,
   executeStep5Workflow,
+  executeStep6Workflow,
   isContainerRunning,
   getContainerExitCode,
   getProjectUuidFromContainer,
@@ -114,6 +116,12 @@ function setupIpcHandlers() {
     })
   })
 
+  ipcMain.handle('docker:downloadAllImages', async (event) => {
+    return await downloadAllImages((progress) => {
+      event.sender.send('docker:download-progress', progress)
+    })
+  })
+
   ipcMain.handle('docker:pullImage', async (_, imageName: string) => {
     return await pullImage(imageName)
   })
@@ -139,6 +147,26 @@ function setupIpcHandlers() {
   })
 
   // Project handlers
+  ipcMain.handle('db:getExperiments', async () => {
+    return await database.experiments.getAll()
+  })
+
+  ipcMain.handle('db:getExperiment', async (_, uuid) => {
+    return await database.experiments.getOne(uuid)
+  })
+
+  ipcMain.handle('db:addExperiment', async (_, experiment) => {
+    return await database.experiments.create(experiment)
+  })
+
+  ipcMain.handle('db:updateExperiment', async (_, uuid, updates) => {
+    return await database.experiments.update(uuid, updates)
+  })
+
+  ipcMain.handle('db:deleteExperiment', async (_, uuid) => {
+    return await database.experiments.delete(uuid)
+  })
+
   ipcMain.handle('db:getProjects', async () => {
     return await database.projects.getAll()
   })
@@ -256,5 +284,15 @@ function setupIpcHandlers() {
     outputPath: string
   }) => {
     return await executeStep5Workflow(database, params)
+  })
+
+  // Step6 handler
+  ipcMain.handle('step:runStep6', async (_, params: {
+    projectName: string
+    csvFilePath: string
+    previousStepPath: string
+    pinFilePath?: string
+  }) => {
+    return await executeStep6Workflow(database, params)
   })
 }

@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto'
 
 export interface Project {
   uuid: string
+  experiment_uuid?: string
   name: string
   step: string
   status: string
@@ -108,4 +109,3 @@ class ProjectTable {
 }
 
 export const projectTable = new ProjectTable()
-

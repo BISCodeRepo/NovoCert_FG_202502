@@ -6,13 +6,18 @@ import {
   StepRunButton,
 } from "../../components/form";
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
-import StepProjectList from "../../components/StepProjectList";
+import ExperimentDagStatus from "../../components/ExperimentDagStatus";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
+import { useExperiment } from "../../contexts/ExperimentContext";
+import { filterTasksByExperiment, getNextTaskName, TaskBranch } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
+import type { Project } from "../../types/project";
 
-function Step1({ onNavigate }: StepPageProps) {
+function Step1(_: StepPageProps) {
+  const { currentExperiment } = useExperiment();
+  const [branch, setBranch] = useState<TaskBranch>("target");
   const [projectName, setProjectName] = useState("");
   const [inputPath, setInputPath] = useState("");
   const [outputPath, setOutputPath] = useState("");
@@ -27,8 +32,9 @@ function Step1({ onNavigate }: StepPageProps) {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+  const [step1Tasks, setStep1Tasks] = useState<Project[]>([]);
 
-  // Check for running projects when page loads
+  // Check for running tasks when page loads
   useStepRunningProject({
     step: 1,
     setProjectUuid,
@@ -45,7 +51,6 @@ function Step1({ onNavigate }: StepPageProps) {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.projectName) setProjectName(parsed.projectName);
         if (parsed.inputPath) setInputPath(parsed.inputPath);
         if (parsed.outputPath) setOutputPath(parsed.outputPath);
         if (parsed.memory) setMemory(parsed.memory);
@@ -55,12 +60,13 @@ function Step1({ onNavigate }: StepPageProps) {
         console.error('Error loading saved Step1 inputs:', error);
       }
     }
-  }, []);
+  }, [currentExperiment?.uuid]);
 
   // Save input values when they change
   useEffect(() => {
     const inputs = {
       projectName,
+      branch,
       inputPath,
       outputPath,
       memory,
@@ -68,7 +74,29 @@ function Step1({ onNavigate }: StepPageProps) {
       randomSeed,
     };
     localStorage.setItem('step1_inputs', JSON.stringify(inputs));
-  }, [projectName, inputPath, outputPath, memory, precursorTolerance, randomSeed]);
+  }, [projectName, branch, inputPath, outputPath, memory, precursorTolerance, randomSeed]);
+
+  useEffect(() => {
+    const applyTaskName = async () => {
+      const allTasks = await window.db.getProjects();
+      setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 1, branch));
+    };
+    applyTaskName();
+  }, [currentExperiment?.uuid, currentExperiment?.name, branch]);
+
+  useEffect(() => {
+    const loadStep1Tasks = async () => {
+      try {
+        const allTasks = await window.db.getProjects();
+        setStep1Tasks(
+          filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter((project) => String(project.step) === "1")
+        );
+      } catch (error) {
+        console.error("Failed to load Step 1 tasks for name validation:", error);
+      }
+    };
+    loadStep1Tasks();
+  }, []);
 
   // Input folder validation
   const [inputFiles, setInputFiles] = useState<string[]>([]);
@@ -146,6 +174,13 @@ function Step1({ onNavigate }: StepPageProps) {
     return () => clearTimeout(timer);
   }, [inputPath, validateInputFolder]);
 
+  const normalizedProjectName = projectName.trim().toLowerCase();
+  const isDuplicateProjectName =
+    normalizedProjectName !== "" &&
+    step1Tasks.some(
+      (project) => project.name.trim().toLowerCase() === normalizedProjectName
+    );
+
   // Check if all required parameters are entered
   const isFormValid = () => {
     return (
@@ -155,7 +190,8 @@ function Step1({ onNavigate }: StepPageProps) {
       memory.trim() !== "" &&
       precursorTolerance.trim() !== "" &&
       randomSeed.trim() !== "" &&
-      (inputValidation.status === "valid" || inputValidation.status === "warning")
+      (inputValidation.status === "valid" || inputValidation.status === "warning") &&
+      !isDuplicateProjectName
     );
   };
 
@@ -164,12 +200,36 @@ function Step1({ onNavigate }: StepPageProps) {
     if (!isFormValid()) {
       return;
     }
+    const latestStep1Tasks = filterTasksByExperiment(await window.db.getProjects(), currentExperiment?.uuid).filter(
+      (project) => String(project.step) === "1"
+    );
+    const isDuplicateAtRunTime = latestStep1Tasks.some(
+      (project) =>
+        project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
+    );
+    if (isDuplicateAtRunTime) {
+      setStep1Tasks(latestStep1Tasks);
+      setMessage({
+        type: "error",
+        text: "A Step 1 task with the same name already exists. Please choose a different task name.",
+      });
+      return;
+    }
+    if (isDuplicateProjectName) {
+      setMessage({
+        type: "error",
+        text: "A Step 1 task with the same name already exists. Please choose a different task name.",
+      });
+      return;
+    }
 
     setIsRunning(true);
     setMessage(null);
 
     try {
       const result = await window.step.runStep1({
+        experimentUuid: currentExperiment?.uuid,
+        branch,
         projectName,
         inputPath,
         outputPath,
@@ -233,12 +293,7 @@ function Step1({ onNavigate }: StepPageProps) {
             <p className="text-sm text-gray-500">Decoy Spectra Generation</p>
           </div>
 
-          <div className="border-t pt-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Step 1 Projects
-            </h3>
-            <StepProjectList step={1} refreshTrigger={projectUuid} onNavigate={onNavigate} />
-          </div>
+<ExperimentDagStatus currentStep={1} refreshTrigger={projectUuid} />
 
 
         </div>
@@ -251,14 +306,43 @@ function Step1({ onNavigate }: StepPageProps) {
           </h2>
 
           <div className="space-y-6">
-            <TextInput
-              label="Project Name"
-              value={projectName}
-              onChange={setProjectName}
-              placeholder="Enter the project name"
-              required={true}
-              description="Enter the name of the project to start a new one"
-            />
+            <div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Branch <span className="text-red-500 ml-1">*</span>
+                </label>
+                <div className="flex gap-3">
+                  {(["target", "decoy"] as TaskBranch[]).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setBranch(option)}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium capitalize ${
+                        branch === option
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <TextInput
+                label="Task Name"
+                value={projectName}
+                onChange={setProjectName}
+                placeholder="Enter the task name"
+                required={true}
+                readOnly
+                description="Generated from the experiment, branch, and step."
+              />
+              {isDuplicateProjectName && (
+                <p className="mt-1 text-xs text-red-600">
+                  This task name already exists in Step 1. Please enter a different name.
+                </p>
+              )}
+            </div>
 
             <div>
               <PathInput
@@ -420,7 +504,7 @@ function Step1({ onNavigate }: StepPageProps) {
             isRunning={isRunning || hasRunningProject}
             message={message}
           />
-          {/* Project Status Monitor */}
+          {/* Task Status Monitor */}
           <ProjectStatusMonitor 
             projectUuid={projectUuid}
             projectName={projectName}
@@ -437,7 +521,7 @@ function Step1({ onNavigate }: StepPageProps) {
         stepTitle="Decoy Spectra Generation"
         description="In this step, Decoy Spectra are generated from the input data."
         requiredInputs={[
-          "Project Name",
+          "Task Name",
           "Input Folder Path (bind mount to /app/input)",
           "Output Folder Path (bind mount to /app/output)",
           "Memory",

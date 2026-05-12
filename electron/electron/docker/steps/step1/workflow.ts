@@ -21,10 +21,12 @@ export async function executeStep1Workflow(
   try {
     // 1. Create a Project with step information
     project = await database.projects.create({
+      experiment_uuid: params.experimentUuid,
       name: params.projectName,
       step: '1',
       status: 'running',
       parameters: {
+        branch: params.branch,
         inputPath: params.inputPath,
         outputPath: params.outputPath // Project-level default output path
       }

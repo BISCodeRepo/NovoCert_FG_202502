@@ -5,9 +5,7 @@ services:
       dockerfile: Dockerfile
     image: novocert-p2-1:compose-build
     container_name: novocert-p2-1
-    # user: "${UID:-1000}:${GID:-1000}"
     volumes:
-      # Output directory
       - type: bind
         source: ../app/casanovo_config
         target: /app/output

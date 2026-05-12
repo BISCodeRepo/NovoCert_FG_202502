@@ -27,10 +27,10 @@ function ProjectCreatedMessage({ projectName, containerId, stepNumber }: Project
         </svg>
         <div className="flex-1">
           <p className="text-sm font-semibold text-gray-700 mb-1">
-            Project Created Successfully
+            Task Created Successfully
           </p>
           <p className="text-sm text-gray-600">
-            Project <span className="font-medium">"{projectName}"</span> has been created and Step {stepNumber} is running.
+            Task <span className="font-medium">"{projectName}"</span> has been created and Step {stepNumber} is running.
           </p>
           <p className="text-xs text-gray-500 mt-1">
             Container ID: <span className="font-mono">{containerId.substring(0, 12)}...</span>

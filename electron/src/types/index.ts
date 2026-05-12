@@ -1,4 +1,5 @@
 export * from "./project";
+export * from "./experiment";
 export * from "./task";
 export * from "./docker";
 
@@ -6,4 +7,3 @@ export * from "./docker";
 export interface StepPageProps {
   onNavigate?: (page: string, uuid: string) => void;
 }
-

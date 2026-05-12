@@ -3,23 +3,22 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: novocert-p2:compose-build
-    container_name: novocert-p2
-    # user: "${UID:-1000}:${GID:-1000}"
+    image: novocert-p2-2:compose-build
+    container_name: novocert-p2-2
     volumes:
       # spectra dir
       - type: bind
-        source: ./test_data/mgf/short.mgf
+        source: ../test_data/2-2/mgf_target/b1906_293T_proteinID_01A_QE3_122212.mgf
         target: /app/data/mgf/spectra.mgf
       # Casanovo .yaml path
       - type: bind
-        source: ./test_data/casanovo.yaml
+        source: ../test_data/2-2/casanovo.yaml
         target: /app/data/casanovo.yaml
       # Casanovo model path
       - type: bind
-        source: ./test_data/model.ckpt
+        source: ../test_data/2-2/model/casanovo_v4_2_0.ckpt
         target: /app/data/model.ckpt
       # Output directory
       - type: bind
-        source: ./test_data/output
+        source: ../test_data/2-2/output_target
         target: /app/output/

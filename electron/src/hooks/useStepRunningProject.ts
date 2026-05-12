@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import { useExperiment } from "../contexts/ExperimentContext";
+import { filterTasksByExperiment } from "../utils/experimentTasks";
 
 interface UseStepRunningProjectOptions {
   step: number;
@@ -8,8 +10,8 @@ interface UseStepRunningProjectOptions {
 }
 
 /**
- * Hook to automatically detect and track running projects for a specific step.
- * Checks for running projects when the component mounts and verifies actual container status.
+ * Hook to automatically detect and track running tasks for a specific step.
+ * Checks for running tasks when the component mounts and verifies actual container status.
  * If container is not running, updates project status based on exit code.
  */
 export function useStepRunningProject({
@@ -18,11 +20,13 @@ export function useStepRunningProject({
   setContainerId,
   setProjectName,
 }: UseStepRunningProjectOptions) {
+  const { currentExperiment } = useExperiment();
+
   useEffect(() => {
     const checkRunningProject = async () => {
       try {
-        const allProjects = await window.db.getProjects();
-        const stepRunningProjects = allProjects
+        const allTasks = await window.db.getProjects();
+        const stepRunningTasks = filterTasksByExperiment(allTasks, currentExperiment?.uuid)
           .filter(
             (project) =>
               String(project.step) === String(step) &&
@@ -34,8 +38,8 @@ export function useStepRunningProject({
               new Date(a.created_at).getTime()
           );
 
-        if (stepRunningProjects.length > 0) {
-          const runningProject = stepRunningProjects[0];
+        if (stepRunningTasks.length > 0) {
+          const runningProject = stepRunningTasks[0];
           const stepKey = `step${step}`;
           const stepData = runningProject.parameters[stepKey] as
             | { containerId?: string }
@@ -111,7 +115,7 @@ export function useStepRunningProject({
           }
         }
       } catch (error) {
-        console.error(`Error checking running projects for step ${step}:`, error);
+        console.error(`Error checking running tasks for step ${step}:`, error);
       }
     };
 
@@ -124,5 +128,5 @@ export function useStepRunningProject({
     return () => {
       clearInterval(intervalId);
     };
-  }, [step, setProjectUuid, setContainerId, setProjectName]);
+  }, [step, currentExperiment?.uuid, setProjectUuid, setContainerId, setProjectName]);
 }

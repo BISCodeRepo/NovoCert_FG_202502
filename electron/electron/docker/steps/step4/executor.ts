@@ -40,7 +40,11 @@ export async function runStep4Container(params: Step4ContainerParams): Promise<D
     environment: { PROJECT_NAME: projectName },
     platform: step4Image.platform,
     autoRemove: true,
-    command: [],
+    // Override CMD to bypass CRLF-broken run.sh inside the image
+    command: [
+      'bash', '-c',
+      '/venv/bin/python feature_calculation.py --target_mgf_dir target/mgf/ --target_result_path target/result.mztab --decoy_mgf_dir decoy/mgf/ --decoy_result_path decoy/result.mztab --output_dir output',
+    ],
     logFilePath,
     labels: {
       'project_uuid': projectUuid,

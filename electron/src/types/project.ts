@@ -2,6 +2,7 @@ export type ProjectStatus = "pending" | "running" | "failed" | "success";
 
 export interface Project {
   uuid: string;
+  experiment_uuid?: string;
   name: string;
   status: ProjectStatus;
   step: string | null;
@@ -23,4 +24,3 @@ export const PROJECT_STATUS_COLORS: Record<ProjectStatus, string> = {
   failed: "bg-red-100 text-red-800",
   success: "bg-green-100 text-green-800",
 };
-

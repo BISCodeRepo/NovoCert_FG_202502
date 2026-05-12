@@ -21,6 +21,7 @@ export async function executeStep5Workflow(
   try {
     // 1. Create a Project with step information
     project = await database.projects.create({
+      experiment_uuid: params.experimentUuid,
       name: params.projectName,
       step: '5',
       status: 'running',
@@ -142,4 +143,3 @@ export async function executeStep5Workflow(
     }
   }
 }
-

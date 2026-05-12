@@ -1,11 +1,18 @@
-import { Project, ProjectStatus, Task, TaskStatus } from './types'
+import { Experiment, Project, ProjectStatus, Task, TaskStatus } from './types'
 
 interface DatabaseAPI {
+  // Experiments
+  getExperiments: () => Promise<Experiment[]>
+  getExperiment: (uuid: string) => Promise<Experiment | null>
+  addExperiment: (experiment: { name: string; description?: string }) => Promise<Experiment>
+  updateExperiment: (uuid: string, updates: { name?: string; description?: string }) => Promise<Experiment | null>
+  deleteExperiment: (uuid: string) => Promise<boolean>
+
   // Projects
   getProjects: () => Promise<Project[]>
   getProject: (uuid: string) => Promise<Project | null>
-  addProject: (project: { name: string; status: ProjectStatus; parameters: Record<string, unknown> }) => Promise<Project>
-  updateProject: (uuid: string, updates: { name?: string; status?: ProjectStatus; parameters?: Record<string, unknown> }) => Promise<Project | null>
+  addProject: (project: { name: string; status: ProjectStatus; parameters: Record<string, unknown>; experiment_uuid?: string }) => Promise<Project>
+  updateProject: (uuid: string, updates: { name?: string; status?: ProjectStatus; parameters?: Record<string, unknown>; experiment_uuid?: string }) => Promise<Project | null>
   deleteProject: (uuid: string) => Promise<boolean>
   getDbPath: () => Promise<string>
   
@@ -54,6 +61,7 @@ interface DockerAPI {
   checkRunning: () => Promise<DockerCheckResult>
   checkRequiredImages: () => Promise<DockerImagesResult>
   downloadMissingImages: () => Promise<DockerDownloadResult>
+  downloadAllImages: () => Promise<DockerDownloadResult>
   pullImage: (imageName: string) => Promise<{ success: boolean; output?: string; error?: string }>
   isContainerRunning: (containerId: string) => Promise<{ success: boolean; running: boolean; error?: string }>
   getContainerExitCode: (containerId: string) => Promise<{ success: boolean; exitCode: number | null; error?: string }>
@@ -81,6 +89,8 @@ interface ShellAPI {
 }
 
 interface Step1Params {
+  experimentUuid?: string
+  branch?: "target" | "decoy"
   projectName: string
   inputPath: string
   outputPath: string
@@ -98,6 +108,8 @@ interface Step1Result {
 }
 
 interface Step2Params {
+  experimentUuid?: string
+  branch?: "target" | "decoy"
   projectName: string
   outputPath: string
 }
@@ -111,6 +123,8 @@ interface Step2Result {
 }
 
 interface Step3Params {
+  experimentUuid?: string
+  branch?: "target" | "decoy"
   projectName: string
   spectraPath: string
   casanovoConfigPath: string
@@ -127,6 +141,8 @@ interface Step3Result {
 }
 
 interface Step4Params {
+  experimentUuid?: string
+  branch?: "target" | "decoy"
   projectName: string
   targetMgfDir: string
   targetResultPath: string
@@ -144,6 +160,8 @@ interface Step4Result {
 }
 
 interface Step5Params {
+  experimentUuid?: string
+  branch?: "target" | "decoy"
   projectName: string
   inputPath: string
   outputPath: string
@@ -157,15 +175,60 @@ interface Step5Result {
   error?: string
 }
 
+interface Step6Params {
+  experimentUuid?: string
+  branch?: "target" | "decoy"
+  projectName: string
+  csvFilePath: string
+  previousStepPath: string
+  pinFilePath?: string
+}
+
+interface Step6Result {
+  success: boolean
+  project?: Project
+  task?: Task
+  containerId?: string
+  analysisData?: Step6AnalysisData
+  error?: string
+}
+
 interface StepAPI {
   runStep1: (params: Step1Params) => Promise<Step1Result>
   runStep2: (params: Step2Params) => Promise<Step2Result>
   runStep3: (params: Step3Params) => Promise<Step3Result>
   runStep4: (params: Step4Params) => Promise<Step4Result>
   runStep5: (params: Step5Params) => Promise<Step5Result>
+  runStep6: (params: Step6Params) => Promise<Step6Result>
 }
 
 declare global {
+  interface VennData {
+    title: string
+    leftOnly: number
+    rightOnly: number
+    overlap: number
+    leftLabel: string
+    rightLabel: string
+  }
+
+  interface HistogramBin {
+    min: number
+    max: number
+    overlapCount: number
+    unoverlapCount: number
+  }
+
+  interface HistogramData {
+    title: string
+    bins: HistogramBin[]
+  }
+
+  interface Step6AnalysisData {
+    vennDiagrams: VennData[]
+    histograms: HistogramData[]
+  }
+
   interface Window {
     db: DatabaseAPI
     docker: DockerAPI
@@ -183,4 +246,3 @@ declare global {
 }
 
 export {}
-

@@ -31,10 +31,18 @@ export async function runStep5Container(params: Step5ContainerParams): Promise<D
       `${inputPath}:/app/t_d.pin`,
       `${outputPath}:/app/output`
     ],
-    environment: { PROJECT_NAME: projectName },
+    environment: {
+      PROJECT_NAME: projectName,
+      FDR_TYPE: 'peptide',
+      FDR: '0.01',
+    },
     platform: step5Image.platform,
     autoRemove: true,
-    command: [],
+    // Override CMD to bypass CRLF-broken run.sh inside the image
+    command: [
+      'bash', '-c',
+      'percolator t_d.pin -m output/out.target -M output/out.decoy -w output/out.weight -Y -U -V SA --trainFDR 0.001 && python3 fdr_control.py --fdr_type $FDR_TYPE --target_path output/out.target --decoy_path output/out.decoy --fdr_rate $FDR --output_dir output',
+    ],
     logFilePath,
     labels: {
       'project_uuid': projectUuid,

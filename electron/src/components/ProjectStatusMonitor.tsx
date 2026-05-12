@@ -11,6 +11,7 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
   const [projectStatus, setProjectStatus] = useState<string | null>(null);
   const [isStopping, setIsStopping] = useState(false);
   const [logFilePath, setLogFilePath] = useState<string | null>(null);
+  const [outputFolderPath, setOutputFolderPath] = useState<string | null>(null);
 
   // when the project UUID is changed, initialize and load the status
   useEffect(() => {
@@ -28,8 +29,12 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
           // Find log file path
           if (stepNumber) {
             const stepKey = `step${stepNumber}`;
-            const stepData = project.parameters[stepKey] as { logPath?: string } | undefined;
+            const stepData = project.parameters[stepKey] as { logPath?: string; outputPath?: string } | undefined;
             const logPath = stepData?.logPath;
+            const outputPath = stepData?.outputPath;
+            if (outputPath) {
+              setOutputFolderPath(outputPath);
+            }
             
             if (logPath) {
               // Find the latest .log file in the log directory
@@ -149,13 +154,31 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
     }
   };
 
+  // Handle opening output folder
+  const handleOpenOutputFolder = async () => {
+    if (!outputFolderPath) {
+      alert('Output folder not found');
+      return;
+    }
+
+    try {
+      const result = await window.shell.openPath(outputFolderPath);
+      if (result.error) {
+        await window.shell.showItemInFolder(outputFolderPath);
+      }
+    } catch (error) {
+      console.error('Error opening output folder:', error);
+      alert(`Failed to open output folder: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
   // Handle container stop and cleanup
   const handleStopContainer = async () => {
     if (!containerId || !projectUuid) {
       return;
     }
 
-    if (!confirm(`Are you sure you want to stop and clean up the container for project "${projectName}"? This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to stop and clean up the container for task "${projectName}"? This action cannot be undone.`)) {
       return;
     }
 
@@ -238,29 +261,29 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-800 mb-1">
                 {projectStatus === 'running' 
-                  ? 'Project Created Successfully' 
+                  ? 'Task Created Successfully' 
                   : projectStatus === 'success'
-                  ? 'Project Completed Successfully'
+                  ? 'Task Completed Successfully'
                   : projectStatus === 'failed'
-                  ? 'Project Failed'
-                  : 'Project Status'}
+                  ? 'Task Failed'
+                  : 'Task Status'}
               </p>
               <p className="text-sm text-gray-600 mb-2">
                 {projectStatus === 'running' ? (
                   <>
-                    Project <span className="font-medium text-gray-800">"{projectName}"</span> has been created and Step {stepNumber} is running.
+                    Task <span className="font-medium text-gray-800">"{projectName}"</span> has been created and Step {stepNumber} is running.
                   </>
                 ) : projectStatus === 'success' ? (
                   <>
-                    Project <span className="font-medium text-gray-800">"{projectName}"</span> has been completed successfully.
+                    Task <span className="font-medium text-gray-800">"{projectName}"</span> has been completed successfully.
                   </>
                 ) : projectStatus === 'failed' ? (
                   <>
-                    Project <span className="font-medium text-gray-800">"{projectName}"</span> has been stopped or failed.
+                    Task <span className="font-medium text-gray-800">"{projectName}"</span> has been stopped or failed.
                   </>
                 ) : (
                   <>
-                    Project <span className="font-medium text-gray-800">"{projectName}"</span> status: {projectStatus}
+                    Task <span className="font-medium text-gray-800">"{projectName}"</span> status: {projectStatus}
                   </>
                 )}
               </p>
@@ -298,6 +321,27 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
                       />
                     </svg>
                     View Log
+                  </button>
+                )}
+                {outputFolderPath && (
+                  <button
+                    onClick={handleOpenOutputFolder}
+                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 7a2 2 0 012-2h3l2 2h9a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
+                      />
+                    </svg>
+                    Open Output Folder
                   </button>
                 )}
                 {projectStatus === 'running' && containerId && (

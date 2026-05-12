@@ -6,14 +6,19 @@ import {
   StepRunButton,
 } from "../../components/form";
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
+import ExperimentDagStatus from "../../components/ExperimentDagStatus";
 import { useStepProjectSelector } from "../../hooks/useStepProjectSelector";
 import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
-import StepProjectList from "../../components/StepProjectList";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
+import { useExperiment } from "../../contexts/ExperimentContext";
+import { filterTasksByExperiment, getNextTaskName, getTaskRootOutputPath, latestTaskForStep, TaskBranch } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
+import type { Project } from "../../types/project";
 
-function Step3({ onNavigate }: StepPageProps) {
+function Step3(_: StepPageProps) {
+  const { currentExperiment } = useExperiment();
+  const [branch, setBranch] = useState<TaskBranch>("target");
   const [projectName, setProjectName] = useState("");
   const [spectraPath, setSpectraPath] = useState("");
   const [casanovoConfigPath, setCasanovoConfigPath] = useState("");
@@ -27,8 +32,9 @@ function Step3({ onNavigate }: StepPageProps) {
   const [projectUuid, setProjectUuid] = useState<string | null>(null);
   const [containerId, setContainerId] = useState<string | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+  const [step3Tasks, setStep3Tasks] = useState<Project[]>([]);
 
-  // Check for running projects when page loads
+  // Check for running tasks when page loads
   useStepRunningProject({
     step: 3,
     setProjectUuid,
@@ -45,7 +51,6 @@ function Step3({ onNavigate }: StepPageProps) {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.projectName) setProjectName(parsed.projectName);
         if (parsed.spectraPath) setSpectraPath(parsed.spectraPath);
         if (parsed.casanovoConfigPath) setCasanovoConfigPath(parsed.casanovoConfigPath);
         if (parsed.modelPath) setModelPath(parsed.modelPath);
@@ -60,29 +65,68 @@ function Step3({ onNavigate }: StepPageProps) {
   useEffect(() => {
     const inputs = {
       projectName,
+      branch,
       spectraPath,
       casanovoConfigPath,
       modelPath,
       outputPath,
     };
     localStorage.setItem('step3_inputs', JSON.stringify(inputs));
-  }, [projectName, spectraPath, casanovoConfigPath, modelPath, outputPath]);
+  }, [projectName, branch, spectraPath, casanovoConfigPath, modelPath, outputPath]);
 
-  // Use Step1 project selector for MGF file
+  useEffect(() => {
+    const loadStep3Tasks = async () => {
+      try {
+        const allTasks = await window.db.getProjects();
+        setStep3Tasks(
+          filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter((project) => String(project.step) === "3")
+        );
+      } catch (error) {
+        console.error("Failed to load Step 3 tasks for name validation:", error);
+      }
+    };
+    loadStep3Tasks();
+  }, [currentExperiment?.uuid]);
+
+  // Use Step1 task selector for MGF file
   const mgfSelector = useStepProjectSelector({
     step: 1,
     defaultSourceType: "step",
     extensions: ["mgf"],
+    branch,
     onFileFound: (path) => setSpectraPath(path),
   });
 
-  // Use Step2 project selector for Config file
+  // Use Step2 task selector for Config file
   const configSelector = useStepProjectSelector({
     step: 2,
     defaultSourceType: "step",
     extensions: ["yaml", "yml"],
+    branch,
     onFileFound: (path) => setCasanovoConfigPath(path),
   });
+
+  useEffect(() => {
+    const applyPreviousStepDefaults = async () => {
+      const allTasks = await window.db.getProjects();
+      const step1Task = latestTaskForStep(allTasks, 1, currentExperiment?.uuid, branch);
+      const previousTask = latestTaskForStep(allTasks, 2, currentExperiment?.uuid, branch);
+
+      mgfSelector.setSelectedProjectUuid(step1Task?.uuid || "");
+      configSelector.setSelectedProjectUuid(previousTask?.uuid || "");
+      setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 3, branch));
+
+      if (!previousTask) {
+        setOutputPath("");
+        return;
+      }
+
+      setOutputPath(getTaskRootOutputPath(previousTask));
+    };
+
+    applyPreviousStepDefaults();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentExperiment?.uuid, currentExperiment?.name, branch]);
 
   // Update spectraPath when selector finds file or switches to custom
   useEffect(() => {
@@ -103,6 +147,13 @@ function Step3({ onNavigate }: StepPageProps) {
     }
     // Trigger validation when path changes
   }, [configSelector.sourceType, configSelector.foundFilePath, configSelector.error]);
+
+  const normalizedProjectName = projectName.trim().toLowerCase();
+  const isDuplicateProjectName =
+    normalizedProjectName !== "" &&
+    step3Tasks.some(
+      (project) => project.name.trim().toLowerCase() === normalizedProjectName
+    );
 
   // Check if all required parameters are entered
   const isFormValid = () => {
@@ -125,13 +176,36 @@ function Step3({ onNavigate }: StepPageProps) {
       spectraPathValid &&
       configPathValid &&
       modelPath.trim() !== "" &&
-      outputPath.trim() !== ""
+      outputPath.trim() !== "" &&
+      !isDuplicateProjectName
     );
   };
 
   // Run Step 3 button click handler
   const handleRunStep3 = async () => {
     if (!isFormValid()) {
+      return;
+    }
+    const latestStep3Tasks = filterTasksByExperiment(await window.db.getProjects(), currentExperiment?.uuid).filter(
+      (project) => String(project.step) === "3"
+    );
+    const isDuplicateAtRunTime = latestStep3Tasks.some(
+      (project) =>
+        project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
+    );
+    if (isDuplicateAtRunTime) {
+      setStep3Tasks(latestStep3Tasks);
+      setMessage({
+        type: "error",
+        text: "A Step 3 task with the same name already exists. Please choose a different task name.",
+      });
+      return;
+    }
+    if (isDuplicateProjectName) {
+      setMessage({
+        type: "error",
+        text: "A Step 3 task with the same name already exists. Please choose a different task name.",
+      });
       return;
     }
 
@@ -143,6 +217,8 @@ function Step3({ onNavigate }: StepPageProps) {
       const finalSpectraPath = spectraPath;
 
       const result = await window.step.runStep3({
+        experimentUuid: currentExperiment?.uuid,
+        branch,
         projectName,
         spectraPath: finalSpectraPath,
         casanovoConfigPath,
@@ -204,12 +280,7 @@ function Step3({ onNavigate }: StepPageProps) {
             <p className="text-sm text-gray-500">De novo Peptide Sequencing</p>
           </div>
 
-          <div className="border-t pt-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Step 3 Projects
-            </h3>
-            <StepProjectList step={3} refreshTrigger={projectUuid} onNavigate={onNavigate} />
-          </div>
+<ExperimentDagStatus currentStep={3} refreshTrigger={projectUuid} />
 
 
         </div>
@@ -222,14 +293,43 @@ function Step3({ onNavigate }: StepPageProps) {
           </h2>
 
           <div className="space-y-6">
-            <TextInput
-              label="Project Name"
-              value={projectName}
-              onChange={setProjectName}
-              placeholder="Enter the project name"
-              required={true}
-              description="Enter the name of the project to start a new one"
-            />
+            <div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Branch <span className="text-red-500 ml-1">*</span>
+                </label>
+                <div className="flex gap-3">
+                  {(["target", "decoy"] as TaskBranch[]).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setBranch(option)}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium capitalize ${
+                        branch === option
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <TextInput
+                label="Task Name"
+                value={projectName}
+                onChange={setProjectName}
+                placeholder="Enter the task name"
+                required={true}
+                readOnly
+                description="Generated from the experiment, branch, and step."
+              />
+              {isDuplicateProjectName && (
+                <p className="mt-1 text-xs text-red-600">
+                  This task name already exists in Step 3. Please enter a different name.
+                </p>
+              )}
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -246,7 +346,7 @@ function Step3({ onNavigate }: StepPageProps) {
                     onChange={() => mgfSelector.setSourceType("step")}
                     className="mr-2"
                   />
-                  <span className="text-sm text-gray-700">Step1 Project</span>
+                  <span className="text-sm text-gray-700">Step1 Task</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -265,7 +365,7 @@ function Step3({ onNavigate }: StepPageProps) {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Step1 Project
+                      Select Step1 Task
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <select
@@ -275,8 +375,8 @@ function Step3({ onNavigate }: StepPageProps) {
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     >
-                      <option value="">Select Step1 Project</option>
-                      {mgfSelector.projects.map((project) => (
+                      <option value="">Select Step1 Task</option>
+                      {mgfSelector.tasks.map((project) => (
                         <option key={project.uuid} value={project.uuid}>
                           {project.name}
                         </option>
@@ -296,7 +396,7 @@ function Step3({ onNavigate }: StepPageProps) {
                             {mgfSelector.foundFilePath}
                           </div>
                           <p className="mt-1 text-xs text-gray-500">
-                            The most recently created .mgf file in the output directory of the selected Step1 project has been automatically selected.
+                            The most recently created .mgf file in the output directory of the selected Step1 task has been automatically selected.
                           </p>
                         </>
                       ) : null}
@@ -336,7 +436,7 @@ function Step3({ onNavigate }: StepPageProps) {
                     onChange={() => configSelector.setSourceType("step")}
                     className="mr-2"
                   />
-                  <span className="text-sm text-gray-700">Step2 Project</span>
+                  <span className="text-sm text-gray-700">Step2 Task</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -355,7 +455,7 @@ function Step3({ onNavigate }: StepPageProps) {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Step2 Project
+                      Select Step2 Task
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <select
@@ -365,8 +465,8 @@ function Step3({ onNavigate }: StepPageProps) {
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     >
-                      <option value="">Select Step2 Project</option>
-                      {configSelector.projects.map((project) => (
+                      <option value="">Select Step2 Task</option>
+                      {configSelector.tasks.map((project) => (
                         <option key={project.uuid} value={project.uuid}>
                           {project.name}
                         </option>
@@ -386,7 +486,7 @@ function Step3({ onNavigate }: StepPageProps) {
                             {configSelector.foundFilePath}
                           </div>
                           <p className="mt-1 text-xs text-gray-500">
-                            The most recently created .yaml or .yml file in the output directory of the selected Step2 project has been automatically selected.
+                            The most recently created .yaml or .yml file in the output directory of the selected Step2 task has been automatically selected.
                           </p>
                         </>
                       ) : null}
@@ -439,7 +539,7 @@ function Step3({ onNavigate }: StepPageProps) {
             isRunning={isRunning || hasRunningProject}
             message={message}
           />
-          {/* Project Status Monitor */}
+          {/* Task Status Monitor */}
           <ProjectStatusMonitor 
             projectUuid={projectUuid}
             projectName={projectName}
@@ -456,7 +556,7 @@ function Step3({ onNavigate }: StepPageProps) {
         stepTitle="De novo Peptide Sequencing"
         description="In this step, Casanovo is used to perform de novo peptide sequencing."
         requiredInputs={[
-          "Project name",
+          "Task name",
           "Spectra MGF file path",
           "Casanovo configuration file path (Step2 output)",
           "Model file path (.ckpt)",

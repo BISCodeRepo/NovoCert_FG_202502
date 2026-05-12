@@ -1,4 +1,5 @@
 export interface Step5Params {
+  experimentUuid?: string
   projectName: string
   inputPath: string        // PIN file path
   outputPath: string
@@ -29,4 +30,3 @@ export interface Step5Result {
   containerId?: string
   error?: string
 }
-

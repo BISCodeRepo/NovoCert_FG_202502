@@ -132,6 +132,60 @@ export function getRequiredImages(): DockerImageConfig[] {
 }
 
 /**
+ * Force pull all required images from remote (even if already installed locally)
+ */
+export async function downloadAllImages(
+  onProgress?: (progress: {
+    image: string
+    name: string
+    status: 'downloading' | 'success' | 'error'
+    error?: string
+  }) => void
+): Promise<{
+  success: boolean
+  results?: Array<{ image: string; success: boolean; error?: string }>
+  error?: string
+}> {
+  try {
+    const results = []
+
+    for (const imageInfo of REQUIRED_IMAGES) {
+      if (onProgress) {
+        onProgress({
+          image: imageInfo.image,
+          name: imageInfo.name,
+          status: 'downloading'
+        })
+      }
+
+      const pullResult = await pullImage(imageInfo.image, imageInfo.platform)
+
+      if (onProgress) {
+        onProgress({
+          image: imageInfo.image,
+          name: imageInfo.name,
+          status: pullResult.success ? 'success' : 'error',
+          error: pullResult.error
+        })
+      }
+
+      results.push({
+        image: imageInfo.image,
+        success: pullResult.success,
+        error: pullResult.error
+      })
+    }
+
+    return { success: true, results }
+  } catch {
+    return {
+      success: false,
+      error: 'Failed to download images. Please ensure Docker is installed and running.'
+    }
+  }
+}
+
+/**
  * Download missing images (pass progress through callback)
  */
 export async function downloadMissingImages(

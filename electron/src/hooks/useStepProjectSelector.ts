@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
+import { useExperiment } from "../contexts/ExperimentContext";
 import type { Project } from "../types";
+import { filterTasksByBranch, filterTasksByExperiment, TaskBranch } from "../utils/experimentTasks";
 
 interface UseStepProjectSelectorOptions {
   step: number;
   defaultSourceType?: "step" | "custom";
   extensions?: string[]; // file extensions (for file finding)
   returnDirectory?: boolean; // true returns directory path, false returns file path
+  branch?: TaskBranch;
   onFileFound?: (path: string) => void;
   onError?: (error: string) => void;
 }
@@ -13,7 +16,7 @@ interface UseStepProjectSelectorOptions {
 interface UseStepProjectSelectorReturn {
   sourceType: "step" | "custom";
   setSourceType: (type: "step" | "custom") => void;
-  projects: Project[];
+  tasks: Project[];
   selectedProjectUuid: string;
   setSelectedProjectUuid: (uuid: string) => void;
   foundFilePath: string;
@@ -26,34 +29,37 @@ export function useStepProjectSelector({
   defaultSourceType = "step",
   extensions = [],
   returnDirectory = false,
+  branch,
   onFileFound,
   onError,
 }: UseStepProjectSelectorOptions): UseStepProjectSelectorReturn {
+  const { currentExperiment } = useExperiment();
   const [sourceType, setSourceType] = useState<"step" | "custom">(defaultSourceType);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [tasks, setTasks] = useState<Project[]>([]);
   const [selectedProjectUuid, setSelectedProjectUuid] = useState<string>("");
   const [foundFilePath, setFoundFilePath] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load projects for the specified step
+  // Load tasks for the specified step
   useEffect(() => {
-    const loadProjects = async () => {
+    const loadTasks = async () => {
       if (sourceType !== "step") {
-        setProjects([]);
+        setTasks([]);
         return;
       }
 
       setIsLoading(true);
       try {
-        const allProjects = await window.db.getProjects();
-        const stepProjects = allProjects.filter(
-          (project) => String(project.step) === String(step)
-        );
-        setProjects(stepProjects);
+        const allTasks = await window.db.getProjects();
+        const stepTasks = filterTasksByBranch(
+          filterTasksByExperiment(allTasks, currentExperiment?.uuid),
+          branch
+        ).filter((project) => String(project.step) === String(step));
+        setTasks(stepTasks);
       } catch (error) {
-        console.error(`Failed to load Step${step} projects:`, error);
-        const errorMsg = `Failed to load Step${step} projects`;
+        console.error(`Failed to load Step${step} tasks:`, error);
+        const errorMsg = `Failed to load Step${step} tasks`;
         setError(errorMsg);
         onError?.(errorMsg);
       } finally {
@@ -61,8 +67,8 @@ export function useStepProjectSelector({
       }
     };
 
-    loadProjects();
-  }, [step, sourceType, onError]);
+    loadTasks();
+  }, [step, sourceType, currentExperiment?.uuid, branch, onError]);
 
   // Find file in selected project's outputPath
   useEffect(() => {
@@ -73,7 +79,7 @@ export function useStepProjectSelector({
         return;
       }
 
-      const selectedProject = projects.find(
+      const selectedProject = tasks.find(
         (project) => project.uuid === selectedProjectUuid
       );
 
@@ -139,7 +145,7 @@ export function useStepProjectSelector({
     };
 
     findFile();
-  }, [sourceType, selectedProjectUuid, projects, step, extensions, returnDirectory, onFileFound, onError]);
+  }, [sourceType, selectedProjectUuid, tasks, step, extensions, returnDirectory, onFileFound, onError]);
 
   // Reset found file path when source type changes to custom
   useEffect(() => {
@@ -153,7 +159,7 @@ export function useStepProjectSelector({
   return {
     sourceType,
     setSourceType,
-    projects,
+    tasks,
     selectedProjectUuid,
     setSelectedProjectUuid,
     foundFilePath,
@@ -161,4 +167,3 @@ export function useStepProjectSelector({
     error,
   };
 }
-
