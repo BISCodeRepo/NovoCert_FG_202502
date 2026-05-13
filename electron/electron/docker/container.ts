@@ -43,8 +43,8 @@ export async function runDockerContainer(options: DockerRunOptions): Promise<Doc
   return new Promise((resolve) => {
     const args: string[] = ['run']
 
-    // Detached mode (background execution) - always used
-    args.push('-d')
+    // Detached mode with interactive TTY - always used
+    args.push('-d', '-it')
 
     // Auto remove option (can use --rm in detached mode)
     if (autoRemove) {
