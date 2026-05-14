@@ -13,6 +13,8 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
   const [isStopping, setIsStopping] = useState(false);
   const [logFilePath, setLogFilePath] = useState<string | null>(null);
   const [outputFolderPath, setOutputFolderPath] = useState<string | null>(null);
+  // Freeze the task name at the moment this task starts — don't reflect parent name refreshes
+  const [frozenProjectName, setFrozenProjectName] = useState<string | undefined>(projectName);
   const prevStatusRef = useRef<string | null>(null);
   const onTaskCompleteRef = useRef(onTaskComplete);
   useEffect(() => { onTaskCompleteRef.current = onTaskComplete; }, [onTaskComplete]);
@@ -27,6 +29,15 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
     }
     prevStatusRef.current = projectStatus;
   }, [projectStatus]);
+
+  // When a new task starts (UUID changes), freeze the name shown in this monitor
+  useEffect(() => {
+    if (projectUuid) {
+      setFrozenProjectName(projectName);
+    }
+    // intentionally exclude projectName from deps — only capture on UUID change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectUuid]);
 
   // when the project UUID is changed, initialize and load the status
   useEffect(() => {
@@ -193,7 +204,7 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
       return;
     }
 
-    if (!confirm(`Are you sure you want to stop and clean up the container for task "${projectName}"? This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to stop and clean up the container for task "${frozenProjectName}"? This action cannot be undone.`)) {
       return;
     }
 
@@ -222,7 +233,7 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
     return null;
   }
 
-  const showCreatedMessage = projectName && stepNumber;
+  const showCreatedMessage = frozenProjectName && stepNumber;
 
   return (
     <div className="mt-6 p-5 bg-white border border-gray-200 rounded-lg shadow-sm">
@@ -286,19 +297,19 @@ function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumbe
               <p className="text-sm text-gray-600 mb-2">
                 {projectStatus === 'running' ? (
                   <>
-                    Task <span className="font-medium text-gray-800">"{projectName}"</span> has been created and Step {stepNumber} is running.
+                    Task <span className="font-medium text-gray-800">"{frozenProjectName}"</span> has been created and Step {stepNumber} is running.
                   </>
                 ) : projectStatus === 'success' ? (
                   <>
-                    Task <span className="font-medium text-gray-800">"{projectName}"</span> has been completed successfully.
+                    Task <span className="font-medium text-gray-800">"{frozenProjectName}"</span> has been completed successfully.
                   </>
                 ) : projectStatus === 'failed' ? (
                   <>
-                    Task <span className="font-medium text-gray-800">"{projectName}"</span> has been stopped or failed.
+                    Task <span className="font-medium text-gray-800">"{frozenProjectName}"</span> has been stopped or failed.
                   </>
                 ) : (
                   <>
-                    Task <span className="font-medium text-gray-800">"{projectName}"</span> status: {projectStatus}
+                    Task <span className="font-medium text-gray-800">"{frozenProjectName}"</span> status: {projectStatus}
                   </>
                 )}
               </p>
