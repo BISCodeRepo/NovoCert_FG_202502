@@ -12,7 +12,7 @@ import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useExperiment } from "../../contexts/ExperimentContext";
-import { filterTasksByExperiment, getNextTaskName, getTaskRootOutputPath, latestTaskForStep } from "../../utils/experimentTasks";
+import { filterTasksByExperiment, getNextTaskName, getTaskRootOutputPath, latestTaskForStep, resolveMgfPathFromStep1Task } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
 import type { Project } from "../../types/project";
 
@@ -89,17 +89,15 @@ function Step4(_: StepPageProps) {
     loadStep4Tasks();
   }, [currentExperiment?.uuid]);
 
-  // Step1 tasks no longer have branch — show all successful Step1 tasks
+  // Target MGF: resolved from Step 1 inputPath (not outputPath)
   const targetMgfSelector = useStepProjectSelector({
     step: 1,
     defaultSourceType: "step",
-    extensions: ["mgf"],
     successOnly: true,
-    onFileFound: (path) => setTargetSpectraMgfPath(path),
-    onError: (error) =>
-      setMessage({ type: "error", text: error }),
+    // no extensions — path resolution handled manually via resolveMgfPathFromStep1Task
   });
 
+  // Decoy MGF: resolved from Step 1 outputPath (generated decoy)
   const decoyMgfSelector = useStepProjectSelector({
     step: 1,
     defaultSourceType: "step",
@@ -159,6 +157,26 @@ function Step4(_: StepPageProps) {
     applyPreviousStepDefaults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentExperiment?.uuid, currentExperiment?.name]);
+
+  // Resolve target MGF path from Step 1 inputPath whenever the selected task changes
+  useEffect(() => {
+    const resolve = async () => {
+      if (targetMgfSelector.sourceType !== "step" || !targetMgfSelector.selectedProjectUuid) {
+        return;
+      }
+      const task = targetMgfSelector.tasks.find(
+        (t) => t.uuid === targetMgfSelector.selectedProjectUuid
+      );
+      const result = await resolveMgfPathFromStep1Task(task, "target");
+      if (result.path) {
+        setTargetSpectraMgfPath(result.path);
+      } else {
+        setTargetSpectraMgfPath("");
+        if (result.error) setMessage({ type: "error", text: result.error });
+      }
+    };
+    resolve();
+  }, [targetMgfSelector.selectedProjectUuid, targetMgfSelector.sourceType, targetMgfSelector.tasks]);
 
   const refreshTaskInfo = useCallback(async () => {
     const allTasks = await window.db.getProjects();
@@ -419,14 +437,14 @@ function Step4(_: StepPageProps) {
                     </select>
                   </div>
 
-                  {targetMgfSelector.selectedProjectUuid && targetMgfSelector.foundFilePath && (
+                  {targetMgfSelector.selectedProjectUuid && targetSpectraMgfPath && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        MGF File Path
+                        MGF File Path (from Step 1 input)
                         <span className="text-red-500 ml-1">*</span>
                       </label>
                       <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
-                        {targetMgfSelector.foundFilePath}
+                        {targetSpectraMgfPath}
                       </div>
                     </div>
                   )}

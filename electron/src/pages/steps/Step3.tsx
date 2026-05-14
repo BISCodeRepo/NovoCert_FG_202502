@@ -12,57 +12,10 @@ import { useStepRunningProject } from "../../hooks/useStepRunningProject";
 import { useStepRunningStatus } from "../../hooks/useStepRunningStatus";
 import StepDescriptionModal from "../../components/StepDescriptionModal";
 import { useExperiment } from "../../contexts/ExperimentContext";
-import { filterTasksByExperiment, getNextTaskName, getTaskRootOutputPath, latestTaskForStep, TaskBranch } from "../../utils/experimentTasks";
+import { filterTasksByExperiment, getNextTaskName, getTaskRootOutputPath, latestTaskForStep, resolveMgfPathFromStep1Task, TaskBranch } from "../../utils/experimentTasks";
 import type { StepPageProps } from "../../types";
 import type { Project } from "../../types/project";
 
-/** Resolve absolute MGF path for Step 3 from the selected Step 1 task. Target uses Step 1 `inputPath` (folder or .mgf file); decoy uses Step 1 output folder. */
-async function resolveStep3SpectraPathFromStep1Task(
-  task: Project | undefined,
-  branch: TaskBranch
-): Promise<{ path: string | null; error: string | null }> {
-  if (!task) {
-    return { path: null, error: "No Step 1 task selected." };
-  }
-
-  if (branch === "target") {
-    const inputPath = String(
-      task.parameters?.inputPath ??
-        (task.parameters?.step1 as { inputPath?: string } | undefined)?.inputPath ??
-        ""
-    ).trim();
-    if (!inputPath) {
-      return { path: null, error: "Step 1 task has no input path (parameters.inputPath)." };
-    }
-    if (inputPath.toLowerCase().endsWith(".mgf")) {
-      return { path: inputPath, error: null };
-    }
-    const result = await window.fs.findLatestFile(inputPath, "mgf");
-    if (result.success && result.path) {
-      return { path: result.path, error: null };
-    }
-    return {
-      path: null,
-      error:
-        result.error ||
-        `Cannot find an MGF file under the Step 1 input path: ${inputPath}`,
-    };
-  }
-
-  const step1Params = task.parameters?.step1 as { outputPath?: string } | undefined;
-  const out = String(step1Params?.outputPath ?? "").trim();
-  if (!out) {
-    return { path: null, error: "Step 1 task has no output path (step1.outputPath)." };
-  }
-  const result = await window.fs.findLatestFile(out, "mgf");
-  if (result.success && result.path) {
-    return { path: result.path, error: null };
-  }
-  return {
-    path: null,
-    error: result.error || `Cannot find an MGF file in Step 1 output: ${out}`,
-  };
-}
 
 function Step3(_: StepPageProps) {
   const { currentExperiment } = useExperiment();
@@ -201,7 +154,7 @@ function Step3(_: StepPageProps) {
         setStep1InputPathPreview("");
       }
 
-      const resolved = await resolveStep3SpectraPathFromStep1Task(task, branch);
+      const resolved = await resolveMgfPathFromStep1Task(task, branch);
       if (resolved.path) {
         setMgfFoundPath(resolved.path);
         setSpectraPath(resolved.path);
@@ -328,7 +281,7 @@ function Step3(_: StepPageProps) {
       if (mgfSourceType === "step") {
         const all = await window.db.getProjects();
         const step1Task = all.find((p) => p.uuid === selectedStep1TaskUuid);
-        const resolved = await resolveStep3SpectraPathFromStep1Task(step1Task, branch);
+        const resolved = await resolveMgfPathFromStep1Task(step1Task, branch);
         if (!resolved.path) {
           setMessage({
             type: "error",

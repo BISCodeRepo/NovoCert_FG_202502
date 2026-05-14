@@ -93,3 +93,54 @@ export function getTaskStepOutputPath(task: Project | null) {
   const stepParams = task.parameters?.[`step${task.step}`] as { outputPath?: string } | undefined;
   return stepParams?.outputPath || getTaskRootOutputPath(task);
 }
+
+/**
+ * Resolve the MGF file path from a Step 1 task for use in Step 3 or Step 4.
+ * - target branch: looks at parameters.inputPath (the original MGF or folder)
+ * - decoy branch:  looks at parameters.step1.outputPath (generated decoy MGF)
+ */
+export async function resolveMgfPathFromStep1Task(
+  task: Project | undefined,
+  branch: TaskBranch
+): Promise<{ path: string | null; error: string | null }> {
+  if (!task) {
+    return { path: null, error: "No Step 1 task selected." };
+  }
+
+  if (branch === "target") {
+    const inputPath = String(
+      task.parameters?.inputPath ??
+        (task.parameters?.step1 as { inputPath?: string } | undefined)?.inputPath ??
+        ""
+    ).trim();
+    if (!inputPath) {
+      return { path: null, error: "Step 1 task has no input path (parameters.inputPath)." };
+    }
+    if (inputPath.toLowerCase().endsWith(".mgf")) {
+      return { path: inputPath, error: null };
+    }
+    const result = await window.fs.findLatestFile(inputPath, "mgf");
+    if (result.success && result.path) {
+      return { path: result.path, error: null };
+    }
+    return {
+      path: null,
+      error: result.error || `Cannot find an MGF file under Step 1 input path: ${inputPath}`,
+    };
+  }
+
+  // decoy: use Step 1 output folder
+  const step1Params = task.parameters?.step1 as { outputPath?: string } | undefined;
+  const out = String(step1Params?.outputPath ?? "").trim();
+  if (!out) {
+    return { path: null, error: "Step 1 task has no output path (step1.outputPath)." };
+  }
+  const result = await window.fs.findLatestFile(out, "mgf");
+  if (result.success && result.path) {
+    return { path: result.path, error: null };
+  }
+  return {
+    path: null,
+    error: result.error || `Cannot find an MGF file in Step 1 output: ${out}`,
+  };
+}
