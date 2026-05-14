@@ -4,8 +4,8 @@
 
 | Platform | Link |
 |----------|------|
-| macOS (Universal) | [NovoCert-Mac-1.2.8-universal.dmg](https://github.com/BISCodeRepo/NovoCert_FG_202502/releases/download/v1.2.8/NovoCert-Mac-1.2.8-universal.dmg) |
-| Windows (x64) | [NovoCert-Windows-1.2.8-x64-Setup.exe](https://github.com/BISCodeRepo/NovoCert_FG_202502/releases/download/v1.2.8/NovoCert-Windows-1.2.8-x64-Setup.exe) |
+| macOS (Universal) | [NovoCert-Mac-1.2.9-universal.dmg](https://github.com/BISCodeRepo/NovoCert_FG_202502/releases/download/v1.2.9/NovoCert-Mac-1.2.9-universal.dmg) |
+| Windows (x64) | [NovoCert-Windows-1.2.9-x64-Setup.exe](https://github.com/BISCodeRepo/NovoCert_FG_202502/releases/download/v1.2.9/NovoCert-Windows-1.2.9-x64-Setup.exe) |
 
 ## Contributors
 
