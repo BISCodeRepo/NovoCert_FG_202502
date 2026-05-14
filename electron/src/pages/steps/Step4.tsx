@@ -89,24 +89,21 @@ function Step4(_: StepPageProps) {
     loadStep4Tasks();
   }, [currentExperiment?.uuid]);
 
-  // Use Step1 task selector for Target Spectra MGF File
+  // Step1 tasks no longer have branch — show all successful Step1 tasks
   const targetMgfSelector = useStepProjectSelector({
     step: 1,
     defaultSourceType: "step",
     extensions: ["mgf"],
-    branch: "target",
     successOnly: true,
     onFileFound: (path) => setTargetSpectraMgfPath(path),
     onError: (error) =>
       setMessage({ type: "error", text: error }),
   });
 
-  // Use Step1 task selector for Decoy Spectra MGF File
   const decoyMgfSelector = useStepProjectSelector({
     step: 1,
     defaultSourceType: "step",
     extensions: ["mgf"],
-    branch: "decoy",
     successOnly: true,
     onFileFound: (path) => setDecoySpectraMgfPath(path),
     onError: (error) =>
@@ -140,13 +137,13 @@ function Step4(_: StepPageProps) {
   useEffect(() => {
     const applyPreviousStepDefaults = async () => {
       const allTasks = await window.db.getProjects();
-      const targetStep1Task = latestTaskForStep(allTasks, 1, currentExperiment?.uuid, "target");
-      const decoyStep1Task = latestTaskForStep(allTasks, 1, currentExperiment?.uuid, "decoy");
+      // Step1 has no branch — use the latest successful Step1 task for both MGF selectors
+      const step1Task = latestTaskForStep(allTasks, 1, currentExperiment?.uuid);
       const targetStep3Task = latestTaskForStep(allTasks, 3, currentExperiment?.uuid, "target");
       const decoyStep3Task = latestTaskForStep(allTasks, 3, currentExperiment?.uuid, "decoy");
 
-      targetMgfSelector.setSelectedProjectUuid(targetStep1Task?.uuid || "");
-      decoyMgfSelector.setSelectedProjectUuid(decoyStep1Task?.uuid || "");
+      targetMgfSelector.setSelectedProjectUuid(step1Task?.uuid || "");
+      decoyMgfSelector.setSelectedProjectUuid(step1Task?.uuid || "");
       targetResultSelector.setSelectedProjectUuid(targetStep3Task?.uuid || "");
       decoyResultSelector.setSelectedProjectUuid(decoyStep3Task?.uuid || "");
       setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 4));
