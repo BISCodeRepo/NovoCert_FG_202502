@@ -1,15 +1,18 @@
-# GitHub Release: electron-builder 산출물(.exe, .dmg)을 gh CLI로 업로드
+# NovoCert Makefile
 #
-# 사용법:
-#   make release-upload                    # package.json 버전 사용
-#   make release-upload VERSION=1.2.4      # 원하는 버전 지정
-#   make release-upload VERSION=1.2.4 NOTES=changelog.md
+# 버전 관리:
+#   make bump VERSION=1.2.5          # 모든 파일의 버전 일괄 업데이트
 #
-# 전제:
+# GitHub Release 업로드:
+#   make release-upload              # package.json 버전 사용
+#   make release-upload VERSION=1.2.5
+#   make release-upload VERSION=1.2.5 NOTES=changelog.md
+#
+# 전제 (release-upload):
 #   - gh 설치 및 gh auth login 완료
 #   - electron/release/$(VERSION)/ 에 빌드 산출물이 이미 있음
 
-.PHONY: help release-upload check-gh check-artifacts
+.PHONY: help bump release-upload check-gh check-artifacts
 
 # 기본값: electron/package.json 의 version 필드
 VERSION ?= $(shell node -p "require('./electron/package.json').version" 2>/dev/null)
@@ -24,15 +27,30 @@ MAC_DMG := $(RELEASE_DIR)/NovoCert-Mac-$(VERSION)-universal.dmg
 NOTES ?=
 
 help:
-	@echo "GitHub Release (gh)"
+	@echo "사용 가능한 타겟:"
+	@echo ""
+	@echo "  make bump VERSION=x.y.z          # 버전 일괄 업데이트 (package.json + README)"
 	@echo ""
 	@echo "  make release-upload              # VERSION = electron/package.json"
-	@echo "  make release-upload VERSION=1.2.4"
-	@echo "  make release-upload VERSION=1.2.4 NOTES=RELEASE_NOTES.md"
+	@echo "  make release-upload VERSION=x.y.z"
+	@echo "  make release-upload VERSION=x.y.z NOTES=RELEASE_NOTES.md"
 	@echo ""
 	@echo "산출물 기대 경로:"
 	@echo "  $(WIN_EXE)"
 	@echo "  $(MAC_DMG)"
+
+# 버전 일괄 업데이트
+# 사용법: make bump VERSION=1.2.5
+bump:
+	@test -n "$(VERSION)" || { echo "VERSION 을 지정하세요. 예: make bump VERSION=1.2.5"; exit 1; }
+	@OLD_VERSION=$$(node -p "require('./electron/package.json').version"); \
+	echo "$$OLD_VERSION → $(VERSION)"; \
+	cd electron && npm version "$(VERSION)" --no-git-tag-version; \
+	cd ..; \
+	sed -i '' "s/$$OLD_VERSION/$(VERSION)/g" README.md; \
+	sed -i '' "s/$$OLD_VERSION/$(VERSION)/g" electron/README.md; \
+	echo "완료: electron/package.json, README.md, electron/README.md 업데이트"
+	@echo "Header.tsx 버전은 빌드 시 자동 반영됩니다 (__APP_VERSION__)."
 
 check-gh:
 	@command -v gh >/dev/null 2>&1 || { echo "gh 가 없습니다. https://cli.github.com"; exit 1; }
