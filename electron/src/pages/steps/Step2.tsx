@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PathInput, TextInput, StepRunButton } from "../../components/form";
 import ProjectStatusMonitor from "../../components/ProjectStatusMonitor";
 import ExperimentDagStatus from "../../components/ExperimentDagStatus";
@@ -70,6 +70,14 @@ function Step2(_: StepPageProps) {
     };
     loadStep2Tasks();
   }, [currentExperiment?.uuid]);
+
+  const refreshTaskInfo = useCallback(async () => {
+    const allTasks = await window.db.getProjects();
+    setStep2Tasks(
+      filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter((project) => String(project.step) === "2")
+    );
+    setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 2));
+  }, [currentExperiment?.uuid, currentExperiment?.name]);
 
   useEffect(() => {
     const applyPreviousStepDefaults = async () => {
@@ -295,11 +303,12 @@ function Step2(_: StepPageProps) {
             message={message}
           />
           {/* Task Status Monitor */}
-          <ProjectStatusMonitor 
+          <ProjectStatusMonitor
             projectUuid={projectUuid}
             projectName={projectName}
             containerId={containerId}
             stepNumber={2}
+            onTaskComplete={refreshTaskInfo}
           />
         </div>
       </div>

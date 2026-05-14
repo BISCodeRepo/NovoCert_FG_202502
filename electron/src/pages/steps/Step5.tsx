@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   PathInput,
   TextInput,
@@ -78,6 +78,14 @@ function Step5(_: StepPageProps) {
     };
     loadStep5Tasks();
   }, [currentExperiment?.uuid]);
+
+  const refreshTaskInfo = useCallback(async () => {
+    const allTasks = await window.db.getProjects();
+    setStep5Tasks(
+      filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter((project) => String(project.step) === "5")
+    );
+    setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 5));
+  }, [currentExperiment?.uuid, currentExperiment?.name]);
 
   useEffect(() => {
     const applyPreviousStepDefaults = async () => {
@@ -273,11 +281,12 @@ function Step5(_: StepPageProps) {
             message={message}
           />
           {/* Task Status Monitor */}
-          <ProjectStatusMonitor 
+          <ProjectStatusMonitor
             projectUuid={projectUuid}
             projectName={projectName}
             containerId={containerId}
             stepNumber={5}
+            onTaskComplete={refreshTaskInfo}
           />
         </div>
       </div>

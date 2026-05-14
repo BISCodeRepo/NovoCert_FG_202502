@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   PathInput,
   TextInput,
@@ -158,6 +158,14 @@ function Step4(_: StepPageProps) {
 
     applyPreviousStepDefaults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentExperiment?.uuid, currentExperiment?.name]);
+
+  const refreshTaskInfo = useCallback(async () => {
+    const allTasks = await window.db.getProjects();
+    setStep4Tasks(
+      filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter((project) => String(project.step) === "4")
+    );
+    setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 4));
   }, [currentExperiment?.uuid, currentExperiment?.name]);
 
   // Sync path state from step selectors (only when a file is resolved from a step task)
@@ -709,6 +717,7 @@ function Step4(_: StepPageProps) {
             projectName={projectName}
             containerId={containerId}
             stepNumber={4}
+            onTaskComplete={refreshTaskInfo}
           />
         </div>
       </div>

@@ -1,17 +1,32 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface ProjectStatusMonitorProps {
   projectUuid: string | null;
   projectName?: string;
   containerId?: string | null;
   stepNumber?: number;
+  onTaskComplete?: () => void; // called once when task transitions running → success/failed
 }
 
-function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumber }: ProjectStatusMonitorProps) {
+function ProjectStatusMonitor({ projectUuid, projectName, containerId, stepNumber, onTaskComplete }: ProjectStatusMonitorProps) {
   const [projectStatus, setProjectStatus] = useState<string | null>(null);
   const [isStopping, setIsStopping] = useState(false);
   const [logFilePath, setLogFilePath] = useState<string | null>(null);
   const [outputFolderPath, setOutputFolderPath] = useState<string | null>(null);
+  const prevStatusRef = useRef<string | null>(null);
+  const onTaskCompleteRef = useRef(onTaskComplete);
+  useEffect(() => { onTaskCompleteRef.current = onTaskComplete; }, [onTaskComplete]);
+
+  // Fire onTaskComplete once when status transitions from running → success/failed
+  useEffect(() => {
+    if (
+      prevStatusRef.current === "running" &&
+      (projectStatus === "success" || projectStatus === "failed")
+    ) {
+      onTaskCompleteRef.current?.();
+    }
+    prevStatusRef.current = projectStatus;
+  }, [projectStatus]);
 
   // when the project UUID is changed, initialize and load the status
   useEffect(() => {

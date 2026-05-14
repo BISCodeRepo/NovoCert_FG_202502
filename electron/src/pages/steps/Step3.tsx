@@ -136,6 +136,14 @@ function Step3(_: StepPageProps) {
     loadStep3Tasks();
   }, [currentExperiment?.uuid]);
 
+  const refreshTaskInfo = useCallback(async () => {
+    const allTasks = await window.db.getProjects();
+    setStep3Tasks(
+      filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter((project) => String(project.step) === "3")
+    );
+    setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 3, branch));
+  }, [currentExperiment?.uuid, currentExperiment?.name, branch]);
+
   // MGF source state (replaces mgfSelector hook)
   const [mgfSourceType, setMgfSourceType] = useState<"step" | "custom">("step");
   const [step1Tasks, setStep1Tasks] = useState<Project[]>([]);
@@ -660,11 +668,12 @@ function Step3(_: StepPageProps) {
             message={message}
           />
           {/* Task Status Monitor */}
-          <ProjectStatusMonitor 
+          <ProjectStatusMonitor
             projectUuid={projectUuid}
             projectName={projectName}
             containerId={containerId}
             stepNumber={3}
+            onTaskComplete={refreshTaskInfo}
           />
         </div>
       </div>

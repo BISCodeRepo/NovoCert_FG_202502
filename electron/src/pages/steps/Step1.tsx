@@ -96,6 +96,14 @@ function Step1(_: StepPageProps) {
     loadStep1Tasks();
   }, []);
 
+  const refreshTaskInfo = useCallback(async () => {
+    const allTasks = await window.db.getProjects();
+    setStep1Tasks(
+      filterTasksByExperiment(allTasks, currentExperiment?.uuid).filter((project) => String(project.step) === "1")
+    );
+    setProjectName(getNextTaskName(allTasks, currentExperiment?.uuid, currentExperiment?.name, 1));
+  }, [currentExperiment?.uuid, currentExperiment?.name]);
+
   // Input folder validation
   const [inputFiles, setInputFiles] = useState<string[]>([]);
   const [inputValidation, setInputValidation] = useState<{
@@ -481,11 +489,12 @@ function Step1(_: StepPageProps) {
             message={message}
           />
           {/* Task Status Monitor */}
-          <ProjectStatusMonitor 
+          <ProjectStatusMonitor
             projectUuid={projectUuid}
             projectName={projectName}
             containerId={containerId}
             stepNumber={1}
+            onTaskComplete={refreshTaskInfo}
           />
         </div>
       </div>
