@@ -13,8 +13,8 @@ import argparse
 import gzip 
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = ""   
-os.environ["JAX_PLATFORMS"] = "cpu"       
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.environ["JAX_PLATFORMS"] = "cpu"
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"  
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
@@ -140,6 +140,26 @@ def get_bins(desired_bin_size, m,max_val,min_val):
 def get_ss(spectrumId,run):
     tmp  = run
     return tmp.split('.')[0]+"_"+str(spectrumId)
+
+
+def get_available_process_count():
+    try:
+        return len(os.sched_getaffinity(0))
+    except AttributeError:
+        pass
+    except OSError:
+        pass
+    return os.cpu_count() or 1
+
+
+def get_process_count(env_name):
+    raw = os.getenv(env_name)
+    if raw:
+        try:
+            return max(1, int(raw))
+        except ValueError:
+            print(f"WARNING: invalid {env_name}={raw!r}; using all available CPUs")
+    return max(1, get_available_process_count())
     
 
 def psm_list_to_df(psm_list,pd_df):
@@ -380,10 +400,21 @@ def get_feauters_df(result_file,mgf_dir, pattern):
     mgf_files = glob.glob(os.path.join(mgf_dir, "*.mgf")) + glob.glob(os.path.join(mgf_dir, "*.MGF"))
     base_to_full = {os.path.basename(p): os.path.abspath(p) for p in mgf_files}
 
+    def resolve_mgf_path(rid, loc):
+        base = os.path.basename(loc.replace("file://",""))
+        full = base_to_full.get(base)
+        if full:
+            return full
+        if len(mgf_files) == 1:
+            fallback = os.path.abspath(mgf_files[0])
+            print(f"WARNING: ms_run[{rid}] location '{base}' was not found in {mgf_dir}; using only MGF file '{os.path.basename(fallback)}'")
+            return fallback
+        print(f"WARNING: ms_run[{rid}] location '{base}' was not found in {mgf_dir}. Available MGF files: {sorted(base_to_full.keys())}")
+        return None
+
     msrun_to_full = {}
     for rid, loc in msrun_to_path.items():
-        base = os.path.basename(loc.replace("file://",""))
-        msrun_to_full[rid] = base_to_full.get(base)
+        msrun_to_full[rid] = resolve_mgf_path(rid, loc)
     
     
     need = {}
@@ -465,7 +496,7 @@ def get_feauters_df(result_file,mgf_dir, pattern):
         ms2_tolerance=0.02,
         spectrum_path=mgf_dir,
         spectrum_id_pattern=pattern,
-        processes=1,
+        processes=get_process_count("NOVOCERT_MS2PIP_PROCESSES"),
     )
     ms2pip_fgen.add_features(pd_psm_list)
 
@@ -474,7 +505,7 @@ def get_feauters_df(result_file,mgf_dir, pattern):
         lower_score_is_better=False,
         calibration_set_size=0.15,
         spectrum_path=None,
-        processes=1,
+        processes=get_process_count("NOVOCERT_DEEPLC_PROCESSES"),
         deeplc_retrain=False,
     )
     deeplc_fgen.add_features(pd_psm_list)
@@ -523,13 +554,15 @@ if __name__ == "__main__":
 
     os.makedirs(args.output_dir, exist_ok=True)
 
+    spectrum_id_pattern = r'(?:NativeID:".*scan=|.*?\.)(\d+)(?:\.\d+\.\d+)?'
+
     print("start target...")
-    t_pd_df = get_feauters_df(args.target_result_path, args.target_mgf_dir, r'NativeID:".*scan=(\d+)')
+    t_pd_df = get_feauters_df(args.target_result_path, args.target_mgf_dir, spectrum_id_pattern)
     t_pd_df.to_csv(os.path.join(args.output_dir, 'all_target_features_df.csv'), index=False)
     
 
     print("start decoy...")
-    d_pd_df = get_feauters_df(args.decoy_result_path, args.decoy_mgf_dir, r'NativeID:".*scan=(\d+)')
+    d_pd_df = get_feauters_df(args.decoy_result_path, args.decoy_mgf_dir, spectrum_id_pattern)
     d_pd_df.to_csv(os.path.join(args.output_dir, 'all_decoy_features_df.csv'), index=False)
     
     print("start percolator input generation")
