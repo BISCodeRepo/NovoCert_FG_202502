@@ -159,35 +159,27 @@ function Step4(_: StepPageProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentExperiment?.uuid, currentExperiment?.name]);
 
-  // Update paths when selectors find paths or switch to custom
+  // Sync path state from step selectors (only when a file is resolved from a step task)
   useEffect(() => {
-    if (targetMgfSelector.sourceType === "custom") {
-      setTargetSpectraMgfPath("");
-    } else if (targetMgfSelector.foundFilePath) {
+    if (targetMgfSelector.sourceType === "step" && targetMgfSelector.foundFilePath) {
       setTargetSpectraMgfPath(targetMgfSelector.foundFilePath);
     }
   }, [targetMgfSelector.sourceType, targetMgfSelector.foundFilePath]);
 
   useEffect(() => {
-    if (decoyMgfSelector.sourceType === "custom") {
-      setDecoySpectraMgfPath("");
-    } else if (decoyMgfSelector.foundFilePath) {
+    if (decoyMgfSelector.sourceType === "step" && decoyMgfSelector.foundFilePath) {
       setDecoySpectraMgfPath(decoyMgfSelector.foundFilePath);
     }
   }, [decoyMgfSelector.sourceType, decoyMgfSelector.foundFilePath]);
 
   useEffect(() => {
-    if (targetResultSelector.sourceType === "custom") {
-      setTargetDnpsPath("");
-    } else if (targetResultSelector.foundFilePath) {
+    if (targetResultSelector.sourceType === "step" && targetResultSelector.foundFilePath) {
       setTargetDnpsPath(targetResultSelector.foundFilePath);
     }
   }, [targetResultSelector.sourceType, targetResultSelector.foundFilePath]);
 
   useEffect(() => {
-    if (decoyResultSelector.sourceType === "custom") {
-      setDecoyDnpsPath("");
-    } else if (decoyResultSelector.foundFilePath) {
+    if (decoyResultSelector.sourceType === "step" && decoyResultSelector.foundFilePath) {
       setDecoyDnpsPath(decoyResultSelector.foundFilePath);
     }
   }, [decoyResultSelector.sourceType, decoyResultSelector.foundFilePath]);
@@ -384,7 +376,7 @@ function Step4(_: StepPageProps) {
                     name="targetMgfSource"
                     value="custom"
                     checked={targetMgfSelector.sourceType === "custom"}
-                    onChange={() => targetMgfSelector.setSourceType("custom")}
+                    onChange={() => { targetMgfSelector.setSourceType("custom"); setTargetSpectraMgfPath(""); }}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">Custom Path</span>
@@ -463,7 +455,7 @@ function Step4(_: StepPageProps) {
                     name="targetResultSource"
                     value="custom"
                     checked={targetResultSelector.sourceType === "custom"}
-                    onChange={() => targetResultSelector.setSourceType("custom")}
+                    onChange={() => { targetResultSelector.setSourceType("custom"); setTargetDnpsPath(""); }}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">Custom Path</span>
@@ -542,7 +534,7 @@ function Step4(_: StepPageProps) {
                     name="decoyMgfSource"
                     value="custom"
                     checked={decoyMgfSelector.sourceType === "custom"}
-                    onChange={() => decoyMgfSelector.setSourceType("custom")}
+                    onChange={() => { decoyMgfSelector.setSourceType("custom"); setDecoySpectraMgfPath(""); }}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">Custom Path</span>
@@ -621,7 +613,7 @@ function Step4(_: StepPageProps) {
                     name="decoyResultSource"
                     value="custom"
                     checked={decoyResultSelector.sourceType === "custom"}
-                    onChange={() => decoyResultSelector.setSourceType("custom")}
+                    onChange={() => { decoyResultSelector.setSourceType("custom"); setDecoyDnpsPath(""); }}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">Custom Path</span>
