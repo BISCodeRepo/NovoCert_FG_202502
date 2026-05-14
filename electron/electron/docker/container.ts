@@ -35,7 +35,7 @@ export async function runDockerContainer(options: DockerRunOptions): Promise<Doc
     environment = {},
     command = [],
     platform,
-    autoRemove = true,
+    autoRemove = false,
     logFilePath,
     labels = {}
   } = options

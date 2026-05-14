@@ -744,7 +744,7 @@ function Step4(_: StepPageProps) {
         isOpen={isDescriptionModalOpen}
         onClose={() => setIsDescriptionModalOpen(false)}
         stepNumber={4}
-        stepTitle="Percolator and FDR Control"
+        stepTitle="Feature calculation(SA, delta retention time etc.)"
         description="In this step, Feature Calculation is performed (using p3 image)."
         requiredInputs={[
           "Task name",
