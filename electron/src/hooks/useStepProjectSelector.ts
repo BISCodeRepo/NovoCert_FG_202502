@@ -9,6 +9,7 @@ interface UseStepProjectSelectorOptions {
   extensions?: string[]; // file extensions (for file finding)
   returnDirectory?: boolean; // true returns directory path, false returns file path
   branch?: TaskBranch;
+  successOnly?: boolean; // only show success-status tasks; auto-switch to custom if none found
   onFileFound?: (path: string) => void;
   onError?: (error: string) => void;
 }
@@ -17,6 +18,7 @@ interface UseStepProjectSelectorReturn {
   sourceType: "step" | "custom";
   setSourceType: (type: "step" | "custom") => void;
   tasks: Project[];
+  hasNoSuccessTasks: boolean; // true after load when successOnly + no tasks found
   selectedProjectUuid: string;
   setSelectedProjectUuid: (uuid: string) => void;
   foundFilePath: string;
@@ -30,12 +32,14 @@ export function useStepProjectSelector({
   extensions = [],
   returnDirectory = false,
   branch,
+  successOnly = false,
   onFileFound,
   onError,
 }: UseStepProjectSelectorOptions): UseStepProjectSelectorReturn {
   const { currentExperiment } = useExperiment();
   const [sourceType, setSourceType] = useState<"step" | "custom">(defaultSourceType);
   const [tasks, setTasks] = useState<Project[]>([]);
+  const [hasNoSuccessTasks, setHasNoSuccessTasks] = useState(false);
   const [selectedProjectUuid, setSelectedProjectUuid] = useState<string>("");
   const [foundFilePath, setFoundFilePath] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -46,27 +50,43 @@ export function useStepProjectSelector({
   const onErrorRef = useRef(onError);
   const extensionsRef = useRef(extensions);
   const returnDirectoryRef = useRef(returnDirectory);
+  const successOnlyRef = useRef(successOnly);
   useEffect(() => { onFileFoundRef.current = onFileFound; }, [onFileFound]);
   useEffect(() => { onErrorRef.current = onError; }, [onError]);
   useEffect(() => { extensionsRef.current = extensions; }, [extensions]);
   useEffect(() => { returnDirectoryRef.current = returnDirectory; }, [returnDirectory]);
+  useEffect(() => { successOnlyRef.current = successOnly; }, [successOnly]);
 
   // Load tasks for the specified step
   useEffect(() => {
     const loadTasks = async () => {
       if (sourceType !== "step") {
         setTasks([]);
+        setHasNoSuccessTasks(false);
         return;
       }
 
       setIsLoading(true);
       try {
         const allTasks = await window.db.getProjects();
-        const stepTasks = filterTasksByBranch(
+        let stepTasks = filterTasksByBranch(
           filterTasksByExperiment(allTasks, currentExperiment?.uuid),
           branch
         ).filter((project) => String(project.step) === String(step));
+
+        if (successOnlyRef.current) {
+          stepTasks = stepTasks.filter((t) => t.status === "success");
+        }
+
         setTasks(stepTasks);
+
+        // Auto-switch to custom if no (successful) tasks are available
+        if (successOnlyRef.current && stepTasks.length === 0) {
+          setHasNoSuccessTasks(true);
+          setSourceType("custom");
+        } else {
+          setHasNoSuccessTasks(false);
+        }
       } catch (error) {
         console.error(`Failed to load Step${step} tasks:`, error);
         const errorMsg = `Failed to load Step${step} tasks`;
@@ -167,6 +187,7 @@ export function useStepProjectSelector({
     sourceType,
     setSourceType,
     tasks,
+    hasNoSuccessTasks,
     selectedProjectUuid,
     setSelectedProjectUuid,
     foundFilePath,

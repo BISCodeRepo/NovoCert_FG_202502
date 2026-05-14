@@ -95,6 +95,7 @@ function Step4(_: StepPageProps) {
     defaultSourceType: "step",
     extensions: ["mgf"],
     branch: "target",
+    successOnly: true,
     onFileFound: (path) => setTargetSpectraMgfPath(path),
     onError: (error) =>
       setMessage({ type: "error", text: error }),
@@ -106,6 +107,7 @@ function Step4(_: StepPageProps) {
     defaultSourceType: "step",
     extensions: ["mgf"],
     branch: "decoy",
+    successOnly: true,
     onFileFound: (path) => setDecoySpectraMgfPath(path),
     onError: (error) =>
       setMessage({ type: "error", text: error }),
@@ -117,6 +119,7 @@ function Step4(_: StepPageProps) {
     defaultSourceType: "step",
     extensions: ["mztab"],
     branch: "target",
+    successOnly: true,
     onFileFound: (path) => setTargetDnpsPath(path),
     onError: (error) =>
       setMessage({ type: "error", text: error }),
@@ -128,6 +131,7 @@ function Step4(_: StepPageProps) {
     defaultSourceType: "step",
     extensions: ["mztab"],
     branch: "decoy",
+    successOnly: true,
     onFileFound: (path) => setDecoyDnpsPath(path),
     onError: (error) =>
       setMessage({ type: "error", text: error }),
@@ -359,12 +363,13 @@ function Step4(_: StepPageProps) {
                 <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="flex gap-4 mb-3">
-                <label className="flex items-center">
+                <label className={`flex items-center ${targetMgfSelector.hasNoSuccessTasks ? "opacity-40 cursor-not-allowed" : ""}`}>
                   <input
                     type="radio"
                     name="targetMgfSource"
                     value="step"
                     checked={targetMgfSelector.sourceType === "step"}
+                    disabled={targetMgfSelector.hasNoSuccessTasks}
                     onChange={() => targetMgfSelector.setSourceType("step")}
                     className="mr-2"
                   />
@@ -382,6 +387,9 @@ function Step4(_: StepPageProps) {
                   <span className="text-sm text-gray-700">Custom Path</span>
                 </label>
               </div>
+              {targetMgfSelector.hasNoSuccessTasks && (
+                <p className="text-xs text-amber-600 mb-2">No successful Step 1 tasks found. Please enter a custom path.</p>
+              )}
 
               {targetMgfSelector.sourceType === "step" ? (
                 <div className="space-y-3">
@@ -438,12 +446,13 @@ function Step4(_: StepPageProps) {
                 <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="flex gap-4 mb-3">
-                <label className="flex items-center">
+                <label className={`flex items-center ${targetResultSelector.hasNoSuccessTasks ? "opacity-40 cursor-not-allowed" : ""}`}>
                   <input
                     type="radio"
                     name="targetResultSource"
                     value="step"
                     checked={targetResultSelector.sourceType === "step"}
+                    disabled={targetResultSelector.hasNoSuccessTasks}
                     onChange={() => targetResultSelector.setSourceType("step")}
                     className="mr-2"
                   />
@@ -461,6 +470,9 @@ function Step4(_: StepPageProps) {
                   <span className="text-sm text-gray-700">Custom Path</span>
                 </label>
               </div>
+              {targetResultSelector.hasNoSuccessTasks && (
+                <p className="text-xs text-amber-600 mb-2">No successful Step 3 (target) tasks found. Please enter a custom path.</p>
+              )}
 
               {targetResultSelector.sourceType === "step" ? (
                 <div className="space-y-3">
@@ -517,12 +529,13 @@ function Step4(_: StepPageProps) {
                 <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="flex gap-4 mb-3">
-                <label className="flex items-center">
+                <label className={`flex items-center ${decoyMgfSelector.hasNoSuccessTasks ? "opacity-40 cursor-not-allowed" : ""}`}>
                   <input
                     type="radio"
                     name="decoyMgfSource"
                     value="step"
                     checked={decoyMgfSelector.sourceType === "step"}
+                    disabled={decoyMgfSelector.hasNoSuccessTasks}
                     onChange={() => decoyMgfSelector.setSourceType("step")}
                     className="mr-2"
                   />
@@ -540,6 +553,9 @@ function Step4(_: StepPageProps) {
                   <span className="text-sm text-gray-700">Custom Path</span>
                 </label>
               </div>
+              {decoyMgfSelector.hasNoSuccessTasks && (
+                <p className="text-xs text-amber-600 mb-2">No successful Step 1 tasks found. Please enter a custom path.</p>
+              )}
 
               {decoyMgfSelector.sourceType === "step" ? (
                 <div className="space-y-3">
@@ -596,12 +612,13 @@ function Step4(_: StepPageProps) {
                 <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="flex gap-4 mb-3">
-                <label className="flex items-center">
+                <label className={`flex items-center ${decoyResultSelector.hasNoSuccessTasks ? "opacity-40 cursor-not-allowed" : ""}`}>
                   <input
                     type="radio"
                     name="decoyResultSource"
                     value="step"
                     checked={decoyResultSelector.sourceType === "step"}
+                    disabled={decoyResultSelector.hasNoSuccessTasks}
                     onChange={() => decoyResultSelector.setSourceType("step")}
                     className="mr-2"
                   />
@@ -619,6 +636,9 @@ function Step4(_: StepPageProps) {
                   <span className="text-sm text-gray-700">Custom Path</span>
                 </label>
               </div>
+              {decoyResultSelector.hasNoSuccessTasks && (
+                <p className="text-xs text-amber-600 mb-2">No successful Step 3 (decoy) tasks found. Please enter a custom path.</p>
+              )}
 
               {decoyResultSelector.sourceType === "step" ? (
                 <div className="space-y-3">
